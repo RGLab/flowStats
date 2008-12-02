@@ -1,0 +1,14 @@
+import("flowCore")
+
+export("lymphGate",
+       "lymphFilter",
+       "oneDGate",
+       "quadrantGate",
+       "rangeGate",
+       "warpSet",
+       "proBin",
+       "binByRef")
+
+exportClasses("lymphFilter")
+
+exportMethods("%in%")

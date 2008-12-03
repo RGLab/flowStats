@@ -97,162 +97,99 @@ binByRef<-function(binRes,data)  #output of proBin function, flowFrame
       storeIndx<-storeIndx+1
    } 
    return(binned)
+   
 }
-# 
-# calcPearsonChi<-function(binRes,sampRes)
-# {  
-#       binId<-binRes$node$dataIndx[binRes$node$left==0]
-#     binCount<-length(binId)
-#     input=matrix(0,2,binCount)
-#     for( i in seq_len(binCount))
-#     { 
-#         input[1,i]=nrow(binRes$data[[binId[i]]])     #expected
-#         input[2,i]=nrow(sampRes[[as.character(i)]])  #observed
-#     }
-#     chisq.test(input)
-# }
-# 
-# 
-# calcPBChiSquare<-function(binRes,sampRes,controlCount,sampleCount)
-# {
-# 
-#   result<-list()
-#   binId<-binRes$node$dataIndx[binRes$node$left==0]
-#   binCount<-length(binId)
-#   for( i in seq_len(binCount))
-#   { 
-#     ctrl= (nrow(binRes$data[[binId[i]]]))/controlCount
-#     samp=(nrow(sampRes[[as.character(i)]]))/sampleCount
-#     result$chiSq[i]<-( (samp-ctrl)^2)/(ctrl+samp)
-#     result$expected[i]<-ctrl*controlCount
-#     result$observed[i]<-samp*sampleCount
-#     result$residuals[i]<-(samp-ctrl)/(sqrt(ctrl+samp))
-#   }
-#   result$pbStat<-(2*controlCount*sampleCount*(sum(result$chiSq))/(controlCount+sampleCount)
-#      -(binCount-1))/(sqrt(2*(binCount-1)))
-#     
-#   return(result)
-#   }
-#   
-# plotBins<-function(binRes,data,channels=c("FSC","SSC"),title="",residuals=NULL) 
-# {
-# #data<-exprs(data) 
-# plotColX<-which(colnames(data)==channels[1])
-# plotColY<-which(colnames(data)==channels[2])
-# 
-# smoothScatter(x=data[,plotColX], y=data[,plotColY],
-#               xlab=channels[1],  ylab=channels[2],
-#               main=title, col="#0080ff30")
-# 
-#   x.limits=range(data[,plotColX])
-#   y.limits=range(data[,plotColY])
-#   limits= binRes$limits[binRes$table$dataIndx[-1]]  
-#   pars= binRes$splitPars[binRes$table$dataIndx[-1]]  
-#   
-# 
-# 
-#   for(i in seq_along(limits))
-#   {
-#       x1=limits[[i]]$axisMin[plotColX]
-#       x2=limits[[i]]$axisMax[plotColX]
-#       y1=limits[[i]]$axisMin[plotColY]
-#       y2=limits[[i]]$axisMax[plotColY]
-#       
-#       if(pars[[i]]$splitCol==plotColX)
-#       {
-#           ##plot vertical lines
-#           y1=max(limits[[i]]$axisMin[plotColY], y.limits[1])    # indexed to the Y  axis
-#           y2=min(limits[[i]]$axisMax[plotColY], y.limits[2])
-#           x1=max(limits[[i]]$axisMin[plotColX], x.limits[1])    # indexes to the x axis
-#           x2=min(limits[[i]]$axisMax[plotColX], x.limits[2])
-#       }
-#     else if(pars[[i]]$splitCol==plotColY)  
-#     {
-#       x1=max(limits[[i]]$axisMin[plotColX], x.limits[1])    # indexes to the x axis
-#       x2=min(limits[[i]]$axisMax[plotColX], x.limits[2])
-#       y1=max(limits[[i]]$axisMin[plotColY], y.limits[1])    # indexes to the x axis
-#       y2=min(limits[[i]]$axisMax[plotColY], y.limits[2])
-#     }
-#       fill <- "transparent"
-#       if(!is.null(residuals))
-#       {
-#           res <- abs(residuals)
-#           res <- (((res - min(res)) / max(res-min(res)))*0.5)
-#           fill  <- rgb(0,0,0, res)
-#       }
-#      
-#     ##lines(c(y1,y2),c(x1,x2),col="blue")
-#     rect(x1,y1,x2,y2,border="red", col=fill)
-# }
-# 
-# }
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# shadeBins<-function(binRes,sampRes,data,plotColX=1,plotColY=2,title="") 
-# { 
-#     data<-exprs(data) 
-#     binId<-binRes$node$dataIndx[binRes$node$left==0]
-#     binCount<-length(binId)
-#     shadeVal<-0
-#     for( i in seq_len(binCount))
-#     { 
-#         ctrl= nrow(binRes$data[[binId[i]]])
-#         samp=max(1, nrow(sampRes[[as.character(i)]]))
-#         shadeVal[i]<- abs(log(samp/ctrl))
-#         }
-# 
-#         #shadeVal<-(shadeVal-min(shadeVal))/max(shadeVal)   
-#         shadeVal<-(shadeVal)/7.650169
-#           scatter.smooth(data[,plotColY], data[,plotColX],
-#     xlab="SSC",ylab="FSC",
-#     main=title, col="#0080ff30")
-# 
-#     x.limits=range(data[,plotColX])
-#     y.limits=range(data[,plotColY])
-#     limits=mget(binRes$node$dataIndx[binRes$node$dataIndx>=1],binRes$limits)
-#     limits <- limits[binRes$node$dataIndx[binRes$node$left[-1]==0]]
-#     pars=mget(binRes$node$dataIndx[binRes$node$dataIndx>=1],binRes$splitPars)
-#   
-#     for(i in seq_along(limits))
-#     {
-#         x1=limits[[i]]$axisMin[plotColX]
-#         x2=limits[[i]]$axisMax[plotColX]
-#         y1=limits[[i]]$axisMin[plotColY]
-#         y2=limits[[i]]$axisMax[plotColY]
-#               
-#         if(pars[[i]]$splitCol==plotColX){
-#             ##plot vertical lines
-#             y1=max(limits[[i]]$axisMin[plotColY], y.limits[1])    # indexed to the Y  axis
-#             y2=min(limits[[i]]$axisMax[plotColY], y.limits[2])
-#             x1=max(limits[[i]]$axisMin[plotColX], x.limits[1])    # indexes to the x axis
-#             x2=min(limits[[i]]$axisMax[plotColX], x.limits[2])
-#             }
-#         else if(pars[[i]]$splitCol==plotColY){
-#             x1=max(limits[[i]]$axisMin[plotColX], x.limits[1])    # indexes to the x axis
-#             x2=min(limits[[i]]$axisMax[plotColX], x.limits[2])
-#             y1=max(limits[[i]]$axisMin[plotColY], y.limits[1])    # indexes to the x axis
-#             y2=min(limits[[i]]$axisMax[plotColY], y.limits[2])
-#         }
-#         fill <- "transparent"
-# 
-# #         res<-shadeVal[i]
-# #         res <- (((res - min(shadeVal)) / max(res-min(shadeVal)))*0.5)
-#         fill  <- rgb(0,0,0, 0.6*shadeVal[i])
-#      
-#         ##lines(c(y1,y2),c(x1,x2),col="blue")
-#         rect(y1,x1, y2,x2,border="red", col=fill)
-#     }
-# 
-# }
+   
+   
+plotBins<-function(binRes,data,channels=c("FSC-H","SSC-H"),title="",residuals=NULL,shadeFactor=0.6) 
+{
+   if(!all(channels %in% colnames(data)))
+   stop("Invalid channel(s)")
+  
+   data<-exprs(data) 
+   plotColX<-which(colnames(data)==channels[1])
+   plotColY<-which(colnames(data)==channels[2])
+
+   plot(x=data[,plotColX], y=data[,plotColY],
+   xlab=channels[1],  ylab=channels[2],
+   main=title, col="#0080ff30")
+
+   fill<-"transparent"
+   if(!is.null(residuals))
+   {
+   res <- (((residuals - min(residuals)) / max(residuals-min(residuals)))*shadeFactor)
+   shade  <- rgb(0,0,0, res)
+   }
+
+   x.limits=range(data[,plotColX])
+   y.limits=range(data[,plotColY])
+   limits=binRes$limits[binRes$table$left==0]
+   pars=binRes$splitPars[binRes$table$left==0]
+        
+   for(i in seq_along(limits))
+   {
+      x1=limits[[i]]$axisMin[plotColX]
+      x2=limits[[i]]$axisMax[plotColX]
+      y1=limits[[i]]$axisMin[plotColY]
+      y2=limits[[i]]$axisMax[plotColY]
+	  
+      if(pars[[i]]$splitCol==plotColX)
+      {
+      ##plot vertical lines
+      y1=max(limits[[i]]$axisMin[plotColY], y.limits[1])    
+      y2=min(limits[[i]]$axisMax[plotColY], y.limits[2])
+      x1=max(limits[[i]]$axisMin[plotColX], x.limits[1])    
+      x2=min(limits[[i]]$axisMax[plotColX], x.limits[2])
+      }
+      else if(pars[[i]]$splitCol==plotColY)  
+      {
+      x1=max(limits[[i]]$axisMin[plotColX], x.limits[1])   
+      x2=min(limits[[i]]$axisMax[plotColX], x.limits[2])
+      y1=max(limits[[i]]$axisMin[plotColY], y.limits[1])    
+      y2=min(limits[[i]]$axisMax[plotColY], y.limits[2])
+      }
+            
+      if(!is.null(residuals))
+      {
+	fill<-shade[i]
+      }
+  
+      rect(x1,y1,x2,y2,border="red", col=fill)
+   }
+
+}
+   
+
+calcPearsonChi<-function(ctrlRes,sampRes)
+{  
+      binId<-ctrlRes$table$dataIndx[ctrlRes$table$left==0]
+    binCount<-length(binId)
+    input=matrix(0,2,binCount)
+    for( i in seq_len(binCount))
+    { 
+        input[1,i]=nrow(ctrlRes$data[[as.character(binId[i])]])     #expected
+        input[2,i]=nrow(sampRes[[as.character(i)]])  #observed
+    }
+    chisq.test(input)
+}
+
+calcPBChiSquare<-function(ctrlRes,sampRes,ctrlCount,sampCount)
+{
+  result<-list()
+  binId<-ctrlRes$table$dataIndx[ctrlRes$table$left==0]
+  binCount<-length(binId)
+  for( i in seq_len(binCount))
+  { 
+    ctrl= (nrow(ctrlRes$data[[as.character(binId[i])]]))/ctrlCount
+    samp=(nrow(sampRes[[as.character(i)]]))/sampCount
+    result$chiSq[i]<-( (samp-ctrl)^2)/(ctrl+samp)
+    result$expected[i]<-ctrl*ctrlCount
+    result$observed[i]<-samp*sampCount
+    result$residuals[i]<-(samp-ctrl)/(sqrt(ctrl+samp))
+  }
+  result$pbStat<-(2*ctrlCount*sampCount*(sum(result$chiSq))/(ctrlCount+sampCount)
+     -(binCount-1))/(sqrt(2*(binCount-1)))
+    
+  return(result)
+  }
+  

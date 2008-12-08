@@ -8,9 +8,8 @@ Description: Methods and functionality to analyse flow data that is beyond the
              basic infrastructure provided by the flowCore package.
 Depends: R (>= 2.7.0), flowCore (>= 1.9.0), fda, methods, MASS
 License: Artistic-2.0
-biocViews: Flowcytometry, CellBasedAssays, Statistics
+biocViews: FlowCytometry, CellBasedAssays, Statistics
 Lazyload: yes
-biocViews: Flowcytometry, CellBasedAssays
 Collate: autoGate.R
 	 density1d.R
 	 quadrantGate.R

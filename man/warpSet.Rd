@@ -12,7 +12,7 @@
 }
 
 \usage{
-warpSet(x, stains, grouping = NULL, monwrd = FALSE, ...)
+warpSet(x, stains, grouping = NULL, monwrd = FALSE, subsample=NULL, ...)
 }
 
 
@@ -33,6 +33,12 @@ warpSet(x, stains, grouping = NULL, monwrd = FALSE, ...)
   \item{monwrd}{ Logical. Compute strictly monotone warping
     functions. This gets directly passed on to
     \code{\link[fda]{landmarkreg}}. }
+
+  \item{subsample}{ Numeric. Reduce the number of events in each \code{flowSet}
+    by sub sampling for all density estimation steps and the calculation
+    of the warping functions. This can increase computation time for
+    large data sets, however it might reduce the accuracy of the density
+    estimates. To be used with care. }
 
   \item{\dots}{ Further arguments that are passed on to
     \code{landmarkreg}. }

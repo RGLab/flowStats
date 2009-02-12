@@ -1,6 +1,7 @@
 ## Align data in a flowSet by estimating high density regions and using this
 ## information as landmarks. This works separately on each parameter.
-warpSet <- function(x, stains, grouping=NULL, monwrd=FALSE, ...){
+warpSet <- function(x, stains, grouping=NULL, monwrd=FALSE, subsample=NULL, ...)
+{
     ## Some type-checking first
     flowCore:::checkClass(x, "flowSet")
     flowCore:::checkClass(stains, "character")
@@ -8,18 +9,27 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=FALSE, ...){
     if(!all(mt))
         stop("Invalid stain(s) not matching the flowSet:\n    ",
              paste(stains[!mt], collapse=", "))
+    expData <- as(x, "list")
+    ranges <-  range(x[[1]])
     if(!is.null(grouping))
         flowCore:::checkClass(grouping, "character", 1)
+    if(!is.null(subsample))
+    {
+        flowCore:::checkClass(subsample, "numeric", 1)
+        ## subsample data set before all desnity estimation steps
+        x <- Subset(x, sampleFilter(size=subsample))
+    }
     flowCore:::checkClass(monwrd, "logical", 1)
     ## find landmarks 
     fres <- list()
+    cat("Estimating landmarks\n")
     for(p in stains)
         fres[[p]] <- filter(x, curv1Filter(p))
     nb <- 201
-    expData <- as(x, "list")
-    ranges <-  range(x[[1]])
+   
+   
     lm <- list()
-    z <- NULL
+    z <- NULL 
     ## iterate over stains
     for(p in stains)
     {
@@ -73,6 +83,7 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=FALSE, ...){
             warpfdobj <- regDens$warpfd
             warpedX <- eval.fd(warpfdobj, argvals)
             ## compute warping functions
+            ## funs <-  apply(warpedX, 2, function(y) approxfun(argvals, y))
             funs <-  apply(warpedX, 2, approxfun, argvals)
         }
         warpedLandmarks <- landmarks
@@ -84,10 +95,12 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=FALSE, ...){
             leftBoard[[i]] <- thisDat <= r[1]
             rightBoard[[i]] <- thisDat >= r[2]
             sel <- leftBoard[[i]] | rightBoard[[i]]
-            exprs(expData[[i]])[!sel,p] <- as.matrix(funs[[i]](thisDat[!sel,]))
+            newDat <- as.matrix(funs[[i]](thisDat[!sel,]))
+            newDat[is.na(newDat)] <- thisDat[!sel,][is.na(newDat)]
+            exprs(expData[[i]])[!sel,p] <- newDat
             warpedLandmarks[i, ] <- funs[[i]](landmarks[i,])
-            newRange[1] <- min(newRange[1], min(exprs(expData[[i]])[,p]))
-            newRange[2] <- max(newRange[2], max(exprs(expData[[i]])[,p]))
+            newRange[1] <- min(newRange[1], min(exprs(expData[[i]])[,p], na.rm=TRUE))
+            newRange[2] <- max(newRange[2], max(exprs(expData[[i]])[,p], na.rm=TRUE))
         }
         ## make sure that edge envents are set to the extreme values
         ## of the warped data range and update the parameters slot

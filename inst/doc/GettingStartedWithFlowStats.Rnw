@@ -2,7 +2,7 @@
 % likely to be overwritten.
 %
 %\VignetteIndexEntry{flowStats Overview}
-%\VignetteDepends{flowStats}
+%\VignetteDepends{flowStats, flowViz}
 %\VignetteKeywords{}
 %\VignettePackage{flowStats}
 \documentclass[11pt]{article}
@@ -88,6 +88,7 @@ this subset. The function also allows to derive the pre-selection
 through back-gating: we know that CD4 positive cells are a subset of
 T-cells, so by estimating CD4 positive cells first we can get a rough
 idea on where to find the T-cells in the CD3 SSC projection.
+
 <<lymphGate>>=
 lg <- lymphGate(Data(wf[["asinh"]]), channels=c("SSC", "CD3"),
                 preselection="CD4", filterId="TCells", eval=FALSE,
@@ -96,10 +97,10 @@ add(wf, lg$n2gate, parent="asinh")
 <<lymphGatePlot, fig=TRUE>>=
 library(flowViz)
 print(xyplot(SSC ~ CD3| PatientID, wf[["TCells+"]],
-             par.settings=list(gate=list(col="red", fill="red",
-                                         alpha=0.3))))
+      par.settings=list(gate=list(col="red", 
+         fill="red", alpha=0.3))))
 @ 
-%
+
 In the next step we want to separate T-helper and NK cells using the
 CD4 and CD8 stains. A convenient way of doing this is to apply a
 \Rclass{quadGate}, assuming that both CD4 and CD8 are binary markers
@@ -111,13 +112,14 @@ the fluorescence itensities between samples which are purely caused by
 technical variation rather than biological phenotype. Let's take a
 look at this variation for the T-cell subset and all 4 remaining
 fluorescense channels:
+
 <<variation, fig=TRUE>>=
 pars <- colnames(Data(wf[["base view"]]))[c(3,4,5,7)]
 print(densityplot(PatientID~., Data(wf[["TCells+"]]), channels=pars, groups=GroupID,
                   scales=list(y=list(draw=F)), filter=lapply(pars, curv1Filter),
                   layout=c(4,1)))
 @ 
-%
+
 Indeed the data, especially for CD4 and CD8, don't align well. At
 this point we could decide to compute the \Rclass{quadGates} for each
 sample separately. Alternatively, we can try to normalize the data and
@@ -125,6 +127,7 @@ then compute a common gate. The \Rfunction{warpSet} function can be
 used to normalize data according to a set of landmarks, which
 essentially are the peaks or high-density areas in the density
 estimates shown before.
+
 <<norm>>=
 norm <- normalization(normFun=function(x, parameters, ...)
                       warpSet(x, parameters, ...),
@@ -137,13 +140,14 @@ print(densityplot(PatientID~., Data(wf[["Warping"]]), channels=pars, groups=Grou
                   scales=list(y=list(draw=F)), filter=lapply(pars, curv1Filter),
                   layout=c(4,1)))
 @
-%
+
 After normalization the data look much cleaner and we should be able
 to use a single static gate for all \Rclass{flowFrames} in order to
 separate CD4 and CD8 positive cells. Typically one would use a
 \Rclass{quadGate}, and the \Rfunction{quadrantGate} function in
 \Rpackage{flowStats} can be used to automatically estimate such a
 gate. 
+
 <<quadGate>>=
 qgate <- quadrantGate(Data(wf[["Warping"]]), stains=c("CD4", "CD8"),
                       filterId="CD4CD8", sd=3)
@@ -153,10 +157,12 @@ add(wf, qgate, parent="Warping")
 print(xyplot(CD8 ~ CD4 | PatientID, wf[["CD4+CD8+"]],
              par.settings=list(gate=list(fill="transparent", col="red"))))
 @ 
+
 In a final step we might be interested in finding the proportion of
 activated T-helper cells by means of the CD69 stain. The
 \Rfunction{rangeGate} function is helpful in separating positive and
 negative peaks in 1D.
+
 <<rangeGate>>=
 CD69rg <- rangeGate(Data(wf[["Warping"]]), stain="CD69",
                     alpha=0.75, filterId="CD4+CD8-CD69", sd=2.5)
@@ -167,7 +173,10 @@ print(densityplot(PatientID ~ CD69, Data(wf[["CD4+CD8-"]]), main = "CD4+",
             groups=GroupID, refline=CD69rg@min))
 @ 
 
-
+<<echo=FALSE,results=tex>>=
+toLatex(sessionInfo())
+@
+ 
 \clearpage
 \end{document}
 

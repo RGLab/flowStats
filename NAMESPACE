@@ -1,4 +1,64 @@
-import("flowCore")
+import(flowCore)
+
+importClassesFrom(methods,
+                  character,
+                  list,
+                  numeric)
+
+importMethodsFrom(Biobase,
+                  exprs,
+                  "exprs<-",
+                  pData,
+                  "pData<-",
+                  phenoData,
+                  "phenoData<-",
+                  sampleNames)
+
+importFrom(Biobase,
+           listLen)
+
+importFrom(MASS,
+           hubers)
+
+importFrom(fda,
+           create.bspline.basis,
+           data2fd,
+           eval.fd,
+           fdPar,
+           landmarkreg)
+
+importFrom(grDevices,
+           rgb)
+
+importFrom(graphics,
+           abline,
+           legend,
+           lines,
+           par,
+           polygon,
+	   plot,
+           rect)
+
+importFrom(methods,
+           "@<-",
+           as,
+           is,
+           new)
+
+importFrom(stats,
+           anova,
+           approxfun,
+           chisq.test,
+           density,
+           kmeans,
+           mad,
+           median,
+           optimize,
+           quantile,
+           var)
+
+importFrom(utils,
+           capture.output)
 
 export("lymphGate",
        "lymphFilter",
@@ -14,4 +74,6 @@ export("lymphGate",
 
 exportClasses("lymphFilter")
 
+
+#export("%in%")
 exportMethods("%in%")

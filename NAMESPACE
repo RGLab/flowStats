@@ -75,5 +75,4 @@ export("lymphGate",
 exportClasses("lymphFilter")
 
 
-#export("%in%")
 exportMethods("%in%")

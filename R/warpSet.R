@@ -1,6 +1,6 @@
 ## Align data in a flowSet by estimating high density regions and using this
 ## information as landmarks. This works separately on each parameter.
-warpSet <- function(x, stains, grouping=NULL, monwrd=FALSE, subsample=NULL, ...)
+warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL, ...)
 {
     ## Some type-checking first
     flowCore:::checkClass(x, "flowSet")
@@ -35,8 +35,8 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=FALSE, subsample=NULL, ...)
     {
         ## set up fda parameters
         r <- ranges[,p]
-        from <- r[1]-diff(r)*0.1
-        to <- ranges[2,p]+diff(r)*0.1
+        from <- r[1]-diff(r)*0.15
+        to <- ranges[2,p]+diff(r)*0.15
         wbasis <- create.bspline.basis(rangeval=c(from, to))
         WfdPar <- fdPar(wbasis, 1, 1e-4)
         densY <- t(fsApply(x, function(x){

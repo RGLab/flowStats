@@ -20,12 +20,7 @@ importFrom(Biobase,
 importFrom(MASS,
            hubers)
 
-importFrom(fda,
-           create.bspline.basis,
-           data2fd,
-           eval.fd,
-           fdPar,
-           landmarkreg)
+import(fda)
 
 importFrom(grDevices,
            rgb)

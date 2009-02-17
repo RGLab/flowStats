@@ -12,7 +12,7 @@
 }
 
 \usage{
-warpSet(x, stains, grouping = NULL, monwrd = FALSE, subsample=NULL, ...)
+warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL, ...)
 }
 
 

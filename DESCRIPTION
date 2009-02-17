@@ -6,7 +6,7 @@ Author: Florian Hahne
 Maintainer: Florian Hahne <fhahne@fhcrc.org>
 Description: Methods and functionality to analyse flow data that is beyond the
              basic infrastructure provided by the flowCore package.
-Depends: R (>= 2.7.0), flowCore (>= 1.9.0)
+Depends: R (>= 2.7.0), flowCore (>= 1.9.0), fda
 Suggests: flowViz
 Imports: MASS, flowCore, fda, Biobase, methods, grDevices, graphics, stats, utils 
 License: Artistic-2.0

@@ -24,7 +24,7 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL, ...)
     fres <- list()
     cat("Estimating landmarks\n")
     for(p in stains)
-        fres[[p]] <- filter(x, curv1Filter(p))
+        fres[[p]] <- filter(x, curv1Filter(p, bwFac=1.3))
     nb <- 201
    
    

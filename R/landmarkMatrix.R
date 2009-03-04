@@ -2,7 +2,7 @@
 ## Number of modes per sample doesn't need to be the same, the algorithm will
 ## try to guess wich of the modes are to be aligned.
 ## Currently this uses k-means clustering
-landmarkMatrix <- function(data, fres, parm, border=0.05)
+landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL)
 {
     ## Some type-checking first
     flowCore:::checkClass(data, "flowSet")
@@ -24,6 +24,11 @@ landmarkMatrix <- function(data, fres, parm, border=0.05)
     ## are multiple peaks reasonable?
     nrPeaks <- table(listLen(peaks))
     fnrPeaks <- as.numeric(max(names(which(nrPeaks/sum(nrPeaks) > 0.1))))
+    peakNr <- min(max(nrPeaks), peakNr)
+    clustCenters <- if(fnrPeaks>1 && !is.null(peakNr)){
+        fnrPeaks <- peakNr
+        apply(matrix(unlist(peaks[(listLen(peaks)==peakNr)]), ncol=peakNr) ,1, mean)
+    }else seq_len(nrPeaks)
     if(fnrPeaks==1){
         single <- which(listLen(peaks)==1)
         med <- median(unlist(peaks[single]), na.rm=TRUE)
@@ -50,7 +55,7 @@ landmarkMatrix <- function(data, fres, parm, border=0.05)
     pvect <- unlist(peaks)
     names(pvect) <- rep(names(peaks), listLen(peaks))
     sel <- !is.na(pvect)
-    km <- kmeans(pvect[sel], fnrPeaks)
+    km <- kmeans(pvect[sel], clustCenters)
     km$cluster <- match(km$cluster, order(km$centers))
     clusterDist <- numeric(length(km$cluster))
     for(i in seq_along(km$cluster))

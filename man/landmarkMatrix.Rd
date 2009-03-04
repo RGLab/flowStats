@@ -16,7 +16,7 @@
 }
 
 \usage{
-landmarkMatrix(data, fres, parm, border=0.05)
+landmarkMatrix(data, fres, parm, border=0.05, peakNr=NULL)
 }
 
 
@@ -37,6 +37,9 @@ landmarkMatrix(data, fres, parm, border=0.05)
   \item{border}{ A numeric in \code{[0,1]}. Ignore all high-density
     regions with mean values in the extreme percentiles of the data
     range. }
+  
+  \item{peakNr}{ Force a fixed number of peaks. }
+  
 }
 
 \details{

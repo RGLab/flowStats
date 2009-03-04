@@ -1,6 +1,6 @@
 ## parse output of curv1Filter and find modes and midpoints of the density
 ## regions
-curvPeaks <- function(x, dat, borderQuant=0.1, n=201, from, to)
+curvPeaks <- function(x, dat, borderQuant=0.01, n=201, from, to)
 {
     ## Some type-checking first
     flowCore:::checkClass(x, "multipleFilterResult")
@@ -25,8 +25,8 @@ curvPeaks <- function(x, dat, borderQuant=0.1, n=201, from, to)
         on.exit(options(oo))
         for(b in bound){
             ## discard regions on the margins
-            if(b[2] > quantile(dat, borderQuant) &&
-               b[1] < quantile(dat, 1-borderQuant)){
+            if(b[2] > quantile(c(from,to), borderQuant) &&
+               b[1] < quantile(c(from,to), 1-borderQuant)){
                 ## approximate density by function
                 afun <- approxfun(dens)
                 sel <- seq(b[1], b[2], len=50)

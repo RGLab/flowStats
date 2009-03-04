@@ -12,7 +12,7 @@
 }
 
 \usage{
-warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL, ...)
+warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL, peakNr=NULL, clipRange=0.01, ...)
 }
 
 
@@ -40,6 +40,13 @@ warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL, ...)
     large data sets, however it might reduce the accuracy of the density
     estimates. To be used with care. }
 
+  \item{peakNr}{ Numeric scalar. Force a fixed number of peaks to use
+    for the normalization.}
+
+  \item{clipRange}{Only use peaks within a clipped data
+    range. Essentially, the number indicates the percent of clipping on
+    both sides of the data range, e.g. \code{min(x) - 0.01 * diff(range(x))}.}
+  
   \item{\dots}{ Further arguments that are passed on to
     \code{landmarkreg}. }
   

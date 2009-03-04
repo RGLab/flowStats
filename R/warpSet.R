@@ -1,6 +1,6 @@
 ## Align data in a flowSet by estimating high density regions and using this
 ## information as landmarks. This works separately on each parameter.
-warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL, ...)
+warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL, peakNr=NULL, clipRange=0.01, ...)
 {
     ## Some type-checking first
     flowCore:::checkClass(x, "flowSet")
@@ -48,7 +48,7 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL, ...)
                            argnames = c("x", "samples", "density"))
         ## create matrix of landmarks from curv1Filter peaks
         cat("Registering curves for parameter", p, "\n")
-        landmarks <- landmarkMatrix(x, fres, p)
+        landmarks <- landmarkMatrix(x, fres, p, border=clipRange, peakNr=peakNr)
         ## check if we remove signal between groups
         sig <- 0.05
         if(!is.null(grouping)){

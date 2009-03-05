@@ -24,11 +24,12 @@ landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL)
     ## are multiple peaks reasonable?
     nrPeaks <- table(listLen(peaks))
     fnrPeaks <- as.numeric(max(names(which(nrPeaks/sum(nrPeaks) > 0.1))))
-    peakNr <- min(max(nrPeaks), peakNr)
+    if(!is.null(peakNr))
+	peakNr <- min(as.numeric(names(which.max(nrPeaks)), peakNr))
     clustCenters <- if(fnrPeaks>1 && !is.null(peakNr)){
         fnrPeaks <- peakNr
-        apply(matrix(unlist(peaks[(listLen(peaks)==peakNr)]), ncol=peakNr) ,1, mean)
-    }else seq_len(nrPeaks)
+        apply(matrix(unlist(peaks[(listLen(peaks)==peakNr)]), ncol=peakNr, byrow=T) ,2, mean)
+    }else fnrPeaks
     if(fnrPeaks==1){
         single <- which(listLen(peaks)==1)
         med <- median(unlist(peaks[single]), na.rm=TRUE)

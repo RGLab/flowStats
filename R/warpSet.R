@@ -1,6 +1,7 @@
 ## Align data in a flowSet by estimating high density regions and using this
 ## information as landmarks. This works separately on each parameter.
-warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL, peakNr=NULL, clipRange=0.01, ...)
+warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
+                    peakNr=NULL, clipRange=0.01, nbreaks=11, ...)
 {
     ## Some type-checking first
     flowCore:::checkClass(x, "flowSet")
@@ -20,32 +21,41 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL, peakN
         x <- Subset(x, sampleFilter(size=subsample))
     }
     flowCore:::checkClass(monwrd, "logical", 1)
+     
     ## find landmarks 
     fres <- list()
     cat("Estimating landmarks\n")
     for(p in stains)
-        fres[[p]] <- filter(x, curv1Filter(p, bwFac=1.3))
+        fres[[p]] <- filter(x, curv1Filter(p, bwFac=1.2))
+   
+    ## define some variables
     nb <- 201
-   
-   
     lm <- list()
     z <- NULL 
+
     ## iterate over stains
     for(p in stains)
     {
         ## set up fda parameters
         r <- ranges[,p]
-        from <- r[1]-diff(r)*0.15
-        to <- ranges[2,p]+diff(r)*0.15
-        wbasis <- create.bspline.basis(rangeval=c(from, to))
-        WfdPar <- fdPar(wbasis, 1, 1e-4)
+	#from <- max(0, r[1]-diff(r)*0.15)
+	from <- r[1]
+        to   <- r[2]
+
+       	#from <- r[1]-diff(r)*0.15
+	#to <- ranges[2,p]+diff(r)*0.15
+
+        wbasis <- create.bspline.basis(rangeval=c(from, to),
+	                               norder=4, breaks=seq(from, to, len=nbreaks))
+        WfdPar <- fdPar(wbasis, 1, 1e-2)
         densY <- t(fsApply(x, function(x){
-            x <- x[x[,p]>r[1] & x[,p]<r[2],p]
+            x <- x[x[,p]>=r[1] & x[,p]<r[2],p]
             density(x, from=from, to=to, n=nb)$y
         }, use.exprs=TRUE))
         argvals <- seq(from, to, len=nb) 
         fdobj   <- data2fd(densY, argvals, wbasis, 
                            argnames = c("x", "samples", "density"))
+
         ## create matrix of landmarks from curv1Filter peaks
         cat("Registering curves for parameter", p, "\n")
         landmarks <- landmarkMatrix(x, fres, p, border=clipRange, peakNr=peakNr)

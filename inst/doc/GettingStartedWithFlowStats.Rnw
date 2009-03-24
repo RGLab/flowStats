@@ -126,7 +126,29 @@ sample separately. Alternatively, we can try to normalize the data and
 then compute a common gate. The \Rfunction{warpSet} function can be
 used to normalize data according to a set of landmarks, which
 essentially are the peaks or high-density areas in the density
-estimates shown before.
+estimates shown before. The ideas here are simple:
+
+\begin{itemize}
+\item High density areas represent particular sub-types of cells. 
+\item Markers are binary. Cells are either positive or negative for
+  a particular marker.
+\item Peaks should aline if the above statements are true.
+\end{itemize}
+
+The algorithm in \Rfunction{warpSet} performs the following steps:
+\begin{enumerate}
+\item Identify landmarks for each parameter using a \Rfunction{curv1Filter}
+\item Estimate the most likely total number (k) of landmarks
+\item Perform k-means clustering to classify landmarks
+\item Estimate warping functions for each sample and parameter that
+  best align the landmarks, given the underlying data. This step uses
+  functionality from the \Rpackage{fda} package.
+\item Transform the data using the warping functions.
+\end{enumerate}
+
+The algorithm should be robust to missing peaks in some of the
+samples, however the classification in step 3 becomes harder since it
+is not clear which cell population it represents.   
 
 <<norm>>=
 norm <- normalization(normFun=function(x, parameters, ...)

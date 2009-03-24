@@ -16,7 +16,8 @@
 }
 
 \usage{
-density1d(x, stain, alpha = "min", sd = 2, plot = FALSE, borderQuant = 0.1, absolute = TRUE, ...)
+density1d(x, stain, alpha = "min", sd = 2, plot = FALSE, borderQuant =
+0.1, absolute = TRUE, inBetween = FALSE, ...)
 }
 
 \arguments{
@@ -57,6 +58,10 @@ density1d(x, stain, alpha = "min", sd = 2, plot = FALSE, borderQuant = 0.1, abso
     to \code{TRUE} if the alignment of the measurment range is not
     optimal and the bulk of the data is on one end of the theoretical
     range.}
+
+  \item{inBetween}{Force the algorithm to put the separator in between
+    two peaks. If there are more than two peaks, this argument is
+    ignored.}
   
   \item{\dots}{ Further arguments. }
 }

@@ -16,7 +16,7 @@
 }
 
 \usage{
-landmarkMatrix(data, fres, parm, border=0.05, peakNr=NULL)
+landmarkMatrix(data, fres, parm, border=0.05, peakNr=NULL, densities = NULL, n = 201)
 }
 
 
@@ -39,6 +39,12 @@ landmarkMatrix(data, fres, parm, border=0.05, peakNr=NULL)
     range. }
   
   \item{peakNr}{ Force a fixed number of peaks. }
+  
+  \item{densities}{ An optional matrix of y values of the density
+    estimates for the \code{flowSet}. If this is not present, density
+    estimates will be calculated by the function. }
+
+  \item{n}{ Number of bins used for the density estimation. }
   
 }
 

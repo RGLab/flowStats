@@ -14,6 +14,8 @@ importMethodsFrom(Biobase,
                   "phenoData<-",
                   sampleNames)
 
+importMethodsFrom(flowViz, "plot")
+
 importFrom(Biobase,
            listLen)
 

@@ -104,8 +104,8 @@ lymphFilter(channels, preselection=as.character(NULL),
 
 \details{
 
-  This algorithm is not real mixture modelling, however it is able to
-  idxentify a single elliptical cell population from a mixture of
+  This algorithm does not apply real mixture modelling, however it is
+  able to identify a single elliptical cell population from a mixture of
   multiple such populations. The idea is to first define a rough
   rectangular preselection and, in a second step, fit a bivariate normal
   distribution to this subset only.
@@ -113,20 +113,25 @@ lymphFilter(channels, preselection=as.character(NULL),
   Depending on the value of \code{preselection}, the initial rough
   selection is either
 
-  \item{NULL:}{ No preselection at all}
+  \describe{
 
-  \item{character scalar}{ Preselection based on cells that are positive
-    for a single marker only. This allows for back-gating, for instances
-    by selecting \code{CD4+} T-cells and using this information to
-    back-gate lymphocytes in \code{FSC} and \code{SSC}. Positive cells
-    are identified using a \code{curv1Filter}. }
+    \item{NULL:}{ No preselection at all}
 
-  \item{a named list of numerics:}{ Preselection by a rectangular
-    gate. The items of the list have to be numerics of length one giving
-    the gate boundaries in the respective dimensions. }
+    \item{character scalar}{ Preselection based on cells that are
+      positive for a single marker only. This allows for back-gating,
+      for instances by selecting \code{CD4+} T-cells and using this
+      information to back-gate lymphocytes in \code{FSC} and
+      \code{SSC}. Positive cells are identified using a
+      \code{curv1Filter}. }
 
-  The \code{lymphFilter} class and constructor provide the means to
-  treat \code{lymphGates} as regular \code{flowCore} filters.
+    \item{a named list of numerics:}{ Preselection by a rectangular
+      gate. The items of the list have to be numerics of length one
+      giving the gate boundaries in the respective dimensions. }
+
+    The \code{lymphFilter} class and constructor provide the means to
+    treat \code{lymphGates} as regular \code{flowCore} filters.
+
+  }
 
 }
 

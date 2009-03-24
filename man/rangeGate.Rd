@@ -61,7 +61,7 @@ absolute=TRUE, filterId="defaultRectangleGate", positive=TRUE, ...)
     filter. }
 
   \item{positive}{ Create a range gate that includes the positive
-    (\code{TRUE}) or the negative (code{FALSE}) population. }
+    (\code{TRUE}) or the negative (\code{FALSE}) population. }
   
   \item{\dots}{ Further arguments. }
 }

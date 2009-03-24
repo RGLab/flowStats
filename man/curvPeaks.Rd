@@ -16,7 +16,7 @@
 
 \usage{
 
-curvPeaks(x, dat, borderQuant = 0.1, n = 201, from, to)
+curvPeaks(x, dat, borderQuant = 0.01, n = 201, from, to, densities=NULL)
 
 }
 
@@ -34,6 +34,9 @@ curvPeaks(x, dat, borderQuant = 0.1, n = 201, from, to)
   
   \item{n, from, to}{ Arguments are passed on to
     \code{\link[stats]{density}}. }
+
+  \item{densities}{The optional y values of the density estimate
+    computed for the respective data.}
   
 }
 

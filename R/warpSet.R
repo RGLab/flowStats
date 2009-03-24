@@ -1,7 +1,7 @@
 ## Align data in a flowSet by estimating high density regions and using this
 ## information as landmarks. This works separately on each parameter.
 warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
-                    peakNr=NULL, clipRange=0.01, nbreaks=11, ...)
+                    peakNr=NULL, clipRange=0.01, nbreaks=11, fres, ...)
 {
     ## Some type-checking first
     flowCore:::checkClass(x, "flowSet")
@@ -11,54 +11,67 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
         stop("Invalid stain(s) not matching the flowSet:\n    ",
              paste(stains[!mt], collapse=", "))
     expData <- as(x, "list")
-    ranges <-  range(x[[1]])
+    ranges <- fsApply(x, range) 
     if(!is.null(grouping))
         flowCore:::checkClass(grouping, "character", 1)
     if(!is.null(subsample))
     {
         flowCore:::checkClass(subsample, "numeric", 1)
-        ## subsample data set before all desnity estimation steps
+        ## subsample data set before all density estimation steps
         x <- Subset(x, sampleFilter(size=subsample))
     }
     flowCore:::checkClass(monwrd, "logical", 1)
      
-    ## find landmarks 
-    fres <- list()
-    cat("Estimating landmarks\n")
-    for(p in stains)
-        fres[[p]] <- filter(x, curv1Filter(p, bwFac=1.2))
-   
+    ## find landmarks
+    if(missing(fres))
+    {
+        fres <- list()
+        for(p in stains){
+            cat("\rEstimating landmarks for channel", p, "...")
+            fres[[p]] <- filter(x, curv1Filter(p, bwFac=1.2))
+        }
+        cat("\n")    
+    }
+    else
+    {
+        if(!is.list(fres) || !all(stains %in% names(fres)))
+            stop("The supplied list of filter results does not match ",
+                 "the channels to warp.")
+        if(!all(sapply(fres, is, "filterResult")))
+            stop("The argument 'fres' has to be a list of filterResultLists.")
+        cat("Extracting landmarks from user supplied filterResults\n")
+    }
+    
     ## define some variables
-    nb <- 201
+    nb <- 1001
     lm <- list()
     z <- NULL 
 
     ## iterate over stains
+    eps <- .Machine$double.eps
     for(p in stains)
     {
         ## set up fda parameters
-        r <- ranges[,p]
-	#from <- max(0, r[1]-diff(r)*0.15)
-	from <- r[1]
-        to   <- r[2]
-
-       	#from <- r[1]-diff(r)*0.15
-	#to <- ranges[2,p]+diff(r)*0.15
-
+        extend <- 0.15
+        from <- min(sapply(ranges, function(z) z[1,p]-diff(z[,p])*extend), na.rm=TRUE)
+        to <- max(sapply(ranges, function(z) z[2,p]+diff(z[,p])*extend), na.rm=TRUE)
         wbasis <- create.bspline.basis(rangeval=c(from, to),
 	                               norder=4, breaks=seq(from, to, len=nbreaks))
         WfdPar <- fdPar(wbasis, 1, 1e-2)
-        densY <- t(fsApply(x, function(x){
-            x <- x[x[,p]>=r[1] & x[,p]<r[2],p]
-            density(x, from=from, to=to, n=nb)$y
-        }, use.exprs=TRUE))
+        densY <- t(fsApply(x, function(z){
+            r <- range(z)[,p]
+            z <- exprs(z)
+            z <- z[z[,p]>r[1]+eps & z[,p]<r[2]-eps, p]
+            density(z, from=from, to=to, n=nb, na.rm=TRUE)$y
+        }))
         argvals <- seq(from, to, len=nb) 
         fdobj   <- data2fd(densY, argvals, wbasis, 
                            argnames = c("x", "samples", "density"))
 
         ## create matrix of landmarks from curv1Filter peaks
-        cat("Registering curves for parameter", p, "\n")
-        landmarks <- landmarkMatrix(x, fres, p, border=clipRange, peakNr=peakNr)
+        cat("Registering curves for parameter", p, "...\n")
+        landmarks <- landmarkMatrix(x, fres, p, border=clipRange, peakNr=peakNr,
+                                    densities=densY, n=nb)
         ## check if we remove signal between groups
         sig <- 0.05
         if(!is.null(grouping)){
@@ -102,8 +115,12 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
         ## transform the raw data using the warping functions
         for(i in seq_along(funs)){
             thisDat <- exprs(expData[[i]][,p])
-            leftBoard[[i]] <- thisDat <= r[1]
-            rightBoard[[i]] <- thisDat >= r[2]
+            lb <- thisDat < ranges[[i]][1,p]+eps
+            lb[is.na(lb)] <- TRUE
+            leftBoard[[i]] <- lb
+            rb <- thisDat > ranges[[i]][2,p]-eps
+            rb[is.na(rb)] <- TRUE   
+            rightBoard[[i]] <- rb
             sel <- leftBoard[[i]] | rightBoard[[i]]
             newDat <- as.matrix(funs[[i]](thisDat[!sel,]))
             newDat[is.na(newDat)] <- thisDat[!sel,][is.na(newDat)]
@@ -119,10 +136,10 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
             minSel <- leftBoard[[i]]
             maxSel <- rightBoard[[i]]
             exprs(expData[[i]])[minSel,p] <- as.matrix(rep(newRange[1],
-                                                           sum(minSel)),
+                                                           sum(minSel, na.rm=TRUE)),
                                                        ncol=1)
             exprs(expData[[i]])[maxSel,p] <- as.matrix(rep(newRange[2],
-                                                           sum(maxSel)),
+                                                           sum(maxSel, na.rm=TRUE)),
                                                         ncol=1)
             ip <- match(p, pData(parameters(expData[[i]]))$name)
             tmp <- parameters(expData[[i]])

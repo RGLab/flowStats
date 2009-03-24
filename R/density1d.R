@@ -1,6 +1,6 @@
 ## Find most likely separator between peaks in 1D
 density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
-                      absolute=TRUE, ...)
+                      absolute=TRUE, inBetween=FALSE, ...)
 {
     ## some type checking first
     flowCore:::checkClass(x, c("flowFrame", "flowSet"))
@@ -34,9 +34,18 @@ density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
     dens <- density(exprs(tmp)[, stain])
     ## only one peak: use robust estimation of mode and variance for boundary
     est <- hubers(exprs(tmp[,stain]))
-    if(is.null(nrow(anc))){
+    if(is.null(nrow(anc)))
+    {
         class <- which.min(abs(est$mu - anchors))
-    }else{
+    }
+    else if(nrow(anc)==2 && inBetween)
+    {
+        left <- bnds$regions[1,"right"]
+        right <-  bnds$regions[2,"left"]
+        class <- 1:2
+    }
+    else
+    {
         ## multiple peaks: classify as pos or neg and set boundary between
         class <- apply(anc,1, which.min)
         left <- ifelse(sum(class==1)>0, max(bnds$regions[class==1, "right"]),

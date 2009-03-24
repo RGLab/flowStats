@@ -12,7 +12,8 @@
 }
 
 \usage{
-warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL, peakNr=NULL, clipRange=0.01, ...)
+warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL,
+peakNr=NULL, clipRange=0.01, nbreaks=11, fres, ...)
 }
 
 
@@ -45,7 +46,17 @@ warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL, peakNr=NULL, 
 
   \item{clipRange}{Only use peaks within a clipped data
     range. Essentially, the number indicates the percent of clipping on
-    both sides of the data range, e.g. \code{min(x) - 0.01 * diff(range(x))}.}
+    both sides of the data range, e.g. \code{min(x) - 0.01 *
+      diff(range(x))}.}
+
+  \item{nbreaks}{The number of spline sections used to approximate the
+    data. Higher values produce more accurate results, however this
+    comes with the cost of increaseqd computing times. For most data,
+    the default setting is good enough.}
+
+  \item{fres}{A named list of \code{filterResultList} objects. This can
+    be used to speed up the process since the \code{curv1Filter} step
+    can take quite some time.}
   
   \item{\dots}{ Further arguments that are passed on to
     \code{landmarkreg}. }

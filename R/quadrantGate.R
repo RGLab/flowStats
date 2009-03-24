@@ -27,8 +27,10 @@ quadrantGate <- function(x, stains, alpha = c("min", "min"), sd=c(2,2),
     boundY <- density1d(x, stains[2], alpha = alpha[2], plot, sd=sd[2], ...)
     ## add final plot if needed
     if(plot){
-        plot(x[,stains], main=paste("Quad-gate for parameters\n",
-                         paste(stains, collapse=" and ")), cex.main=1)
+        ## FIXME: Ugly hack foe name space issue
+        plot <- selectMethod("plot", c("flowFrame", "character"))
+        plot(x, stains, main=paste("Quad-gate for parameters\n",
+                                   paste(stains, collapse=" and ")), cex.main=1)
         abline(h = boundY, v = boundX)
     }
     ## create the quadGate object

@@ -56,7 +56,7 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
         from <- min(sapply(ranges, function(z) z[1,p]-diff(z[,p])*extend), na.rm=TRUE)
         to <- max(sapply(ranges, function(z) z[2,p]+diff(z[,p])*extend), na.rm=TRUE)
         wbasis <- create.bspline.basis(rangeval=c(from, to),
-	                               norder=2, breaks=seq(from, to, len=nbreaks))
+	                               norder=4, breaks=seq(from, to, len=nbreaks))
         WfdPar <- fdPar(wbasis, 1, 1e-4)
         densY <- t(fsApply(x, function(z){
             r <- range(z)[,p]

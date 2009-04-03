@@ -39,10 +39,10 @@ calcPearsonChi(ctrlRes,sampRes)
 
 data(GvHD)
 # flow frame 1 is treated as  control dataset and used to generate bins
-resCtrl<-proBin(GvHD[[1]][,c("FSC-H","SSC-H")],200)  
-plotBins(resCtrl,GvHD[[1]],channels=c("FSC-H","SSC-H"),title="Binned control data")
+resCtrl<-proBin(GvHD[[1]][,c("FSC-H","SSC-H","Time")],200)  
+plotBins(resCtrl,GvHD[[1]],channels=c("FSC-H","SSC-H","Time"),title="Binned control data")
 # Same bins are applied to flowFrame 16
-resSample<-binByRef(resCtrl,GvHD[[16]][,c("FSC-H","SSC-H")])
+resSample<-binByRef(resCtrl,GvHD[[16]][,c("FSC-H","SSC-H","Time")])
 stat<-calcPearsonChi(resCtrl,resSample)
 }
 

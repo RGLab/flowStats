@@ -1,4 +1,4 @@
-Pckage: flowStats
+Package: flowStats
 Type: Package
 Title: Statistical methods for the analysis of flow cytometry data
 Version: 1.0.13

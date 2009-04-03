@@ -1,7 +1,9 @@
 
 proBin<-function(m,minEvents)
 { 
-  m<-exprs(m)
+  timeCol <- flowCore:::findTimeChannel(m,strict=FALSE)
+  colNames <-colnames(m) 
+  m<-exprs(m)[, colNames[!(colNames==timeCol)]]
 
   nodeIndx=1
   node =data.frame(dataIndx=1,visited=FALSE,parent=0,left=0,right=0,stringsAsFactors=FALSE)
@@ -106,7 +108,11 @@ plotBins<-function(binRes,data,channels=c("FSC-H","SSC-H"),title="",residuals=NU
    if(!all(channels %in% colnames(data)))
    stop("Invalid channel(s)")
   
-   data<-exprs(data) 
+  timeCol <- flowCore:::findTimeChannel(data,strict=FALSE)
+  colNames <-colnames(data) 
+  data<-exprs(data)[, colNames[!(colNames==timeCol)]]
+ #  data<-exprs(data) 
+
    plotColX<-which(colnames(data)==channels[1])
    plotColY<-which(colnames(data)==channels[2])
 

@@ -32,7 +32,7 @@
 
 
 \title{Getting started with \Rpackage{flowStats}}
-\author{F. Hahne}
+\author{F. Hahne, N. Gopalakrishnan}
 
 \begin{document}
 \maketitle
@@ -313,10 +313,10 @@ tm<-lapply(seq_len(length(dat)),function(x){
 
 The patient with CD4/CD8 populations most different from that of the 
 control group can be identified from the magnitue of Pearson-chi square
-statistic(or Probability binning statistic). Patients with sample ids 15, 
-3 and 11 appear to be  most different amongst the patient samples.	
+statistic(or Probability binning statistic). 
 
-<<chiSqstatisticvalues>>=
+
+<<chiSqstatisticvalues,echo=FALSE>>=
 library(xtable)
 chi_Square_Statistic <- unlist(lapply(pearsonStat,function(x){
 		x$statistic
@@ -335,11 +335,13 @@ rownames(frame) <- patNames
 print(xtable(frame))
 @
 
+\clearpage
+
 
 <<echo=FALSE,results=tex>>=
 toLatex(sessionInfo())
 @
  
-\clearpage
+
 \end{document}
 

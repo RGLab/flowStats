@@ -195,6 +195,147 @@ print(densityplot(PatientID ~ CD69, Data(wf[["CD4+CD8-"]]), main = "CD4+",
             groups=GroupID, refline=CD69rg@min))
 @ 
 
+\section{Probability Binning}
+A probability binning algorithm for quantitating multivariate distribution 
+differences was described by Roederer et al. The algorithm identifies the flow 
+parameter in a flowFrame with the largest variance and divides the events in the 
+flowFrame into two subgroups based on the median of the parameter. This process 
+continues until the number of events in each subgroup is less than a user 
+specified threshold.
+
+For comparison across multiple samples, probability binning algorithm can be applied
+to a control dataset to obtain the position of bins and the same bins can be 
+applied to the experimental dataset. The number of events in the control and sample
+bins can then be compared using the Pearsons chi-square test or the probability 
+binning metric defined by Roederer et al.
+
+Although probability binning can be applied simultaneously to all parameters in 
+a flowFrame with bins in n dimensional hyperspace, we proceed with a two dimenstional
+example from our previous discussion involving CD4 and CD8 populations. This helps
+to simplify the demonstration of the method and interpretation of results. 
+
+From the workflow object containing the warped data, we subset a flowSet containing
+CD4, CD8 and Time parameters. We try to compare the panels using probability 
+binning to identify patients with CD4, CD8 populations different from a control 
+flowSet that we create using the data from all the patients.
+
+<<createData>>=
+dat <- Data(wf[["Warping"]])
+dat<-fsApply(dat,function(x){x[,c("CD4","CD8","Time")]})
+@
+
+The dat is visualized below
+<<rawData, fig=TRUE>>=
+print( xyplot(CD8 ~ CD4 , dat, main= "Experimental data set"))
+@
+
+The control dataset is created by combining all the flowFrames in the flowSet. 
+The flowFrame is then subsetted after applying a sampleFilter so that the control
+flowSet created has approximately the same number of events as the other flowSets
+in our example.
+
+<<createControlData>>=
+datComb <- as(dat,"flowFrame")
+subCount <- nrow(exprs(datComb))/length(dat)
+	sf <- sampleFilter(filterId="mySampleFilter", size=subCount)
+	fres <- filter(datComb, sf)
+	ctrlData <- Subset(datComb, fres)
+	ctrlData <- ctrlData[,c("CD4","CD8","Time")]
+@
+
+The probability binning algorithm can then applied to the control data. The 
+terminating condition for the algorithm is set so that the number of events 
+in each bin is approximately 5 percent of the total number of events in the 
+control data.
+<<BinControlData>>=
+minRow=subCount*0.05
+refBins<-proBin(ctrlData,minRow)
+	
+@
+
+The binned control Data can be visualized using the \Rfunction{plotBins} function.
+Areas in the scatter  plot with a large number of data points have a higher
+density of bins. Each bin also has approximately same number of events.
+
+
+
+<<controlBinsPlot, fig=TRUE>>=
+plotBins(refBins,ctrlData,channels=c("CD4","CD8"),title="Control Data")
+
+@
+
+The same bin positions from the control data set are then applied to each flowFrame
+in our sample Data set.
+
+<<binSampleData>>=
+sampBins <- fsApply(dat,function(x){
+		   binByRef(refBins,x)
+		   })
+@
+
+For each patient, the number events in the control and sample bins can be compared
+using the \Rfunction{calcPearsonChi} or using Roederers probability binning 
+metric.
+
+<<pearsonStat>>=
+pearsonStat <- lapply(sampBins,function(x){
+		      calcPearsonChi(refBins,x)
+                     })
+@
+
+<<Roderers PBin metric>>=
+sCount <- fsApply(dat,nrow)
+pBStat <-lapply(seq_along(sampBins),function(x){
+		calcPBChiSquare(refBins,sampBins[[x]],subCount,sCount[x])
+		})
+@
+
+
+For each sample, the results can be visualized using the \Rfunction{plotBins} function.
+The residuals from Roeders probability binning metric or the Pearsons chi square
+test can be used to shade bins to highlight bins in each sample that differ 
+the most from the control sample.
+
+<<plotBinsresiduals, fig=TRUE>>=
+par(mfrow=c(4,4),mar=c(1.5,1.5,1.5,1.5))
+
+plotBins(refBins,ctrlData,channels=c("CD4","CD8"),title="Control Data")
+patNames <-sampleNames(dat)
+tm<-lapply(seq_len(length(dat)),function(x){
+		plotBins(refBins,dat[[x]],channels=c("CD4","CD8"),
+			title=patNames[x],
+			residuals=pearsonStat[[x]]$residuals[2,],
+			shadeFactor=0.7)
+		
+		}
+      )
+@
+
+The patient with CD4/CD8 populations most different from that of the 
+control group can be identified from the magnitue of Pearson-chi square
+statistic(or Probability binning statistic). Patients with sample ids 15, 
+3 and 11 appear to be  most different amongst the patient samples.	
+
+<<chiSqstatisticvalues>>=
+library(xtable)
+chi_Square_Statistic <- unlist(lapply(pearsonStat,function(x){
+		x$statistic
+		}))
+
+pBin_Statistic <-unlist(lapply(pBStat,function(x){
+                x$pbStat
+						                        })) 
+	
+frame <- data.frame(chi_Square_Statistic, pBin_Statistic)
+rownames(frame) <- patNames
+ 	
+@
+
+<<echo=FALSE,results=tex>>=
+print(xtable(frame))
+@
+
+
 <<echo=FALSE,results=tex>>=
 toLatex(sessionInfo())
 @

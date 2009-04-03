@@ -93,7 +93,7 @@ proBin(m, minEvents)
 \examples{
 
 data(GvHD)
-res<-proBin(GvHD[[1]][,1:7],200)  # Time column in the flowFrame is removed
+res<-proBin(GvHD[[1]],200) 
 
 }
 

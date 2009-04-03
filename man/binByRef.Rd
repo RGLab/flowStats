@@ -36,8 +36,8 @@ binByRef(binRes, data)
 \examples{
 
 data(GvHD)
-resCtrl<-proBin(GvHD[[1]][,1:7],200)  # Time column in the flowFrame is removed
-resSample<-binByRef(resCtrl,GvHD[[2]][,1:7])
+resCtrl<-proBin(GvHD[[1]],200)  
+resSample<-binByRef(resCtrl,GvHD[[2]])
 ls(resSample)
 }
 

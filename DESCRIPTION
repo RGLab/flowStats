@@ -20,4 +20,4 @@ Collate: autoGate.R
 	 landmarkMatrix.R
 	 warpSet.R
 	 pbin.R
-	 gaussNorm.R
+	 

@@ -67,7 +67,8 @@ export("lymphGate",
        "binByRef",
        "plotBins",
        "calcPearsonChi",
-       "calcPBChiSquare")
+       "calcPBChiSquare",
+       "gauusNorm")
 
 exportClasses("lymphFilter")
 

@@ -1,7 +1,3 @@
-
-library(flowCore)
-library(geneplotter)
-
 # normalizes data per-channel basis by locating high density regions on each channel and use these as landmarks to adjust the distance between populations.
 # Inputs:
 #       -flowset: the input flowset containing the flowcytomery expriments.

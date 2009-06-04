@@ -16,7 +16,8 @@
 }
 
 \usage{
-landmarkMatrix(data, fres, parm, border=0.05, peakNr=NULL, densities = NULL, n = 201)
+landmarkMatrix(data, fres, parm, border=0.05, peakNr=NULL, densities =
+NULL, n = 201, indices=FALSE)
 }
 
 
@@ -45,6 +46,10 @@ landmarkMatrix(data, fres, parm, border=0.05, peakNr=NULL, densities = NULL, n =
     estimates will be calculated by the function. }
 
   \item{n}{ Number of bins used for the density estimation. }
+
+  \item{indices}{ Return matrix of population indices instead of
+    landmark locations. These indices can be used to point into the
+    populations identified by the curv1Filter.}
   
 }
 

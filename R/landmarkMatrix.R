@@ -2,7 +2,8 @@
 ## Number of modes per sample doesn't need to be the same, the algorithm will
 ## try to guess wich of the modes are to be aligned.
 ## Currently this uses k-means clustering
-landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL, densities=NULL, n=201)
+landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL, densities=NULL, n=201,
+                           indices=FALSE)
 {
     ## Some type-checking first
     flowCore:::checkClass(data, "flowSet")
@@ -48,7 +49,8 @@ landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL, densities
         resPeaks[-single] <- unlist(sapply(peaks[-single],
                                  function(x) x[which.min(abs(x-med))]))
         resPeaks[is.na(resPeaks)] <- med
-        return(matrix(resPeaks, ncol=1))
+        return(if(!indices) matrix(resPeaks, ncol=1) else
+               matrix(0, ncol=1, nrow=length(resPeaks)))
     }  
     ## cluster peaks in k cluster where k is max number of peaks for a sample
     mat <- matrix(nrow=length(peaks), ncol=fnrPeaks)
@@ -62,14 +64,15 @@ landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL, densities
     for(i in seq_along(km$cluster))
         clusterDist[i] <- abs(pvect[i] - km$centers[km$cluster[i]])
     cList <- split(data.frame(cluster=km$cluster, dist=clusterDist,
-                       landmark=pvect[sel]), names(pvect[sel]))
+                       landmark=pvect[sel], index=unlist(sapply(peaks, seq_along))[sel]),
+                   names(pvect[sel]))
     cList <- lapply(cList, function(x) x[order(x$dist),][1:min(nrow(x),
                                                                fnrPeaks),])
     ## put peaks in matrix according to clustering where row=sample and
     ## col=cluster
     for(i in names(cList)){
         cl <- cList[[i]]
-        mat[i,cl$cluster] <- cl$landmark
+        mat[i,cl$cluster] <- if(!indices) cl$landmark else cl$index
     }
     return(mat)
 }

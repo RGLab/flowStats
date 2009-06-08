@@ -18,6 +18,7 @@ Collate: autoGate.R
 	 curvPeaks.R
          gaussNorm.R
 	 landmarkMatrix.R
+	 peakSeparator.R
 	 warpSet.R
 	 pbin.R
 	 

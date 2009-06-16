@@ -26,8 +26,7 @@ backGating <- function(data, xy, channels=setdiff(colnames(data), c(xy, "time", 
     dataColl <- as(data, "flowFrame")
     for(i in seq_along(channels))
     {
-        fresColl <- filter(dataColl, curv1Filter(channels[i]) %subset%
-                           sampleFilter(50000))
+        fresColl <- filter(dataColl, curv1Filter(channels[i]) %subset% sampleFilter(50000))
         np <- length(fresColl)-1
         lm <- landmarkMatrix(data, fres, channels[i], indices=TRUE,
                              peakNr=np)
@@ -251,8 +250,8 @@ simpleHd <- function (A, B)
     if (n1 * n2 == 0) 
         hd <- -1
     else {
-        stopifnot(is.numeric(X))
-        stopifnot(is.numeric(Y))
+        stopifnot(is.numeric(A))
+        stopifnot(is.numeric(B))
         for (i in 1:n1) d1[i] <- min(sqrt((B[,1]-A[i,1])^2 + (B[,2]-A[i,2])^2))
         for (i in 1:n2) d2[i] <- min(sqrt((A[,1]-B[i,1])^2 + (A[,2]-B[i,2])^2))
         hd <- max(max(d1), max(d2))

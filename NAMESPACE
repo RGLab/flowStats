@@ -68,7 +68,8 @@ export("lymphGate",
        "gaussNorm",
        "plotBins",
        "calcPearsonChi",
-       "calcPBChiSquare")
+       "calcPBChiSquare",
+       "gpaSet")
 
 exportClasses("lymphFilter")
 

@@ -105,8 +105,8 @@ if (require(lattice)) {
 
 ## Example 2. centralized x and xbar prior to using iProcrustes
 x <- matrix(runif(10), nrow=5, ncol=2)
-s <- matrix(c(cos(60), -sin(60), sin(60), cos(60), 
-            nrow=2, ncol=2, byrow=TRUE))
+s <- matrix(c(cos(60), -sin(60), sin(60), cos(60)), 
+            nrow=2, ncol=2, byrow=TRUE)
 xbar <- 1.2 *(x \%*\% s) - 2
 I <- matrix(1, nrow=nrow(x), ncol=1)
 x <- x-(I \%*\% colMeans(x)) ## shift the centroid of points in x to the origin

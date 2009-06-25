@@ -62,11 +62,12 @@ iProcrustes(x, xbar, rotation.only=FALSE, scalling=TRUE, translate=FALSE)
   A list of the linear tranformation with items
   \item{Q}{An orthogonal, rotation/reflection matrix.}
   \item{scal}{A scalling factor}
-  \item{T}{(optional) A translation vector. Returned when \code{translate}
+  \item{T}{(optional) A translation vector used to shift the centroid of the
+  points in matrix \code{x} to the origin. Returned when \code{translate}
   is TRUE.} 
-  \item{T.xbar}{(optional) The translated \code{xbar} whose the centroid
-  of the points is translated to the origin. Returned when \code{translate} is
-  TRUE.}
+  \item{T.xbar}{(optional) Centered \code{xbar} (that is, the centroid
+  of the points in \code{xbar} is translated to the origin). Returned when
+  \code{translate} is TRUE.}
 
   Note that the return values of this function do not include the transformed
   matrix \eqn{scal* x* Q} or \eqn{scal*(x-IT)*Q}, \eqn{T} is the translation

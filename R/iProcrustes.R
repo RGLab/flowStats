@@ -1,5 +1,5 @@
-iProcrustes <- function(x, xbar, rotation.only = FALSE, scalling=TRUE, 
-                   translate=FALSE)
+iProcrustes <- function(x, xbar, rotation.only = TRUE, scalling=TRUE, 
+                        translate=FALSE)
 {  
    ## Apply SVD to get the rotation matrix (Q) and scaling factor (scal).
    ## Inputs:
@@ -10,8 +10,13 @@ iProcrustes <- function(x, xbar, rotation.only = FALSE, scalling=TRUE,
    ## Q is the rotation matrix, and scal the scaler (must be positive).
 
    ## check valid dimension
+   if (missing(x))
+       stop("iProcrustes: the first argument x is missing.")
+   if (missing(xbar))
+       stop("iProcrustes: the second arugement xbar is mission.")
    if (!all(dim(x) == dim(xbar)))
-      stop("The dimension of matrix x must equal to that of matrix xbar.")
+       stop("iProcrustes: the dimension of matrix x must equal to that of
+            matrix xbar.")    
 
    ## 1. translation
    if (translate) {
@@ -29,8 +34,7 @@ iProcrustes <- function(x, xbar, rotation.only = FALSE, scalling=TRUE,
  
    ## force Q to be a rotation matrix
    if (det(Q) < 0 & rotation.only) {
-       cat("iProcrustes: Q is a reflection matrix. Fix it to a rotation matrix...\n")
-       Q <- .rotateOnly(Q, x)
+       Q <- .rotateOnly(s)
    }
 
    ## 3. get scalling factor
@@ -50,34 +54,20 @@ iProcrustes <- function(x, xbar, rotation.only = FALSE, scalling=TRUE,
 }
 
 
-## anti-reflection, rotation only matrix
-## now only works for the reflection across Y-axis
+## 
+## get non-reflection transformation matrix
+##
+.rotateOnly <- function(s)
+{   ## s: reture values of svd, including U, V and sigma
+    ## To lose the reflection component of V*t(V), reverse the sign in the
+    ## right most column of either U or V correspoinding to the smallest
+    ## sigular value. 
 
-.rotateOnly <- function(Q, x)
-{
-    ## this function only 2-D
-    if (det(Q) == 1)
-    {
-        cat("Q is already a rotational matrix. Return its original value.")
-        r2psi <- Q
-    } 
-    else 
-    {   ## reflect across Y-axis only, for now... #degugging
-        refX<- matrix(c(1, 0, 0 ,-1), nrow=2, ncol=2)
-    	
-	A <-  x %*% Q
-    	xhat <- x %*% Q %*% refX
-    	norm <- sqrt(xhat[1,1]^2+xhat[1,2]^2)
-    	psi = acos(sum(xhat[2,]*c(1,0))/norm)
+    minsv <- which.min(s$d)
+    s$u[, minsv] <- -s$u[, minsv]
+    Q <- s$v %*% t(s$u)
 
-        ## rotate counterclockwise 
-    	r2psi = matrix(c(cos(2*psi), -sin(2*psi), sin(2*psi), cos(2*psi)),
-      	       ncol=2, nrow=2)
-
-   	xtil = xhat %*% r2psi ## for debugging
-   }
-   return(r2psi)
+    return(Q)
 }
 
-## it will be better to write  a function to seperate rotation and reflection
-## matrices. 
+

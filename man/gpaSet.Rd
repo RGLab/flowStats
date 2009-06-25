@@ -1,12 +1,13 @@
 \name{gpaSet}
 \alias{gpaSet}
 
-\title{Multi-dimensional normalization based on feature registration}
+\title{Multi-dimensional normalization of flow cytometry data}
 
 \description{
 
   This function performs a multi-dimensional normalization of flow cytometry
-  data using a generalized Procrestes analysis (GPA) method. 
+  data (\code{flowSets}) using a generalized Procrustes analysis (GPA) method,
+  coupled with feature registration based on backgating. 
 
 }
 

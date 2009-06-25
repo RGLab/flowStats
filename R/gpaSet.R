@@ -38,13 +38,13 @@ gpaSet <- function(x, params,
     if (register=="backgating") {
         cat("Backgating ... \n")
         bg <- backGating(x, xy=params, channels=bgChannels)
-        regFeatures <- useBackGating(bg, xy = parames, fig=fig) 
+        regFeatures <- useBackGating(bg, xy = params, fig=fig) 
     }
     else { ## use Curve1Filter and landmarkMatrix to find features for each
            ## channels for each flowFrames 
     }
     
-    cat("Alignment ... ")
+    cat("Procrustes analysis ... \n")
     ## 2. translating the centroid of the registered features of each flowFrames
     ## to the origin
     translate <- lapply(regFeatures, colMeans, na.rm=TRUE)
@@ -57,7 +57,7 @@ gpaSet <- function(x, params,
     fbar <- .getRefFeatures(tfeatures, ref.method=ref.method)
  
     ## 3. applying SVD to find rotation matrix and scalling factor
-    SVD <- lapply(tfeatures, useSVD, fbar, rotation.Only=rotation.only)
+    SVD <- lapply(tfeatures, iProcrustes, fbar, rotation.only=rotation.only)
     
     ## eliminate boundary points
     for (i in params) {

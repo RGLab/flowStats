@@ -69,7 +69,8 @@ export("lymphGate",
        "plotBins",
        "calcPearsonChi",
        "calcPBChiSquare",
-       "gpaSet")
+       "gpaSet",
+       "iProcrustes")
 
 exportClasses("lymphFilter")
 

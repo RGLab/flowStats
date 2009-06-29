@@ -2,10 +2,9 @@
 ## high-density regions in a flowSet. The GPA method is concerned with
 ## multi-dimensional normalization wheares the warping method with
 ## one-dimentional. 
-gpaSet <- function(x, params, 
-       	  	   register="backgating", bgChannels=NULL,
-		   ref.method="mean",
-                   rotation.only=TRUE, iter.max=10, thres=1e-3, fig=FALSE)
+gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
+		   ref.method="mean", rotation.only=TRUE, iter.max=10,
+                   thres=1e-3, plot=FALSE, ...) 
 {
     ## check valid arguments
     flowCore:::checkClass(x, "flowSet")
@@ -32,13 +31,13 @@ gpaSet <- function(x, params,
     flowCore:::checkClass(ref.method, "character")
     flowCore:::checkClass(iter.max, "numeric")
     flowCore:::checkClass(thres, "numeric")
-    flowCore:::checkClass(fig, "logical")  ## for debugging purposes
+    flowCore:::checkClass(plot, "logical")  ## for debugging purposes
 
     ## 1. identifying and registering (labelling) features
     if (register=="backgating") {
         cat("Backgating ... \n")
         bg <- backGating(x, xy=params, channels=bgChannels)
-        regFeatures <- useBackGating(bg, xy = params, fig=fig) 
+        regFeatures <- useBackGating(bg, xy = params, plot=plot) 
     }
     else { ## use Curve1Filter and landmarkMatrix to find features for each
            ## channels for each flowFrames 

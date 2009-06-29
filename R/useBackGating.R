@@ -1,6 +1,7 @@
-## use backgeting to register and label features
+## use backgeting to find the reference features and register the features
+## used by function gpaSet
 
-useBackGating <- function(bg, xy, fig=FALSE)
+useBackGating <- function(bg, xy, plot=FALSE)
 {
 
     regFeatures <- list()
@@ -9,21 +10,22 @@ useBackGating <- function(bg, xy, fig=FALSE)
     for (k in 1:length(ch))
     { 
         perChannel = ch[[k]]
-    	head(perChannel)
-    	centroid = which(perChannel$type=="centroid")
+       	centroid = which(perChannel$type=="centroid")
     	center=perChannel[centroid, ]
 
-	## keep the population that has more than 15% of the centroid point
+	## keep the population that has more than 10% of the centroid points
+	## must have more than two points
+	## --> not very good algorithm, need improvement. talk to Florian
     	eachPop <- split(center, factor(center$population))
         keepF <- sapply(eachPop, function(a, b) {
-	                   (nrow(a) > 0.10 * b) & (nrow(a) >1) }, 
+	                   (nrow(a) > 0.10 * b) & (nrow(a) > 2) }, 
                         nrow(center))
         eachPop <- eachPop[keepF]
 
     	refFeatures <- sapply(eachPop, function(x) {
                     k=kmeans(x[, c("x", "y")], 2)
 		    f = k$center[which.max(k$size), ]})
-    		    refFeatures <- t(refFeatures)
+        refFeatures <- t(refFeatures)
 
         ## register (labelling) features for each samples. each sample's
     	## feature matrix must has the same dimension.
@@ -37,7 +39,7 @@ useBackGating <- function(bg, xy, fig=FALSE)
              lapply(perSample, registerFeatures, refFeatures, by="distance")
 
 	     ## I want different color for each group
-	if (fig) ## for debugging only
+	if (plot) ## for debugging only
 	{   
     	    channel = perChannel$channel[1]
     	    print(xyplot(x ~ y | factor(perChannel$sample), 

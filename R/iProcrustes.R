@@ -1,22 +1,32 @@
 iProcrustes <- function(x, xbar, rotation.only = TRUE, scalling=TRUE, 
                         translate=FALSE)
 {  
-   ## Apply SVD to get the rotation matrix (Q) and scaling factor (scal).
-   ## Inputs:
-   ## The columns of x represent the coordinates of the landmarks, and
-   ## the number of row is the labels of the landmarks. x
-   ## xbar is the reference landmark. 
-   ## Outputs:
-   ## Q is the rotation matrix, and scal the scaler (must be positive).
+   ## Procrustes analysis -- use SVD to find the a linear transformation (Q
+   ## and scal) of x to align x to xbar. 
+   ##
+   ## Inputs
+   ##   x: the columns of x represent the coordinates of the landmarks
+   ##   xbar: the reference landmark  
+   ## Outputs
+   ##   Q: (non-reflection) transformation matrix
+   ##   scal: positive scaler
 
-   ## check valid dimension
+   ## check valid arguments
    if (missing(x))
-       stop("iProcrustes: the first argument x is missing.")
+       stop("iProcrustes: the first argument x is missing with no default")
    if (missing(xbar))
-       stop("iProcrustes: the second arugement xbar is mission.")
+       stop("iProcrustes: the second arugement xbar is missing with no
+            default")
    if (!all(dim(x) == dim(xbar)))
        stop("iProcrustes: the dimension of matrix x must equal to that of
-            matrix xbar.")    
+            matrix xbar") 
+   
+   fail <- !all(sapply(list(rotation.only, scalling, translate), is,
+                "logical"))
+   if (fail) 
+      stop("iProcrustes: Arguments rotation.only, scalling, and translate must
+      be logical")  
+
 
    ## 1. translation
    if (translate) {

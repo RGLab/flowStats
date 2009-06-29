@@ -14,7 +14,7 @@
 \usage{
 gpaSet(x, params, register="backgating", bgChannels=NULL, 
        ref.method="mean", rotation.only=TRUE, 
-       iter.max=10, thres=1e-3, fig=FALSE)
+       iter.max=10, thres=1e-3, fig=FALSE, ...)
 }
 
 \arguments{
@@ -44,7 +44,10 @@ gpaSet(x, params, register="backgating", bgChannels=NULL,
     GPA.}
 
   \item{fig}{Logical. Indicating whether to plot the resulting
-    figures of feature identification and GPA methods. Mainly used for testing.}
+    figures of feature identification and GPA methods. Mainly used for
+    testing.}
+
+  \item{...}{Further arguments.}
 }
 
 \details{
@@ -69,7 +72,9 @@ gpaSet(x, params, register="backgating", bgChannels=NULL,
 \author{C. J. Wong \email{cwon2@fhcrc.org}}
 
 \examples{
+## Example 1:
 data(ITN)
+ITN <- ITN[1:8, ]
 wf <- workFlow(ITN)
 tl <- transformList(colnames(ITN)[3:7], asinh, transformationId="asinh")
 add(wf, tl)
@@ -87,4 +92,23 @@ if(require(flowViz)) {
 
 ## view "GPA" attribute
 attr(s, "GPA")
+
+## Example 2: using work flow
+xy = c("FSC", "SSC")
+norm <- normalization(normFun=function(x, parameters, ...)
+        gpaSet(x, parameters, ...),
+        parameters = c("FSC", "SSC"), 
+	arguments=list(bgChannels=bgChannels, register="backgating"),
+	normalizationId="Procrustes")
+
+add(wf, norm2, parent="asinh")
+s <- Data(wf[["Procrustes"]])
+if(require(flowViz)) {
+   d1 <- densityplot(~., s, channels=c("FSC", "SSC"), 
+                     layout=c(2,1), main="After GPA using bg")
+   d2 <- xyplot(FSC ~ SSC, as(s, "flowFrame"), 
+                channels=c("FSC", "SSC"), main="All flowFrames")
+   plot(d1)
+   plot(d2)
+}
 }

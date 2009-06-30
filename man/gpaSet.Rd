@@ -12,9 +12,8 @@
 }
 
 \usage{
-gpaSet(x, params, register="backgating", bgChannels=NULL, 
-       ref.method="mean", rotation.only=TRUE, 
-       iter.max=10, thres=1e-3, fig=FALSE, ...)
+gpaSet(x, params, register="backgating", bgChannels=NULL, ref.method="mean", 
+       rotation.only=TRUE, iter.max=10, thres=1e-3, plot=FALSE, ...)
 }
 
 \arguments{

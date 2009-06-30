@@ -42,7 +42,7 @@ gpaSet(x, params, register="backgating", bgChannels=NULL, ref.method="mean",
   \item{thres}{A numeric indicating the threshold of the convergence test for
     GPA.}
 
-  \item{fig}{Logical. Indicating whether to plot the resulting
+  \item{plot}{Logical. Indicating whether to plot the resulting
     figures of feature identification and GPA methods. Mainly used for
     testing.}
 

@@ -32,7 +32,8 @@ backGating <- function(data, xy, channels=setdiff(colnames(data), c(xy, "time", 
                              peakNr=np)
         if(!all(lm==0))
         {
-            for(j in seq_len(np))
+            #for(j in seq_len(np))
+	    for(j in 1:ncol(lm))
             {
                 for(k in sampleNames(data))
                 {

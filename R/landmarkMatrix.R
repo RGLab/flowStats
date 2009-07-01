@@ -50,7 +50,7 @@ landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL, densities
                                  function(x) x[which.min(abs(x-med))]))
         resPeaks[is.na(resPeaks)] <- med
         return(if(!indices) matrix(resPeaks, ncol=1) else
-               matrix(0, ncol=1, nrow=length(resPeaks)))
+               matrix(1, ncol=1, nrow=length(resPeaks)))
     }  
     ## cluster peaks in k cluster where k is max number of peaks for a sample
     mat <- matrix(nrow=length(peaks), ncol=fnrPeaks)

@@ -78,7 +78,7 @@ curvRegs <- function(dat, p)
     pols <- attr(c2Res@subSet, "polygons")
     polM <- lapply(pols, function(x) sapply(x[2:3], c))
     if(length(polM)>1)
-        polM <- pruneRegions(polM, max(apply(r, 2, diff))/4,
+        polM <- pruneRegions(polM, max(apply(r, 2, diff))/5,
                              prod(apply(r, 2, diff))/250)
     res <- NULL
     for(i in seq_along(polM))
@@ -285,7 +285,11 @@ combinePols <- function(p1, p2)
 ## areas smaller than 'st'.
 pruneRegions <- function(pols, dt, st)
 {
-    pols <- pols[sapply(pols, area.in.polygon) > st]
+    ssel <- sapply(pols, area.in.polygon) > st
+    if(any(ssel))
+       pols <- pols[ssel]
+    else
+       return(pols)
     d <- hdMat(pols)
     sel <- which(hdMat(pols) < dt, arr=TRUE)
     sel <- sel[apply(sel, 1, diff)!=0, ]

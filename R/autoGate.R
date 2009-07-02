@@ -53,13 +53,11 @@ lymphGate <- function(x, channels, preselection=NULL, scale=2.5,
             ## (essentially the one with the highest mean) after removing margin
             ## events.
             xc <- as(x, "flowFrame")
-            r <- range(xc, preselection)
-            rd <- diff(unlist(r))/1000
-            xc <- Subset(xc, rectangleGate(r+c(1,-1)*rd))
+            xc <- Subset(xc, boundaryFilter(preselection))
             xcf <- filter(xc, curv1Filter(preselection, bwFac=1.3))
             xcS <- split(xc, xcf)
             xcS <- xcS[sapply(xcS, nrow)>nrow(xc)/500]
-            xcMax <- tail(xcS, n=1)[[1]]
+            xcMax <- Subset(tail(xcS, n=1)[[1]], boundaryFilter(channels))
             ## estimate location and variance of this subset in the two other
             ## channels and construct a rectangular preselection from that
             m <- apply(exprs(xcMax[,channels]), 2, median)

@@ -93,11 +93,18 @@ attr(s, "GPA")
 
 \dontrun{
 ## Example 2: using work flow
-xy = c("FSC", "SSC")
+data(ITN)
+ITN <- ITN[1:8, ]
+wf <- workFlow(ITN)
+tl <- transformList(colnames(ITN)[3:7], asinh, transformationId="asinh")
+add(wf, tl)
+x <- Data(wf[["asinh"]])
+
 norm <- normalization(normFun=function(x, parameters, ...)
         gpaSet(x, parameters, ...),
         parameters = c("FSC", "SSC"), 
-	arguments=list(bgChannels=bgChannels, register="backgating"),
+	arguments=list(bgChannels=c("CD8", "CD4", "CD3"),
+                       register="backgating"),
 	normalizationId="Procrustes")
 
 add(wf, norm2, parent="asinh")

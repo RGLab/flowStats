@@ -17,10 +17,12 @@ useBackGating <- function(bg, xy, plot=FALSE)
 	## must have more than two points
 	## --> not very good algorithm, need improvement. talk to Florian
     	eachPop <- split(center, factor(center$population))
+
         keepF <- sapply(eachPop, function(a, b) {
 	                   (nrow(a) > 0.10 * b) & (nrow(a) > 2) }, 
                         nrow(center))
         eachPop <- eachPop[keepF]
+	#refFeatures <- sapply(eachPop, function(x) apply(x[, c("x", "y")], 2, median))
 
     	refFeatures <- sapply(eachPop, function(x) {
                     k=kmeans(x[, c("x", "y")], 2)

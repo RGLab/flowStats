@@ -6,6 +6,7 @@ useBackGating <- function(bg, xy, plot=FALSE)
     ## 'bg' is the return value of function flowStats:::backGating
 
     regFeatures <- list()
+    refFeatures <- list()
     ch = split(bg, factor(bg$channel))
  
     for (i in 1:length(ch))

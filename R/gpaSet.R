@@ -37,12 +37,12 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     if (register=="backgating") {
         cat("Backgating ... \n")
         bg <- backGating(x, xy=params, channels=bgChannels)
-        regFeatures <- useBackGating(bg, xy = params, plot=plot) 
+        regFeatures <- useBackGating(bg, xy = params, plot=plot)$register
     }
     else { ## use Curve1Filter and landmarkMatrix to find features for each
            ## channels for each flowFrames 
     }
-    
+
     cat("Procrustes analysis ... \n")
     ## 2. translating the centroid of the registered features of each flowFrames
     ## to the origin

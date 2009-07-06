@@ -8,10 +8,10 @@
 }
 
 \description{
-  Based upon generalized Procrustes analysis, this function determines a
+  Based on generalized Procrustes analysis, this function determines a
   linear transformation (rotation/reflection and scalling) of the points in
   matrix \code{x} to align them to their reference points
-  in \code{xbar}. The alignemnt is carried out by
+  in matrix \code{xbar}. The alignemnt is carried out by
   minimizing the distance between the points in \code{x} and \code{xbar}.
 }
 

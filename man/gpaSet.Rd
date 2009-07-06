@@ -6,8 +6,7 @@
 \description{
 
   This function performs a multi-dimensional normalization of flow cytometry
-  data (\code{flowSets}) using a generalized Procrustes analysis (GPA) method,
-  coupled with feature registration based on backgating. 
+  data (\code{flowSets}) using a generalized Procrustes analysis (GPA) method.
 
 }
 
@@ -92,6 +91,7 @@ if(require(flowViz)) {
 ## view "GPA" attribute
 attr(s, "GPA")
 
+\dontrun{
 ## Example 2: using work flow
 xy = c("FSC", "SSC")
 norm <- normalization(normFun=function(x, parameters, ...)
@@ -110,4 +110,6 @@ if(require(flowViz)) {
    plot(d1)
    plot(d2)
 }
+} ## end of dontrun
+
 }

@@ -10,10 +10,12 @@
 ## stored in "paste(fname, i)" file.  -base.lms: list of base
 ## landmarks for each channel. i.e. base.lms[[p]] is a vector of base
 ## landmars for channel p.  If not specified the base.lms is computed.
+## The peaks with density value less than peak.density.thr*maximum.peak.density are discarded.
+## and of the peaks with distance less than peak.distance.thr*range.data only one is considered.
 
 ## Output: -returns the normalized flowset.
 
-gaussNorm <- function(flowset, channel.names, max.lms=2, base.lms=NULL, debug=FALSE, fname=''){
+gaussNorm <- function(flowset, channel.names, max.lms=2, base.lms=NULL,  peak.density.thr=0.05, peak.distance.thr=0.05, debug=FALSE, fname=''){
   remb.flowset=remBoundary(flowset, channel.names)
   expr.list=c(1:length(flowset))  
   if(length(max.lms)==1){
@@ -24,13 +26,14 @@ gaussNorm <- function(flowset, channel.names, max.lms=2, base.lms=NULL, debug=FA
     return(NULL)
   }
   names(max.lms)=channel.names
-  lms=extract.landmarks(remb.flowset$res, expr.list, channel.names, max.lms)
+  lms=extract.landmarks(remb.flowset$res, expr.list, channel.names, max.lms,  peak.density.thr, peak.distance.thr)
   if(is.null(base.lms))
     base.lms=extract.base.landmarks(lms$filter, channel.names, max.lms)
   
   ## finds the best matching between landmarks and base landmarks.
   ## the score of a matching is defined as a function of the distance between landmark and the base landmark and the score of the landmark itself.
   matched.lms=match.all.lms(lms, base.lms, channel.names, max.lms)
+  confidence=compute.confidence(matched.lms, base.lms)
   cat('\nAdjusting the distance between landmarks\n')  
   newRange=matrix(ncol=length(channel.names), nrow=2)
   colnames(newRange)=channel.names
@@ -62,7 +65,7 @@ gaussNorm <- function(flowset, channel.names, max.lms=2, base.lms=NULL, debug=FA
       
     }
   }
-  remb.flowset$res
+  list(flowset=remb.flowset$res, confidence=confidence)
 }
 
 ## shifts the data in such a way that the peak at matched.lms[i] is moved to matched.lms[i+1] for each i.
@@ -138,7 +141,7 @@ normalize.one.expr <- function(data, base.lms, lms.list, lms.original, matched.l
 ##       lms.list$score:    the score of lms.list$original landmarks
 ##       lms.list$filtered: max.lms top score landmarks.
 
-extract.landmarks <- function(flowset, expr.list, channel.names, max.lms){
+extract.landmarks <- function(flowset, expr.list, channel.names, max.lms,  peak.density.thr, peak.distance.thr){
   ## defining output variables.
   lms.list=list()    
   lms.list$original=matrix(vector("list"), length(channel.names), length(expr.list))
@@ -159,7 +162,7 @@ extract.landmarks <- function(flowset, expr.list, channel.names, max.lms){
         lms=landmarker(data, p, max.lms[c])
         lms.list$original[p, j]=list(lms)
         ## returns the max.lms[c] top score landmarks.
-        filtered=filter.lms(lms, data[,p], max.lms[c])
+        filtered=filter.lms(lms, data[,p], max.lms[c],  peak.density.thr, peak.distance.thr)
         lms.list$filter[p, j]=list(filtered$lms)
         lms.list$score[p, j]=list(filtered$score)
         j=j+1
@@ -428,7 +431,57 @@ gau <- function(d, s, m){
   return(2.7182^(-((d-m)^2)/(2*s*s)))
 }
 
-
+## computes the confidence value based on the matched landmarks.
+compute.confidence <- function(matched.lms, base.lms){
+  confidence=rep(1, times=length(matched.lms[1,]))
+  # for each channel c.
+  for(c in 1:length(base.lms)){
+    for(l in 1:length(base.lms[[c]])){
+      lms.list=0
+      for ( i in 1:length(matched.lms[1,])){
+        ind=which(matched.lms[c,i][[1]]==base.lms[[c]][l])
+        if(length(ind)==0){
+          lms.list[i]=NA
+        }
+        else{
+          if(ind[1] %% 2 != 0)
+            ind[1]=ind[1]+1
+          lms.list[i]=matched.lms[c,i][[1]][ind[1]-1]
+        }
+      }
+      d=density(na.omit(lms.list))
+      den.lms=0
+      for(i in 1:length(lms.list)){
+        if(is.na(lms.list[i]))
+          den.lms[i]=NA
+        else
+          den.lms[i]=d$y[which(abs(d$x-lms.list[i])==min(abs(d$x-lms.list[i])))]
+      }
+      m.den.lms=mean(den.lms, na.rm=T)
+      ind1=which(den.lms>m.den.lms/4 & den.lms<m.den.lms/3)
+      ind2=which(den.lms<m.den.lms/4)
+      if(length(ind1)!=0)
+        confidence[ind1]=confidence[ind1]*0.8
+      if(length(ind2)!=0)
+        confidence[ind2]=confidence[ind2]*0.7
+      if(length(which(is.na(lms.list)))!=0)
+        confidence[which(is.na(lms.list))]=confidence[which(is.na(lms.list))]*0.6
+      
+      #lms.frame=data.frame(lms=lms.list, ind=c(1:length(lms.list)))
+      #lms.frame=lms.frame[do.call(order, c(lms.frame["lms"], decreasing=F)), ]
+      #diff=unlist(lms.frame['lms'])[2:length(lms.list)]-unlist(lms.frame['lms'])[1:(length(lms.list)-1)]
+      #bw=2*mean(na.omit(diff))
+      #den=0
+      #for(i in 1:length(lms.list)){
+      #  if(is.na(lms.list[i]))
+      #     den[i]=NA
+      #  else
+      #    den[i]=length(which(lms.list>lms.list[i]-bw & lms.list<lms.list[i]+bw))/length(lms.list)
+      #}
+    }
+  }
+  confidence
+}
 
 ############## Landmark finding functions############
 
@@ -451,14 +504,14 @@ landmarker <- function(data, channel.name, max.lms, span=3){
 
 ## returns the max.lms top score landmarks.
 ## the score of a landmarks is a funciton of its sharpness and density value
-filter.lms <- function(lms, data, max.lms){
+filter.lms <- function(lms, data, max.lms, peak.density.thr, peak.distance.thr){
   filtered=list()
   if(length(lms) == 0){
     filtered$lms=vector()
     filtered$score=vector()    
     return(filtered)
   }
-  filtered$score=score.lms(lms, data, max.lms)
+  filtered$score=score.lms(lms, data, max.lms, peak.density.thr, peak.distance.thr)
   lms.score=data.frame(score=filtered$score, ind=c(1:length(lms)))
   lms.score=lms.score[do.call(order, c(lms.score["score"], decreasing=T)), ]
   ind=which(lms.score$score>0)
@@ -477,16 +530,19 @@ filter.lms <- function(lms, data, max.lms){
 
 
 ## assigns a score to each landmark. the score of a landmarks is a funciton of its sharpness and density value.
-score.lms <- function(lms, data, max.lms){    
+## the peaks with density value less than peak.density.thr*maximum.peak.density are discarded.
+## of the peaks with distance less than peak.distance.thr*range.data only one is considered.
+
+score.lms <- function(lms, data, max.lms, peak.density.thr, peak.distance.thr){    
   bw=64
   score=vector()
-  height.cutoff=0.05
+  height.cutoff=peak.density.thr
   if(length(lms) == 0)
     return(score)
   A=density(na.omit(data))
   bw=min(64, length(A$x)/10)
   lms.max.height=max(returny(A, lms), na.rm=T)
-  MIN.LMS.DIST=(max(A$x, na.rm=T)-min(A$x, na.rm=T))/20  
+  MIN.LMS.DIST=(max(A$x, na.rm=T)-min(A$x, na.rm=T))*peak.distance.thr
   last.lms=-1
   last.lms.i=-1
   last.lms.score=0
@@ -534,6 +590,7 @@ score.lms <- function(lms, data, max.lms){
   return(score)  
 }
 
+#setting the boundary values to NA. Also returns the indices of the NA values for recovery.
 remBoundary <- function(flowset, channel.names){
   ranges <- fsApply(flowset, range)
   index=list()
@@ -557,6 +614,8 @@ remBoundary <- function(flowset, channel.names){
   phenoData(res)=phenoData(flowset)
   return(list(index=index, res=res))   
 }
+
+#Restore the boundary values that were set to NA.
 restoreBoundary <- function(org.flowset, remb.flowset, channel.names){
   for(i in 1:length(org.flowset)){
     for(p in channel.names){
@@ -564,3 +623,4 @@ restoreBoundary <- function(org.flowset, remb.flowset, channel.names){
     }
   }
 }
+

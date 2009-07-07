@@ -12,7 +12,8 @@
 }
 
 \usage{
-  gaussNorm (flowset, channel.names, max.lms=2, base.lms=NULL, debug=FALSE, fname='')
+  gaussNorm (flowset, channel.names, max.lms=2, base.lms=NULL,
+  peak.density.thr=0.05, peak.distance.thr=0.05, debug=FALSE, fname='')
 
 }
 
@@ -33,6 +34,13 @@
   base landmarks for normalizing that channel. If not specified the base
   landmarks are computed from the set of extracted landmarks.}
 
+  \item{peak.density.thr}{The peaks with density value less than
+    "peak.density.thr times maximum peak density" are discarded.}
+  \item{peak.distance.thr}{The sequences of peaks that are located closer than
+    "peak.distance.thr times range of data" are identified. Then for
+    each sequence only one peak (the one with the highest intensity
+    value) is used as a landmark. In other words no two landmarks are
+    located closer than "peak.distance.thr times range of data" to each other.}
   \item{debug}{ Logical. Forces the function to draw before and
     after normalization plots for each sample. The plot of the i-th sample is stored in \code{paste(fname, i)} file.}
   
@@ -41,6 +49,7 @@
   \code{TRUE}. If default value is used the plots are drawn on separate X11 windows
   for each sample. In this case, the function waits for a user input to draw the plots
   for the next sample.}
+
 
 }
 

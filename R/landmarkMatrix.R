@@ -15,6 +15,7 @@ landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL, densities
     from <- min(sapply(ranges, function(z) z[1,parm]-diff(z[,parm])*0.15), na.rm=TRUE)
     to <- max(sapply(ranges, function(z) z[2,parm]+diff(z[,parm])*0.15), na.rm=TRUE)
     peaks <- list()
+    regions <- list()
     eps <- .Machine$double.eps
     for(i in sampleNames(data)){
         if(is.null(densities))
@@ -29,8 +30,10 @@ landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL, densities
             dens <- densities[,i]
             x <- NULL
         }
-        peaks[[i]] <- curvPeaks(fres[[parm]][[i]], x, from=from, to=to, n=n,
-                                borderQuant=border, densities=dens)[["peaks"]][,"x"]
+        tmp <- curvPeaks(fres[[parm]][[i]], x, from=from, to=to, n=n,
+                                borderQuant=border, densities=dens)
+        peaks[[i]] <- tmp[["peaks"]][,"x"]
+        regions[[i]] <- tmp[["regions"]]
     }
     ## are multiple peaks reasonable?
     nrPeaks <- table(listLen(peaks))
@@ -41,21 +44,38 @@ landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL, densities
         fnrPeaks <- peakNr
         apply(matrix(unlist(peaks[(listLen(peaks)==peakNr)]), ncol=peakNr, byrow=T) ,2, mean)
     }else fnrPeaks
+     resRegions <- list()
     if(fnrPeaks==1){
         single <- which(listLen(peaks)==1)
         med <- median(unlist(peaks[single]), na.rm=TRUE)
+        rmed <- apply(t(sapply(regions[single], c)), 2, median, na.rm=TRUE)
         resPeaks <- numeric(length(peaks))
         resPeaks[single] <- unlist(peaks[single])
+        resRegions[single] <- regions[single]
         resPeaks[-single] <- unlist(sapply(peaks[-single],
-                                 function(x) x[which.min(abs(x-med))]))
+                                           function(x) x[which.min(abs(x-med))]))
+        resRegions[-single] <- mapply(function(x,y) y[which.min(abs(x-med)),,drop=FALSE],
+                                      x=peaks[-single],
+                                      y=regions[-single], SIMPLIFY=FALSE)
         resPeaks[is.na(resPeaks)] <- med
-        return(if(!indices) matrix(resPeaks, ncol=1) else 
-               matrix(1, ncol=1, nrow=length(resPeaks),
-	              dimnames=list(sampleNames(data), NULL)))
+        resRegions[is.na(resPeaks)] <- matrix(rmed, ncol=2)
+        names(resRegions) <- sampleNames(data)
+        if(!indices){
+            m <- matrix(resPeaks, ncol=1)
+            attr(m, "regions") <- resRegions
+            attr(m, "cdists") <- matrix(0, nrow=length(data), ncol=1,
+                                       dimnames=list(sampleNames(data),NULL))
+            return(m)
+        }
+        else
+        {
+            return(matrix(1, ncol=1, nrow=length(resPeaks),
+                          dimnames=list(sampleNames(data), NULL)))
+        }
     }  
     ## cluster peaks in k cluster where k is max number of peaks for a sample
-    mat <- matrix(nrow=length(peaks), ncol=fnrPeaks)
-    rownames(mat) <- sampleNames(data)
+    mat <- matD <- matrix(nrow=length(peaks), ncol=fnrPeaks)
+    rownames(mat) <-  rownames(matD) <- sampleNames(data)
     pvect <- unlist(peaks)
     names(pvect) <- rep(names(peaks), listLen(peaks))
     sel <- !is.na(pvect)
@@ -71,10 +91,17 @@ landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL, densities
                                                                fnrPeaks),])
     ## put peaks in matrix according to clustering where row=sample and
     ## col=cluster
-    for(i in names(cList)){
+    for(i in rownames(mat)){
         cl <- cList[[i]]
+        tmp <- matrix(NA, ncol=2, nrow=fnrPeaks)
+        tmp[cl$cluster,] <- regions[[i]][cl$index,,drop=FALSE]
+        resRegions[[i]] <- matrix(tmp, ncol=2)
         mat[i,cl$cluster] <- if(!indices) cl$landmark else cl$index
+        matD[i,cl$cluster] <- cl$dist/diff(ranges[[1]][,parm])
     }
+    resRegions <- resRegions[rownames(mat)]
+    attr(mat, "regions") <- resRegions
+    attr(mat, "cdists") <- matD
     return(mat)
 }
 

@@ -13,7 +13,7 @@
 
 \usage{
 warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL,
-peakNr=NULL, clipRange=0.01, nbreaks=11, fres, ...)
+peakNr=NULL, clipRange=0.01, nbreaks=11, fres, warpFus=FALSE, ...)
 }
 
 
@@ -58,6 +58,9 @@ peakNr=NULL, clipRange=0.01, nbreaks=11, fres, ...)
     be used to speed up the process since the \code{curv1Filter} step
     can take quite some time.}
   
+  \item{warpFuns}{Logical indcating whether to return the normalized
+    \code{flowSet} or a list of warping functions.}
+  
   \item{\dots}{ Further arguments that are passed on to
     \code{landmarkreg}. }
   
@@ -83,7 +86,10 @@ peakNr=NULL, clipRange=0.01, nbreaks=11, fres, ...)
 
 \value{
 
-  The normalized \code{flowSet}.
+  The normalized \code{flowSet} if \code{warpFuns} is \code{FALSE},
+  otherwise a list of warping functions. Additional inforamtion is
+  attached as the \code{warping} attribute to the \code{flowSet} in form
+  of a list.
   
 }
 

@@ -13,7 +13,7 @@
 
 \usage{
 warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL,
-peakNr=NULL, clipRange=0.01, nbreaks=11, fres, warpFus=FALSE, ...)
+peakNr=NULL, clipRange=0.01, nbreaks=11, fres, warpFuns=FALSE, ...)
 }
 
 

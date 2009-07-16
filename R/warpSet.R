@@ -91,7 +91,8 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
         ## fill NAs with column medians
         regions <- attr(landmarks, "regions")
         dists <- attr(landmarks, "cdists") 
-        attr(landmarks, c("regions", "cdists")) <- NULL
+        attr(landmarks, "regions") <- NULL
+        attr(landmarks, "cdists") <- NULL
         hasPeak <- !is.na(landmarks)
         for(n in 1:ncol(landmarks))
         {
@@ -185,7 +186,9 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 
 
 ## Some QA pots for a normalized data set
-normQA <- function(data, morph=c("^fsc", "^ssc"), channels, ask=TRUE)
+normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
+                   odat, ask=names(dev.cur())!="pdf",
+                   peaksOnly=FALSE)
 {
     if(! "warping" %in% names(attributes(data)))
         stop("This flowSet has not been normalized.")
@@ -202,148 +205,307 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels, ask=TRUE)
     if(!all(wchans %in% names(ninfo)))
         stop("No normalization information available for one or more channels.")
 
-    ## Plot the amount of warping for each landmark
-    layout(matrix(1:length(wchans), ncol=1))
-    for(p in wchans)
+    ## Plot the amount of warping for each landmark.
+    if(all(c("prior", "warped", "hasPeak") %in% names(ninfo[[1]])))
     {
-        nc <- ncol(ninfo[[p]]$warped)
-        nr <- nrow(ninfo[[p]]$warped)
-        matplot(ninfo[[p]]$prior, type="n",
-                ylab=p, xlab="sample", ylim=range(data[[1]])[,p],
-                main=paste("Landmark Warping", p))
-        pch <- ifelse(ninfo[[p]]$hasPeak, 20, 4)
-        for(i in seq_len(nc))
-            points(ninfo[[p]]$prior[,i], pch=pch[,i], col=i+1)
-        m <- apply(ninfo[[p]]$warped, 2, mean, na.rm=TRUE)
-        abline(h=m, col=seq_len(nc)+1, lty="dotted")
-        diffs <- abs(ninfo[[p]]$prior - ninfo[[p]]$warped)
-        for(i in seq_len(nc))
-          segments(x0=seq_len(nr), x1=seq_len(nr), y0=ninfo[[p]]$prior[,i],
-                   y1=m[i], col=i+1, lty="dotted")
+        ## We first create a dataFrame ameanable for trellis graphics.
+        prior <- data.frame()
+        m <- lapply(ninfo, function(x) apply(x$warped, 2, mean, na.rm=TRUE))
+        for(p in wchans)
+        {
+            pr <- ninfo[[p]]$prior
+            hp <- ninfo[[p]]$hasPeak
+            nc <- ncol(pr)
+            nr <- nrow(pr)
+            peak <- factor(rep(seq_len(nc), each=nr))
+            present <- sapply(split(hp, peak), function(x)
+                              sprintf("(%d/%d)", sum(x), nr))
+            peakLong <- factor(paste(peak, present[peak]))
+            prior <- rbind(prior,
+                           data.frame(sample=factor(sampleNames(data),
+                                                    levels=sampleNames(data)),
+                                      value=as.vector(pr),
+                                      peak=peak, peakLong=peakLong,
+                                      channel=factor(p),
+                                      hasPeak=as.vector(hp),
+                                      dists=if(length(ninfo[[p]]$dists))
+                                      1-as.vector(ninfo[[p]]$dists) else NA))
+            sel <- is.na(prior$value)
+            prior[sel, "value"] <- m[[p]][prior[sel, "peak"]]
+        }
+        ## A regular stripplot with dotted lines extending from the
+        ## adjusted landmark positions for each peak.
+        par(ask=ask)
+        on.exit(par(ask=FALSE))
+        myPanelStrip <- function(x,y, groupMeans, datSet, ...)
+        {
+            chan <- levels(datSet$channel)[panel.number()]
+            thisP <- datSet[datSet$channel==chan,] 
+            nc <- length(groupMeans[[chan]])
+            nr <- nlevels(y)
+            col <- rep(trellis.par.get("superpose.symbol")$col[seq_len(nc)], nc)
+            pch <- if(nc==1) 20 else rep(c(4, 20), each=nc)
+            panel.stripplot(x,y, pch=pch, col=col, ...)
+            panel.abline(v=groupMeans[[chan]], lty="dotted", col=col)
+            for(i in seq_len(nc)){
+                peak <- thisP[thisP$peak==i,"value"]
+                panel.segments(y0=seq_len(nr), y1=seq_len(nr), x0=peak,
+                               x1=groupMeans[[chan]][i], col=col[i], lty="dotted")
+            }
+            
+        }
+        col <- trellis.par.get("superpose.symbol")$col[seq_len(nlevels(prior$peak))]
+        print(stripplot(sample~value|channel, prior,
+                  group=interaction(prior$peak, prior$hasPeak),
+                  panel=myPanelStrip, groupMeans=m, datSet=prior, xlab=NULL,
+                  key=list(text=list(paste("peak", levels(prior$peak))),
+                           points=list(col=col, pch=20),
+                           text=list("missing peak"),
+                           points=list(pch=4, col=1), rep=FALSE),
+                  main="Amount of Landmark Adjustment"))
     }
-    par(ask=ask)
-    on.exit(par(ask=FALSE))
 
     ## Plot the confidence of the landmark registration step
-    layout(matrix(1:length(wchans), ncol=1))
-    for(p in wchans)
+    if("dists" %in% names(ninfo[[1]]))
     {
-        nc <- ncol(ninfo[[p]]$warped)
-        nr <- nrow(ninfo[[p]]$warped)
-        dists <- 1-ninfo[[p]]$dists
-        #dists[is.na(dists)] <- 1
-        pch <- ifelse(ninfo[[p]]$hasPeak, 1, 4)
-        plot(rep(seq_len(nc), each=nr), as.vector(dists),
-             ylim=c(min(0.5, min(dists, na.rm=TRUE)), 1.05),
-             xlim=c(0, nc+1), xlab="peaks", ylab="confidence", xaxt="n",
-             pch=pch,
-             main=paste("Landmark Registration", p))
-        axis(1, at=seq_len(nc), labels=TRUE)
-        box()
-        present <- apply(ninfo[[p]]$dists, 2, function(x) sum(!is.na(x)))
-        text(seq_len(nc), rep(1.05, nc), paste(present, nr, sep="/"),
-             cex=0.8)
-        
+        present <- lapply(split(prior, prior$channel), function(x)
+                           sapply(split(x$hasPeak, x$peak), function(x)
+                                  sprintf("(%d/%d)", sum(x), length(data))))
+        print(stripplot(dists~peak |channel, prior, ylim=c(0,1.1),
+                  ylab="Clustering Confidence", xlab="Peak",
+                  group=peak, myLabel=present,
+                  panel=function(myLabel, datSet, ...){
+                      panel.stripplot(...)
+                       chan <- levels(datSet$channel)[panel.number()]
+                      panel.text(seq_along(myLabel[[chan]]), 1.05, myLabel[[chan]],
+                                 cex=0.7)
+                      panel.abline(h=1, col="gray")
+                  }, datSet=prior,
+                  main="Landmark Registration"))
     }
-
-    ## Plot the warping functions
-    layout(matrix(1:length(wchans), ncol=1))
-    for(p in wchans)
+            
+    ## Plot the warping functions. 
+    if("warpFun" %in% names(ninfo[[1]]))
     {
-       xvals <-  seq(range(data[[1]], p)[1,], range(data[[1]], p)[2,], len=50)
-       yvals <- sapply(ninfo[[p]]$warpFun, function(fun) fun(xvals))
-       matplot(yvals, xvals, type="l", xlab="warped", ylab="original",
-               main=paste("Warping Functions", p))
-    }
-
-    ## Plot the projection in the FCS vs. SSC space
-    alldat <- Subset(as(data, "flowFrame")[,c(fsc, ssc)],
-                     boundaryFilter(c(fsc, ssc)))
-    allM <- allV <- list()
-    layout(matrix(1:length(wchans), ncol=1))
-    for(p in wchans)
-    {
-        nc <- ncol(ninfo[[p]]$warped)
-        nr <- nrow(ninfo[[p]]$warped)
-        ## First create rectangleGates from the peak regions
-        regions <- ninfo[[p]]$regions
-        wfuns <- ninfo[[p]]$warpFun
-        datc <-  Subset(data, boundaryFilter(c(fsc, ssc)))
-        nfc <- filter(datc, norm2Filter(c(fsc, ssc)))
-        vcc <- sapply(nfc, function(x)
-                         prod(sqrt(eigen(filterDetails(x)[[1]]$cov)$values))*pi)
-        contour(alldat, xlab=fsc, ylab=ssc,
-                main=paste("Backgating Shape", p), col="transparent")
-        tmp <- sapply(regions, rowMeans)
-        expval <- signif(if(!is.null(dim(tmp))) rowMeans(tmp) else mean(tmp),3)
-        legend("topleft", pch=20, col=seq_len(nc)+1,
-               legend=sprintf("Peak %d (mean %s=%g)", seq_len(nc), p, expval),
-               cex=0.8, bty="n")
-        for(i in seq_len(nc))
+        ## We first create a dataFrame for the trellis plotting
+        wfRes <- data.frame()
+        for(p in wchans)
         {
-            g <- list()
-            for(j in names(regions))
-            {
-                g[[j]] <- rectangleGate(matrix(wfuns[[j]](regions[[j]][i,]), ncol=1,
-                                               dimnames=list(NULL, p)))
-            }
-            dat <- Subset(Subset(data, filterList(g)), boundaryFilter(c(fsc, ssc)))
-      
-            crgb <- col2rgb(i+1)
-            col <- rgb(crgb[1,], crgb[2,], crgb[3,], 255*0.12, maxColorValue=255)
-            colc <- rgb(crgb[1,], crgb[2,], crgb[3,], 255*0.2, maxColorValue=255)
-            nf <- filter(dat, norm2Filter(c(fsc, ssc)))
-            for(f in nf)
-                gpolygon(f, col=col, border=colc)
-            m <- fsApply(dat, function(x) apply(x[,c(fsc, ssc)], 2, mean, na.rm=TRUE),
-                         use.exprs=TRUE)
-            v <- fsApply(dat, function(x) apply(x[,c(fsc, ssc)], 2, sd, na.rm=TRUE),
-                         use.exprs=TRUE)
-            vc <- sapply(nf, function(x)
-                         prod(sqrt(eigen(filterDetails(x)[[1]]$cov)$values))*pi)
-            #segments(x0=m[,1]-v[,1], x1=m[,1]+v[,1], y0=m[,2], y1=m[,2], col=i,
-            #         lwd=1)
-            #segments(x0=m[,1], x1=m[,1], y0=m[,2]-v[,2], y1=m[,2]+v[,2], col=i,
-            #         lwd=1)
-            #points(m, col=i)
-            relV <- vc/vcc
-            allV[[p]][[i]] <- relV
-            allM[[p]][[i]] <- m
+            np <- 30
+            xvals <-  seq(range(data[[1]], p)[1,], range(data[[1]], p)[2,], len=np)
+            yvals <- sapply(ninfo[[p]]$warpFun, function(fun) fun(xvals))
+            wfRes <- rbind(wfRes,
+                           data.frame(sample=rep(factor(sampleNames(data),
+                                                        levels=sampleNames(data)),
+                                                 each=np),
+                                      original=xvals, normalized=as.vector(yvals),
+                                      channel=p))
         }
+        print(xyplot(normalized~original|channel, wfRes, type="l", alpha=0.4,
+               main="Warping Functions"))
     }
 
-    for(p in wchans)
+   
+    ## Plot the projection in the FCS vs. SSC space.
+    if("regions" %in% names(ninfo[[1]]))
     {
-        nc <- ncol(ninfo[[p]]$warped)
-        nr <- nrow(ninfo[[p]]$warped)
-        contour(alldat, col="lightgray", xlab=fsc, ylab=ssc,
-                main=paste("Backgating Centroids", p))
-        regions <- ninfo[[p]]$regions
-        tmp <- sapply(regions, rowMeans)
-        expval <- signif(if(!is.null(dim(tmp))) rowMeans(tmp) else mean(tmp),3)
-        legend("topleft", pch=20, col=seq_len(nc)+1,
-               legend=sprintf("Peak %d (mean %s=%g)", seq_len(nc), p, expval),
-               cex=0.8, bty="n")
-        for(i in seq_len(nc))
-            points(allM[[p]][[i]], col=i+1)
-    }
+        ## We first create rectangleGates from the peak regions and
+        ## compute norm2Filters in the backgating dimensions
+        cat("Computing the backgating information. Please wait...")
+        backGates <- cents <- vector(mode="list", length=length(wchans))
+        names(backGates) <- names(cents) <-  wchans
+        stand <- apply(range(data[[1]])[,c(fsc, ssc)], 2, diff)
+        vars <- data.frame()
+        for(p in wchans)
+        {
+            regions <- ninfo[[p]]$regions
+            if(is.null(names(regions)))
+                names(regions) <- sampleNames(data)
+            wfuns <- ninfo[[p]]$warpFun
+            if(is.null(wfuns))
+            {
+                wfuns <- list()
+                for(n in names(regions))
+                    wfuns[[n]] <- function(x) x
+            }
+            else
+            {
+                if(missing(odat))
+                   odat <- flowCore:::copyFlowSet(data)
+                else
+                    for(n in names(regions))
+                        wfuns[[n]] <- function(x) x
+            }
+            np <- ncol(ninfo[[p]]$warped)
+            bg <- cs <- vector(mode="list", length=np)
+            for(i in seq_len(np))
+            {
+                g <- list()
+                for(j in names(regions))
+                {
+                    g[[j]] <- if(ninfo[[p]]$hasPeak[which(sampleNames(data)==j),i])
+                        rectangleGate(matrix(wfuns[[j]](regions[[j]][i,]), ncol=1,
+                                             dimnames=list(NULL, p)))
+                    else rectangleGate(matrix(c(-Inf, Inf),  ncol=1,
+                                             dimnames=list(NULL, p)))
+                }
+                subDat <- Subset(Subset(odat, filterList(g)), boundaryFilter(c(fsc, ssc)))
+                hp <- ninfo[[p]]$hasPeak[,i]
+                bg[[i]] <- filter(subDat, norm2Filter(c(fsc, ssc)))
+                cs[[i]] <-  fsApply(subDat, function(x)
+                                    apply(x[,c(fsc, ssc)], 2, mean, na.rm=TRUE),
+                                    use.exprs=TRUE)
+                if(peaksOnly)
+                {
+                    bg[[i]][!hp] <- NA
+                    cs[[i]][!hp] <- NA
+                }
+                vars <- rbind(vars,
+                              data.frame(value=sapply(bg[[i]], function(x)
+                               if(is(x, "filterResult"))
+                                 prod(sqrt(eigen(filterDetails(x)[[1]]$cov)$values)/stand)*pi
+                               else NA),
+                                          channel=p, peak=factor(paste("Peak", i)),
+                                          sample=factor(sampleNames(data),
+                                                        levels=sampleNames(data))))
+            }
+            backGates[[p]] <- bg
+            cents[[p]] <- cs
+        }
+        dummy <- data.frame(channel=factor(rep(names(backGates),
+                                        times=length(data)*listLen(backGates))),
+                            peak=factor(unlist(sapply(listLen(backGates),
+                                                         function(x)
+                                                         rep(seq_len(x),
+                                                             each=length(data))))),
+                            sample=factor(sampleNames(data), levels=sampleNames(data)),
+                            x=0, y=0)
+        cat("\n")
+        myXYPanel <- function(datSet, backGates, ...)
+        {
+            wp <- which.packet()
+            p <- levels(datSet$channel)[wp[1]]
+            bg <- backGates[[p]]
+            if(length(wp)==2)
+                bg <- bg[wp[2]]
+            for(i in seq_along(bg))
+            {
+                crgb <- col2rgb(i+1)
+                col <- rgb(crgb[1,], crgb[2,], crgb[3,], 255*0.12, maxColorValue=255)
+                colc <- rgb(crgb[1,], crgb[2,], crgb[3,], 255*0.2, maxColorValue=255)
+                for(f in bg[[i]])
+                    if(is(f, "filterResult"))
+                        glpolygon(f, gpar=list(gate=list(fill=col, col=colc)))
+            }
+        }
+        flowViz:::plotType("gsmooth", c(fsc, ssc))
+        print(xyplot(x~y|channel+factor(paste("Peak", peak)), dummy, xlab=fsc, ylab=ssc,
+                     xlim=range(data[[1]])[,fsc],
+                     ylim=range(data[[1]])[, ssc],
+                     panel=myXYPanel, datSet=dummy, backGates=backGates,
+                     main="Backgating Shape"))
+                   
 
+        ##  tmp <- sapply(regions, rowMeans)
+        ##         expval <- signif(if(!is.null(dim(tmp))) rowMeans(tmp) else mean(tmp),3)
+        ##         legend("topleft", pch=20, col=seq_len(nc)+1,
+        ##                legend=sprintf("Peak %d (mean %s=%g)", seq_len(nc), p, expval),
+        ##                cex=0.8, bty="n")
+
+        ## Now only plot the centroids of the ellipses
+        alldat <- Subset(as(odat, "flowFrame")[,c(fsc, ssc)],
+                         boundaryFilter(c(fsc, ssc)) %subset%
+                         sampleFilter(10000))   
+        
+        myXYPanelCent <- function(datSet, centroids, alldat, labels, ...)
+        {
+            wp <- which.packet()
+            p <- levels(datSet$channel)[wp[1]]
+            ct <- centroids[[p]]
+            if(length(wp)==2)
+                ct <- ct[wp[2]]
+            exp <- exprs(alldat)[,1:2]
+            xr <- range(exp[,1], na.rm=TRUE)
+            yr <- range(exp[,2], na.rm=TRUE)
+            bw <- diff(apply(exp, 2, quantile, probs=c(0.05, 0.95),
+                             na.rm=TRUE)) / 25
+            range <- list(xr+c(-1,1)*bw[1]*2.5, yr+c(-1,1)*bw[2]*2.5)
+            z <- bkde2D(exp, bw, c(65,65), range.x=range)
+            ll <- contourLines(z$x1, z$x2, z$fhat, nlevels=10)
+            for(pg in ll)
+                panel.polygon(pg$x, pg$y, border="lightgray")
+            for(i in seq_along(ct))
+            {
+                #x <- ct[[i]][,1]
+                #y <- ct[[i]][,2]
+                #dists <- rowMeans(cbind(x-median(x, na.rm=TRUE),
+                #                        y-median(y, na.rm=TRUE)))
+                #outliers <- dists > (median(dists, na.rm=TRUE) + 2* mad(dists, na.rm=TRUE))
+                panel.points(ct[[i]], col=i+1)
+                #panel.points(ct[[i]], col=i+1, pch=ifelse(outliers, 4,1))
+                #panel.text(x[outliers], y[outliers], labels[outliers], adj=c(1,1),
+                #       cex=0.6)
+            }
+        }      
+        print(xyplot(x~y|channel, dummy, xlab=fsc, ylab=ssc,
+                     xlim=range(data[[1]])[,fsc],
+                     ylim=range(data[[1]])[, ssc],
+                     panel=myXYPanelCent, datSet=dummy, centroids=cents,
+                     main="Backgating Location", alldat=alldat, labels=sampleNames(data),
+                     key=list(text=list(paste("peak", levels(prior$peak))),
+                              points=list(col=seq_len(nlevels(prior$peak))+1, pch=20))))
+                              #text=list("outlier"),
+                              #points=list(pch=4, col=1), rep=FALSE)))   
+
+
+        cvSum <- data.frame()
+        for(i in seq_along(cents))
+            for(j in seq_along(cents[[i]]))
+            {
+                mc <- apply(cents[[i]][[j]], 2, median, na.rm=TRUE)
+                md <- t(cents[[i]][[j]]) - mc
+                mds <- colMeans(md/stand)
+                cvSum <- rbind(cvSum, data.frame(sample=factor(names(mds),
+                                                               levels=unique(names(mds))),
+                                                 channel=wchans[[i]],
+                                                 peak=factor(paste("Peak",j)),
+                                                 location=mds))
+            }
+        cvSum <- cbind(cvSum, variation=vars[, "value"])
+        myXYPanelSum <- function(x, y, labels, ...)
+        {
+            ## outliers <- pcout(cbind(x, y))$wfinal<0.05
+            ##require(parody)
+            ##outliers <- seq_along(x) %in% mv.calout.detect(cbind(x,y))$inds
+            dists <- rowMeans(cbind(x-median(x, na.rm=TRUE), y-median(y, na.rm=TRUE)))
+            outliers <- dists > (median(dists, na.rm=TRUE) + 2* mad(dists, na.rm=TRUE))
+            panel.xyplot(x,y,pch=ifelse(outliers, 4 ,1), ...)
+            panel.text(x[outliers], y[outliers], labels[outliers], adj=c(1,1),
+                       cex=0.6)
+        }
+        print(xyplot(location ~ variation|channel+peak, cvSum, panel=myXYPanelSum,
+                     labels=sampleNames(data), main="Backgating Summary",
+                     key=list(text=list("outlier"), xlab="Dispersion",
+                              ylab="Location",
+                              points=list(pch=4, col=1), rep=FALSE))) 
+
+    }
     ## Plot the relative ellipse volumes for the backgated channels
-    layout(matrix(1:length(wchans), ncol=1))
-    for(p in wchans)
-    {
-        nc <- ncol(ninfo[[p]]$warped)
-        nr <- nrow(ninfo[[p]]$warped)
-        plot(seq_len(nc), rep(0, nc),
-             ylim=c(0,max(5, max(unlist(allV[[p]])))), type="n",
-             xlim=c(0, nc+1), xlab="peaks", ylab="variation", xaxt="n",
-             pch=pch, col=rep(seq_len(nc), each=nr),
-             main=paste("Backgating Variation", p))
-        axis(1, at=seq_len(nc), labels=TRUE)
-        box()
-        for(i in seq_len(nc))
-            points(rep(i, nr), allV[[p]][[i]]) 
-    }
+    ##  layout(matrix(1:length(wchans), ncol=1))
+    ##     for(p in wchans)
+    ##     {
+    ##         nc <- ncol(ninfo[[p]]$warped)
+    ##         nr <- nrow(ninfo[[p]]$warped)
+    ##         plot(seq_len(nc), rep(0, nc),
+    ##              ylim=c(0,max(5, max(unlist(allV[[p]])))), type="n",
+    ##              xlim=c(0, nc+1), xlab="peaks", ylab="variation", xaxt="n",
+    ##              pch=pch, col=rep(seq_len(nc), each=nr),
+    ##              main=paste("Backgating Variation", p))
+    ##         axis(1, at=seq_len(nc), labels=TRUE)
+    ##         box()
+    ##         for(i in seq_len(nc))
+    ##             points(rep(i, nr), allV[[p]][[i]]) 
+    ##     }
     invisible()
 }
 

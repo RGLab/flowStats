@@ -6,10 +6,10 @@ Author: Florian Hahne, Nishant Gopalakrishnan, Alireza Hadj Khodabakhshi
 Maintainer: Florian Hahne <fhahne@fhcrc.org>
 Description: Methods and functionality to analyse flow data that is beyond the
              basic infrastructure provided by the flowCore package.
-Depends: R (>= 2.9.0), flowCore (>= 1.10.0), fda
+Depends: R (>= 2.9.0), flowCore (>= 1.10.0), fda, mvoutlier
 Suggests: flowViz, xtable
 Imports: MASS, flowCore, fda, Biobase, methods, grDevices, graphics, stats,
-         utils, flowViz  
+         utils, flowViz, KernSmooth
 License: Artistic-2.0
 biocViews: FlowCytometry, CellBasedAssays, Bioinformatics
 Lazyload: yes

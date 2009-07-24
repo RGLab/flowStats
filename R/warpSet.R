@@ -187,8 +187,9 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 
 ## Some QA pots for a normalized data set
 normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
-                   odat, ask=names(dev.cur())!="pdf",
-                   peaksOnly=FALSE)
+                   odat=NULL, ask=names(dev.cur())!="pdf",
+                   grouping=NULL, tag.outliers=FALSE,
+                   peaksOnly=TRUE)
 {
     if(! "warping" %in% names(attributes(data)))
         stop("This flowSet has not been normalized.")
@@ -204,7 +205,27 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
     wchans <- if(missing(channels)) names(ninfo) else channels
     if(!all(wchans %in% names(ninfo)))
         stop("No normalization information available for one or more channels.")
-
+    if(is.null(grouping))
+    {
+        grouping <- factor(rep(1, length(data)))
+    }
+    else
+    {
+        if(is.character(grouping)){
+            if(! grouping %in% names(pData(data)))
+                stop("'grouping' must be a covariate in the phenoData slot of ",
+                     "'data' or a factor of the same length as 'data'.")
+            grouping <- factor(pData(data)[,grouping])
+        }
+        else
+        {
+            grouping <- factor(grouping)
+        }
+        if(length(grouping) != length(data))
+            stop("'grouping' must be a covariate in the phenoData slot of ",
+                 "'data' or a factor of the same length as 'data'.")
+    }
+    
     ## Plot the amount of warping for each landmark.
     if(all(c("prior", "warped", "hasPeak") %in% names(ninfo[[1]])))
     {
@@ -224,6 +245,7 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
             prior <- rbind(prior,
                            data.frame(sample=factor(sampleNames(data),
                                                     levels=sampleNames(data)),
+                                      group=factor(as.integer(grouping)),
                                       value=as.vector(pr),
                                       peak=peak, peakLong=peakLong,
                                       channel=factor(p),
@@ -237,32 +259,37 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
         ## adjusted landmark positions for each peak.
         par(ask=ask)
         on.exit(par(ask=FALSE))
-        myPanelStrip <- function(x,y, groupMeans, datSet, ...)
+        myPanelStrip <- function(x,y, groupMeans, datSet, groups, ng, ...)
         {
             chan <- levels(datSet$channel)[panel.number()]
             thisP <- datSet[datSet$channel==chan,] 
             nc <- length(groupMeans[[chan]])
             nr <- nlevels(y)
-            col <- rep(trellis.par.get("superpose.symbol")$col[seq_len(nc)], nc)
-            pch <- if(nc==1) 20 else rep(c(4, 20), each=nc)
-            panel.stripplot(x,y, pch=pch, col=col, ...)
-            panel.abline(v=groupMeans[[chan]], lty="dotted", col=col)
+            col <- rep(trellis.par.get("superpose.symbol")$col[seq_len(ng)], ng)
+            pch <- if(ng==1) rep(c(4,20), 2) else rep(c(4, 20), each=ng)
+            panel.abline(v=groupMeans[[chan]], lty="dotted", col="gray")
             for(i in seq_len(nc)){
                 peak <- thisP[thisP$peak==i,"value"]
                 panel.segments(y0=seq_len(nr), y1=seq_len(nr), x0=peak,
-                               x1=groupMeans[[chan]][i], col=col[i], lty="dotted")
+                               x1=groupMeans[[chan]][i], col="gray", lty="dotted")
             }
-            
+            panel.stripplot(x,y, pch=pch, col=col, groups=groups, ...)
         }
-        col <- trellis.par.get("superpose.symbol")$col[seq_len(nlevels(prior$peak))]
-        print(stripplot(sample~value|channel, prior,
-                  group=interaction(prior$peak, prior$hasPeak),
-                  panel=myPanelStrip, groupMeans=m, datSet=prior, xlab=NULL,
-                  key=list(text=list(paste("peak", levels(prior$peak))),
-                           points=list(col=col, pch=20),
-                           text=list("missing peak"),
-                           points=list(pch=4, col=1), rep=FALSE),
-                  main="Amount of Landmark Adjustment"))
+        col <- trellis.par.get("superpose.symbol")$col[seq_len(nlevels(prior$group))]
+        ng <- nlevels(prior$group)
+        key <- list()
+        if(ng>1)
+            key <- append(key, list(points=list(col=col, pch=20),
+                                    text=list(paste("Group", levels(grouping)))))
+        if(!all(prior$hasPeak))
+            key <- append(key, list(points=list(pch=4, col=1),
+                                    text=list("no peak detected"),
+                                    rep=FALSE))
+        print(stripplot(sample~value|channel, prior, ng=ng,
+                        groups=interaction(group, hasPeak),
+                        panel=myPanelStrip, groupMeans=m, datSet=prior, xlab=NULL,
+                        key=if(length(key)) c(key, cex=0.8, between=1) else NULL,
+                        main="Amount of Landmark Adjustment\n"))
     }
 
     ## Plot the confidence of the landmark registration step
@@ -271,17 +298,24 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
         present <- lapply(split(prior, prior$channel), function(x)
                            sapply(split(x$hasPeak, x$peak), function(x)
                                   sprintf("(%d/%d)", sum(x), length(data))))
+        col <- trellis.par.get("superpose.symbol")$col[seq_len(nlevels(prior$group))]
+        key <- list()
+        ng <- nlevels(prior$group)
+        if(ng>1)
+            key <- append(key, list(text=list(paste("Group", levels(grouping))),
+                                    points=list(col=col, pch=1)))
         print(stripplot(dists~peak |channel, prior, ylim=c(0,1.1),
-                  ylab="Clustering Confidence", xlab="Peak",
-                  group=peak, myLabel=present,
-                  panel=function(myLabel, datSet, ...){
-                      panel.stripplot(...)
-                       chan <- levels(datSet$channel)[panel.number()]
-                      panel.text(seq_along(myLabel[[chan]]), 1.05, myLabel[[chan]],
-                                 cex=0.7)
-                      panel.abline(h=1, col="gray")
-                  }, datSet=prior,
-                  main="Landmark Registration"))
+                        ylab="Clustering Confidence", xlab="Peak",
+                        groups=group, myLabel=present,
+                        panel=function(myLabel, datSet, ...){
+                            panel.stripplot(...)
+                            chan <- levels(datSet$channel)[panel.number()]
+                            panel.text(seq_along(myLabel[[chan]]), 1.05, myLabel[[chan]],
+                                       cex=0.7)
+                            panel.abline(h=1, col="gray")
+                        }, datSet=prior,
+                        key=if(length(key)) c(key, cex=0.8) else NULL,    
+                        main="Landmark Registration\n"))
     }
             
     ## Plot the warping functions. 
@@ -292,17 +326,25 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
         for(p in wchans)
         {
             np <- 30
-            xvals <-  seq(range(data[[1]], p)[1,], range(data[[1]], p)[2,], len=np)
+            xvals <- seq(range(data[[1]], p)[1,], range(data[[1]], p)[2,], len=np)
             yvals <- sapply(ninfo[[p]]$warpFun, function(fun) fun(xvals))
             wfRes <- rbind(wfRes,
                            data.frame(sample=rep(factor(sampleNames(data),
                                                         levels=sampleNames(data)),
                                                  each=np),
+                                      group=rep(factor(as.integer(grouping)),each=np),
                                       original=xvals, normalized=as.vector(yvals),
                                       channel=p))
         }
+        col <- trellis.par.get("superpose.symbol")$col[seq_len(nlevels(wfRes$group))]
+        key <- list()
+        ng <- nlevels(wfRes$group)
+        if(ng>1)
+            key <- append(key, list(text=list(paste("Group", levels(grouping))),
+                                    lines=list(col=col, pch=1)))
         print(xyplot(normalized~original|channel, wfRes, type="l", alpha=0.4,
-               main="Warping Functions"))
+                     main="Warping Functions\n", groups=group,
+                     key=if(length(key)) c(key, cex=0.8) else NULL))
     }
 
    
@@ -316,26 +358,21 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
         names(backGates) <- names(cents) <-  wchans
         stand <- apply(range(data[[1]])[,c(fsc, ssc)], 2, diff)
         vars <- data.frame()
+        noOdat <- !is.null(ninfo[[1]]$warpFun) && is.null(odat)
+        if(!noOdat && is.null(odat))
+            stop("The un-nomalized data set needs to be supplied as argument 'odat'.")
+        if(noOdat)
+            odat <- flowCore:::copyFlowSet(data)
         for(p in wchans)
         {
             regions <- ninfo[[p]]$regions
             if(is.null(names(regions)))
                 names(regions) <- sampleNames(data)
-            wfuns <- ninfo[[p]]$warpFun
-            if(is.null(wfuns))
-            {
-                wfuns <- list()
+            wfuns <- if(noOdat) ninfo[[p]]$warpFun else {
+                wf <- list()
                 for(n in names(regions))
-                    wfuns[[n]] <- function(x) x
-            }
-            else
-            {
-                if(missing(odat))
-                   odat <- flowCore:::copyFlowSet(data)
-                else
-                    for(n in names(regions))
-                        wfuns[[n]] <- function(x) x
-            }
+                    wf[[n]] <- function(x) x
+                wf}
             np <- ncol(ninfo[[p]]$warped)
             bg <- cs <- vector(mode="list", length=np)
             for(i in seq_len(np))
@@ -352,17 +389,20 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
                 subDat <- Subset(Subset(odat, filterList(g)), boundaryFilter(c(fsc, ssc)))
                 hp <- ninfo[[p]]$hasPeak[,i]
                 bg[[i]] <- filter(subDat, norm2Filter(c(fsc, ssc)))
-                cs[[i]] <-  fsApply(subDat, function(x)
-                                    apply(x[,c(fsc, ssc)], 2, mean, na.rm=TRUE),
-                                    use.exprs=TRUE)
+                bg[[i]][fsApply(subDat, nrow)<30] <- NA
+                cs[[i]] <-  fsApply(subDat, function(x){
+                    if(nrow(x)>30)
+                        apply(x[,c(fsc, ssc)], 2, mean, na.rm=TRUE)
+                    else as.numeric(rep(NA,2))}, use.exprs=TRUE)
                 if(peaksOnly)
                 {
                     bg[[i]][!hp] <- NA
-                    cs[[i]][!hp] <- NA
+                    cs[[i]][!hp] <- rep(NA,2)
                 }
                 vars <- rbind(vars,
                               data.frame(value=sapply(bg[[i]], function(x)
-                               if(is(x, "filterResult"))
+                               if(is(x, "filterResult") && !is.na(filterDetails(x)[[1]]$cov) &&
+                                  length(x@subSet) > 30 )
                                  prod(sqrt(eigen(filterDetails(x)[[1]]$cov)$values)/stand)*pi
                                else NA),
                                           channel=p, peak=factor(paste("Peak", i)),
@@ -379,31 +419,43 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
                                                          rep(seq_len(x),
                                                              each=length(data))))),
                             sample=factor(sampleNames(data), levels=sampleNames(data)),
+                            group=factor(as.integer(grouping)),
                             x=0, y=0)
         cat("\n")
-        myXYPanel <- function(datSet, backGates, ...)
+        myXYPanel <- function(datSet, backGates, groups, ...)
         {
             wp <- which.packet()
             p <- levels(datSet$channel)[wp[1]]
+            ng <- nlevels(groups)
             bg <- backGates[[p]]
             if(length(wp)==2)
                 bg <- bg[wp[2]]
             for(i in seq_along(bg))
             {
-                crgb <- col2rgb(i+1)
-                col <- rgb(crgb[1,], crgb[2,], crgb[3,], 255*0.12, maxColorValue=255)
-                colc <- rgb(crgb[1,], crgb[2,], crgb[3,], 255*0.2, maxColorValue=255)
-                for(f in bg[[i]])
-                    if(is(f, "filterResult"))
-                        glpolygon(f, gpar=list(gate=list(fill=col, col=colc)))
+                crgb <- col2rgb(trellis.par.get("superpose.symbol")$col[as.integer(groups)])
+                col <- rgb(t(crgb), alpha=255*0.12, maxColorValue=255)
+                colc <- rgb(t(crgb), alpha=255*0.2, maxColorValue=255)
+                for(f in seq_along(bg[[i]]))
+                    if(is(bg[[i]][[f]], "filterResult") &&
+                       !is.na(filterDetails(bg[[i]][[f]])[[1]]$cov) &&
+                       length(bg[[i]][[f]]@subSet) > 30 )
+                        glpolygon(bg[[i]][[f]], gpar=list(gate=list(fill=col[f],
+                                                                    col=colc[f])))
             }
         }
         flowViz:::plotType("gsmooth", c(fsc, ssc))
+        key <- list()
+        ng <- nlevels(dummy$group)
+        col <- trellis.par.get("superpose.symbol")$col[seq_len(ng)]
+        if(ng>1)
+            key <- append(key, list(text=list(paste("Group", levels(grouping))),
+                                    rectangles=list(col=col, pch=1)))
         print(xyplot(x~y|channel+factor(paste("Peak", peak)), dummy, xlab=fsc, ylab=ssc,
-                     xlim=range(data[[1]])[,fsc],
+                     xlim=range(data[[1]])[,fsc], groups=group,
                      ylim=range(data[[1]])[, ssc],
                      panel=myXYPanel, datSet=dummy, backGates=backGates,
-                     main="Backgating Shape"))
+                     key=if(length(key)) c(key, cex=0.8) else NULL,
+                     main="Backgating Shape\n"))
                    
 
         ##  tmp <- sapply(regions, rowMeans)
@@ -417,7 +469,7 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
                          boundaryFilter(c(fsc, ssc)) %subset%
                          sampleFilter(10000))   
         
-        myXYPanelCent <- function(datSet, centroids, alldat, labels, ...)
+        myXYPanelCent <- function(datSet, centroids, alldat, labels, groups, ...)
         {
             wp <- which.packet()
             p <- levels(datSet$channel)[wp[1]]
@@ -434,28 +486,46 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
             ll <- contourLines(z$x1, z$x2, z$fhat, nlevels=10)
             for(pg in ll)
                 panel.polygon(pg$x, pg$y, border="lightgray")
+            col <- trellis.par.get("superpose.symbol")$col[as.integer(groups)]
             for(i in seq_along(ct))
             {
-                #x <- ct[[i]][,1]
-                #y <- ct[[i]][,2]
-                #dists <- rowMeans(cbind(x-median(x, na.rm=TRUE),
-                #                        y-median(y, na.rm=TRUE)))
-                #outliers <- dists > (median(dists, na.rm=TRUE) + 2* mad(dists, na.rm=TRUE))
-                panel.points(ct[[i]], col=i+1)
-                #panel.points(ct[[i]], col=i+1, pch=ifelse(outliers, 4,1))
-                #panel.text(x[outliers], y[outliers], labels[outliers], adj=c(1,1),
-                #       cex=0.6)
+                panel.points(ct[[i]], col=col, pch=i)
+                if(tag.outliers)
+                {
+                    tg <- subset(datSet, channel==p & peak==i)$group
+                    x <- split(ct[[i]][,1], tg)
+                    y <- split(ct[[i]][,2], tg)
+                    outliers <- unlist(mapply(function(xx, yy){
+                        tmp <- cbind(xx, yy)
+                        sel <- apply(tmp, 1, function(z) any(is.na(z)))
+                        res <- rep(FALSE, nrow(tmp))
+                        ol <- !pcout(tmp[!sel,], outbound=0.1)$wfinal01
+                        res[!sel] <- ol
+                        return(res)}, x, y, SIMPLIFY=FALSE))
+                    panel.text(ct[[i]][,1][outliers], ct[[i]][,2][outliers],
+                               labels[outliers], adj=c(1.5,1.5), cex=0.6)
+                }
             }
-        }      
+        }
+        key <- list()
+        np <- nlevels(dummy$peak)
+        if(ng>1 || np>1)
+        {
+            labs <- as.character(levels(interaction(paste("Group", levels(grouping)),
+                                                    paste("Peak", levels(dummy$peak)),
+                                                    sep=" ")))
+            key <- append(key, list(text=list(labs),
+                                    points=list(col=rep(col, nlevels(grouping)),
+                                                pch=rep(seq_len(nlevels(dummy$peak)),
+                                                        each=nlevels(grouping))),
+                                    columns=ng))
+        }
         print(xyplot(x~y|channel, dummy, xlab=fsc, ylab=ssc,
-                     xlim=range(data[[1]])[,fsc],
+                     xlim=range(data[[1]])[,fsc], groups=group,
                      ylim=range(data[[1]])[, ssc],
                      panel=myXYPanelCent, datSet=dummy, centroids=cents,
-                     main="Backgating Location", alldat=alldat, labels=sampleNames(data),
-                     key=list(text=list(paste("peak", levels(prior$peak))),
-                              points=list(col=seq_len(nlevels(prior$peak))+1, pch=20))))
-                              #text=list("outlier"),
-                              #points=list(pch=4, col=1), rep=FALSE)))   
+                     main="Backgating Location\n", alldat=alldat, labels=sampleNames(data),
+                     key=if(length(key)) c(key, cex=0.8) else NULL))
 
 
         cvSum <- data.frame()
@@ -467,27 +537,47 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
                 mds <- colMeans(md/stand)
                 cvSum <- rbind(cvSum, data.frame(sample=factor(names(mds),
                                                                levels=unique(names(mds))),
+                                                 group=factor(as.integer(grouping)),
                                                  channel=wchans[[i]],
                                                  peak=factor(paste("Peak",j)),
                                                  location=mds))
             }
         cvSum <- cbind(cvSum, variation=vars[, "value"])
-        myXYPanelSum <- function(x, y, labels, ...)
+        myXYPanelSum <- function(x, y, labels, datSet, groups, ...)
         {
-            ## outliers <- pcout(cbind(x, y))$wfinal<0.05
-            ##require(parody)
-            ##outliers <- seq_along(x) %in% mv.calout.detect(cbind(x,y))$inds
-            dists <- rowMeans(cbind(x-median(x, na.rm=TRUE), y-median(y, na.rm=TRUE)))
-            outliers <- dists > (median(dists, na.rm=TRUE) + 2* mad(dists, na.rm=TRUE))
-            panel.xyplot(x,y,pch=ifelse(outliers, 4 ,1), ...)
-            panel.text(x[outliers], y[outliers], labels[outliers], adj=c(1,1),
-                       cex=0.6)
+            wp <- which.packet()
+            tg <- subset(datSet, channel==levels(factor(datSet$channel))[wp[1]] &
+                         peak==paste("Peak", wp[2]))$group
+            if(length(x))
+            {
+                col <- trellis.par.get("superpose.symbol")$col[as.integer(tg)]
+                panel.points(x,y, col=col, pch=1)
+                if(tag.outliers)
+                {
+                    xs <- split(x, tg)
+                    ys <- split(y, tg)
+                    outliers <- unlist(mapply(function(xx, yy){
+                        tmp <- cbind(xx, yy)
+                        sel <- apply(tmp, 1, function(z) any(is.na(z)))
+                        res <- rep(FALSE, nrow(tmp))
+                        ol <- !pcout(tmp[!sel,], outbound=0.1)$wfinal01
+                        res[!sel] <- ol
+                        return(res)}, xs, ys, SIMPLIFY=FALSE))
+                    col <- trellis.par.get("superpose.symbol")$col[as.integer(tg)]
+                    panel.text(x[outliers], y[outliers], labels[outliers], adj=c(1.5,1.5),
+                               cex=0.6)
+                }
+            }
         }
+        key <- list()
+        col <- trellis.par.get("superpose.symbol")$col[seq_len(ng)]
+        if(ng>1)
+            key <- append(key, list(text=list(paste("Group", levels(grouping))),
+                                    rectangles=list(col=col, pch=1)))
         print(xyplot(location ~ variation|channel+peak, cvSum, panel=myXYPanelSum,
-                     labels=sampleNames(data), main="Backgating Summary",
-                     key=list(text=list("outlier"), xlab="Dispersion",
-                              ylab="Location",
-                              points=list(pch=4, col=1), rep=FALSE))) 
+                     labels=sampleNames(data), main="Backgating Summary\n",
+                     groups=group, datSet=cvSum,
+                     key=if(length(key)) c(key, cex=0.8) else NULL))
 
     }
     ## Plot the relative ellipse volumes for the backgated channels

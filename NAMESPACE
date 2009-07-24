@@ -19,6 +19,9 @@ importMethodsFrom(flowViz, "plot")
 importFrom(Biobase,
            listLen)
 
+importFrom(KernSmooth,
+           bkde2D)
+
 importFrom(MASS,
            hubers)
 
@@ -70,7 +73,8 @@ export("lymphGate",
        "calcPearsonChi",
        "calcPBChiSquare",
        "gpaSet",
-       "iProcrustes")
+       "iProcrustes",
+       "normQA")
 
 exportClasses("lymphFilter")
 

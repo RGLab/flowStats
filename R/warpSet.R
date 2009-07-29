@@ -50,7 +50,6 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 
     ## iterate over stains
     eps <- .Machine$double.eps
-    wfuns <- list()
     for(p in stains)
     {
         ## set up fda parameters
@@ -108,24 +107,30 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
         ## register the densities
         if(ncol(landmarks)==1){ ## only one peak: offset
             offsets <- landmarks-median(landmarks)
-            funs <- vector("list", length(landmarks))
+            funs <- funsBack <- vector("list", length(landmarks))
             for(j in seq_along(funs)){
                 funs[[j]] <- function(x) x - z
                 e1 <- new.env()
                 e1$z <- offsets[j]
                 environment(funs[[j]]) <- e1
+                funsBack[[j]] <- function(x) x + z
+                e2 <- new.env()
+                e2$z <- offsets[j]
+                environment(funsBack[[j]]) <- e2
             }
         }else{ ## multiple peaks: warping
             capture.output(regDens <- landmarkreg(fdobj, landmarks, WfdPar=WfdPar, 
                                    monwrd=monwrd, ...))  
             warpfdobj <- regDens$warpfd
             warpedX <- eval.fd(warpfdobj, argvals)
+            warpedX[1,] <- head(argvals,1)
+            warpedX[nrow(warpedX),] <- tail(argvals,1)
             ## compute warping functions
             ## funs <-  apply(warpedX, 2, function(y) approxfun(argvals, y))
             funs <-  apply(warpedX, 2, approxfun, argvals)
+            funsBack <- apply(warpedX, 2, function(a, b) approxfun(b, a), argvals)
         }
-        names(funs) <- sampleNames(x)
-        wfuns[[p]] <- funs
+        names(funs) <- names(funsBack) <- sampleNames(x)
         if(!warpFuns)
         {
             warpedLandmarks <- landmarks
@@ -169,7 +174,7 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
             }
             lm[[p]] <- list(prior=landmarks, warped=warpedLandmarks,
                             warpFun=funs, regions=regions, dists=dists,
-                            hasPeak=hasPeak)
+                            hasPeak=hasPeak, revWarpFuns=funsBack)
         }
     }
     if(warpFuns)

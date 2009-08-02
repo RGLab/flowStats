@@ -71,7 +71,8 @@
 
 \value{
 
-  The normalized \code{flowSet}.
+  A list with items \code{flowset}: normalized \code{flowSet}.
+  \code{confidence}: a confidence measure of the normalization procedure.
   
 }
 
@@ -85,7 +86,7 @@ dat <- transform(ITN, "CD4"=asinh(CD4), "CD3"=asinh(CD3), "CD8"=asinh(CD8))
 lg <- lymphGate(dat, channels=c("CD3", "SSC"),
 preselection="CD4",scale=1.5)
 dat <- Subset(dat, lg$n2gate)
-datr <- gaussNorm(dat, "CD8")
+datr <- gaussNorm(dat, "CD8")$flowset
 if(require(flowViz)){
 d1 <- densityplot(~CD8, dat, main="original", filter=curv1Filter("CD8"))
 d2 <- densityplot(~CD8, datr, main="normalized", filter=curv1Filter("CD8"))

@@ -25,6 +25,13 @@ importFrom(KernSmooth,
 importFrom(MASS,
            hubers)
 
+
+importFrom(flowViz,
+           glpolygon)
+
+importFrom(lattice,
+           trellis.par.get)
+
 import(fda)
 
 importFrom(grDevices,

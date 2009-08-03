@@ -70,36 +70,35 @@ gpaSet(x, params, register="backgating", bgChannels=NULL, ref.method="mean",
 \author{C. J. Wong \email{cwon2@fhcrc.org}}
 
 \examples{
-## Example 1:
+## Example 1: calling up gpaSet directly
 data(ITN)
 ITN <- ITN[1:8, ]
-wf <- workFlow(ITN)
-tl <- transformList(colnames(ITN)[3:7], asinh, transformationId="asinh")
-add(wf, tl)
-x <- Data(wf[["asinh"]])
+dat <- transform(ITN, "CD8"=asinh(CD8))
+
 xy = c("FSC", "SSC")
-s <- gpaSet(x, params=xy, bgChannels="CD8", ref.method="mean")
+s <- gpaSet(dat, params=xy, bgChannels="CD8", ref.method="mean")
+
 if(require(flowViz)) {
    d1 <- densityplot(~., s, channels=c("FSC", "SSC"), 
                      layout=c(2,1), main="After GPA using bg")
    d2 <- xyplot(FSC ~ SSC, as(s, "flowFrame"), 
                 channels=c("FSC", "SSC"), main="All flowFrames")
    plot(d1)
-   plot(d2, newpage=FALSE)
+   plot(d2)
 }
 
 ## view "GPA" attribute
 attr(s, "GPA")
 
 \dontrun{
-## Example 2: using work flow
+## Example 2: using work flow and normalization objects
 data(ITN)
 ITN <- ITN[1:8, ]
 wf <- workFlow(ITN)
 tl <- transformList(colnames(ITN)[3:7], asinh, transformationId="asinh")
 add(wf, tl)
 x <- Data(wf[["asinh"]])
-
+## normalize 'FSC' and 'SSC' channels
 norm <- normalization(normFun=function(x, parameters, ...)
         gpaSet(x, parameters, ...),
         parameters = c("FSC", "SSC"), 

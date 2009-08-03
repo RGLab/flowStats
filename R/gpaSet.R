@@ -38,7 +38,7 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
         cat("Backgating ... \n")
         bg <- backGating(x, xy=params, channels=bgChannels)
         #regFeatures <- useBackGating(bg, xy = params, plot=plot)$register
-        features <- idFeatures(bg, xy=params) ## $sample** and $reference
+        features <- idFeatures(bg) ## $sample** and $reference
     }
     else { ## use Curve1Filter and landmarkMatrix to find features for each
            ## channels for each flowFrames

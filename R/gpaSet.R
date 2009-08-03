@@ -37,26 +37,29 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     if (register=="backgating") {
         cat("Backgating ... \n")
         bg <- backGating(x, xy=params, channels=bgChannels)
-        regFeatures <- useBackGating(bg, xy = params, plot=plot)$register
+        #regFeatures <- useBackGating(bg, xy = params, plot=plot)$register
+        features <- idFeatures(bg, xy=params) ## $sample** and $reference
     }
     else { ## use Curve1Filter and landmarkMatrix to find features for each
-           ## channels for each flowFrames 
+           ## channels for each flowFrames
+        stop("gpaSet: Only Backgating method is available")
     }
 
     cat("Procrustes analysis ... \n")
-    ## 2. translating the centroid of the registered features of each flowFrames
+    ## 2. translation: translate the centroid of the registered features of each flowFrames
     ## to the origin
-    translate <- lapply(regFeatures, colMeans, na.rm=TRUE)
-    tfeatures <- list() ## translated registered features, debugging
-    I <- matrix(1, nrow=nrow(regFeatures[[1]]), ncol=1)
+    translate <- lapply(features, function(x) colMeans(x[, 1:2], na.rm=TRUE))
+    tfeatures <- list() ## translated registered features
+    I <- matrix(1, nrow=nrow(features[[1]]), ncol=1)
     for (i in names(regFeatures))
-      tfeatures[[i]] <- regFeatures[[i]] - I %*% translate[[i]]
-
-    ## find the reference feature to which the translated features to be aligned
-    fbar <- .getRefFeatures(tfeatures, ref.method=ref.method)
+      tfeatures[[i]] <- features[[i]][, 1:2] - I %*% translate[[i]]
  
-    ## 3. applying SVD to find rotation matrix and scalling factor
-    SVD <- lapply(tfeatures, iProcrustes, fbar, rotation.only=rotation.only)
+    ## 3. transformation: applying SVD to find rotation matrix and scalling factor
+    
+    SVD <- lapply(tfeatures[-which(names(tfeatures)=="reference"),
+                  iProcrustes,
+                  tfeatures$reference,
+                  rotation.only=rotation.only)
     
     ## eliminate boundary points
     for (i in params) {
@@ -69,7 +72,7 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     newRange <- matrix(c(Inf, -Inf), nrow=2, ncol=length(params), 
                        dimnames=list(c("min", "max"), params))
   
-    ## 4. Alignment: translation, rotation, and re-scaling the raw data using
+    ## 4. alignment: translation, rotation, and re-scaling the raw data using
     ##    GPA 
     for (i in names(expData))
     {
@@ -101,9 +104,9 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     chstr <- do.call(paste, chstr, quote=TRUE)
     gpa <- SVD
     attr(gpa, "trans.feature") <- tfeatures
-    attr(gpa, "prior") <- regFeatures
+    attr(gpa, "prior") <- features
     attr(gpa, "channels") <- chstr
-    attr(gpa, "refFeature") <- fbar
+    attr(gpa, "refFeature") <- tfeatures$reference
     class(gpa) <- "GPA"
     ## add backgating channels to attribute
 
@@ -116,21 +119,6 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     return(regSet)
 }
 
-## get reference features (multi-dimensional)
-.getRefFeatures <- function(features, ref.method="mean")
-{
-    
-    fbar <- array(0, dim=dim(features[[1]]), 
-                     dimnames=dimnames(features[[1]]))
-    if (ref.method != "mean")
-       cat("Only mean-value method is avaliable.\n")   
-
-    for (i in rownames(features[[1]]))
-         fbar[i, ] <- 
-            rowMeans(sapply(features, function(x) x[i, ]), na.rm=TRUE)
-
-    return(fbar)
-}
 
 .checkChannel<- function(ch, allch) {
        mc <- ch %in% allch

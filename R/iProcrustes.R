@@ -14,6 +14,7 @@ iProcrustes <- function(x, xbar, rotation.only = TRUE, scalling=TRUE,
    ## check valid arguments
    if (missing(x))
        stop("iProcrustes: the first argument x is missing with no default")
+     
    if (missing(xbar))
        stop("iProcrustes: the second arugement xbar is missing with no
             default")
@@ -27,7 +28,9 @@ iProcrustes <- function(x, xbar, rotation.only = TRUE, scalling=TRUE,
       stop("iProcrustes: Arguments rotation.only, scalling, and translate must
       be logical")  
 
-
+   if (!is.matrix(x))      x <- as.matrix(x)
+   if (!is.matrix(xbar)) xbar <- as.matrix(xbar)
+   
    ## 1. translation
    if (translate) {
        ## translate the centroids of the points in x to that of points in xbar

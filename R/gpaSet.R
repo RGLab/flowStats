@@ -56,7 +56,7 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
  
     ## 3. transformation: applying SVD to find rotation matrix and scalling factor
     
-    SVD <- lapply(tfeatures[-which(names(tfeatures)=="reference"),
+    SVD <- lapply(tfeatures[-which(names(tfeatures)=="reference")],
                   iProcrustes,
                   tfeatures$reference,
                   rotation.only=rotation.only)

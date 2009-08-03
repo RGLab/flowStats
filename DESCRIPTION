@@ -25,5 +25,5 @@ Collate: autoGate.R
 	 gpaSet.R
 	 iProcrustes.R
 	 idFeatures.R
-	 registerFeatures.R
+
 	 

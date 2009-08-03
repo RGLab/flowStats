@@ -1,5 +1,5 @@
-## use backgeting to find the reference features and register the features
-## used by function gpaSet
+## use backgeting to identify the features and define a set of reference
+## features which are needed by function gpaSet
 
 idFeatures <- function(bg, plot=FALSE)
 {
@@ -45,15 +45,9 @@ idFeatures <- function(bg, plot=FALSE)
  
     
     combf <- lapply(combf, function(x)
-                    {x$channel=rownames(x); x})
+                    {x$cluster=rownames(x); x})
     combf[["reference"]] <- reference
-    #pts <- do.call(rbind, combf)
-    #reference <- t(sapply(split(do.call(rbind, combf), factor(pts$channel)),
-    #                      function(x) sapply(x[, 1:2], median)))
-    #reference <- reference[rownames(combf[[1]]$channel,]
-    ## this reference = do.cal(rbind, refFeatures)
-    #if (plot) .plotFeatures(combf, reference)
-    
+      
     return(combf)
 }
 

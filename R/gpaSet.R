@@ -36,9 +36,8 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     ## 1. identifying and registering (labelling) features
     if (register=="backgating") {
         cat("Backgating ... \n")
-        bg <- backGating(x, xy=params, channels=bgChannels)
-        #regFeatures <- useBackGating(bg, xy = params, plot=plot)$register
-        features <- idFeatures(bg) ## $sample** and $reference
+        bg <- flowStats:::backGating(x, xy=params, channels=bgChannels)
+        features <- flowStats:::idFeatures(bg) ## $sample** and $reference
     }
     else { ## use Curve1Filter and landmarkMatrix to find features for each
            ## channels for each flowFrames
@@ -46,12 +45,13 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     }
 
     cat("Procrustes analysis ... \n")
-    ## 2. translation: translate the centroid of the registered features of each flowFrames
-    ## to the origin
+    ## 2. translation: translate the centroid of the labelled features of
+    ##    each flowFrames to the origin
     translate <- lapply(features, function(x) colMeans(x[, 1:2], na.rm=TRUE))
+    
     tfeatures <- list() ## translated registered features
     I <- matrix(1, nrow=nrow(features[[1]]), ncol=1)
-    for (i in names(regFeatures))
+    for (i in names(features))
       tfeatures[[i]] <- features[[i]][, 1:2] - I %*% translate[[i]]
  
     ## 3. transformation: applying SVD to find rotation matrix and scalling factor
@@ -77,7 +77,7 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     for (i in names(expData))
     {
         newSet <- exprs(expData[[i]])[, params]
-        newSet <- t(t(newSet) - translate[[i]]) 
+        newSet <- t(t(newSet) - translate[[i]])
         newSet <- SVD[[i]]$scal * (newSet %*% SVD[[i]]$Q)
         exprs(expData[[i]])[, params] <- newSet
         ## ranges for the translated data across samples
@@ -99,14 +99,24 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     }
     
     ## set up flowSets GPA attribute
+    cstr <- function(strs) {
+        chstr <- lapply(strs, as.name)
+        chstr$sep <- "/"
+        chstr <- do.call(paste, chstr, quote=TRUE)
+        return(chstr)
+    }
+    
     chstr <- lapply(params, as.name)
     chstr$sep <- "/"
     chstr <- do.call(paste, chstr, quote=TRUE)
     gpa <- SVD
-    attr(gpa, "trans.feature") <- tfeatures
-    attr(gpa, "prior") <- features
-    attr(gpa, "channels") <- chstr
-    attr(gpa, "refFeature") <- tfeatures$reference
+    attr(gpa, "prior.features") <- features
+    attr(gpa, "trans.features") <-
+      tfeatures[-which(names(tfeatures)=="reference")]
+    attr(gpa, "trans.refFeatures") <- tfeatures$reference
+    attr(gpa, "norm.channels") <- cstr(params)
+    attr(gpa, "backgating.channels") <- cstr(bgChannels)
+    
     class(gpa) <- "GPA"
     ## add backgating channels to attribute
 
@@ -114,6 +124,10 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     regSet <- as(expData, "flowSet")
     phenoData(regSet) <- phenoData(x)
     regSet <- regSet[sampleNames(x)]
+    
+    if (!is.null(attr(x, "warpSet"))
+        attr(regSet, "warpSet") <- attr(x, "warpSet")
+
     attr(regSet, "GPA") <- gpa
 
     return(regSet)

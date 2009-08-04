@@ -125,8 +125,8 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     phenoData(regSet) <- phenoData(x)
     regSet <- regSet[sampleNames(x)]
     
-    if (!is.null(attr(x, "warpSet"))
-        attr(regSet, "warpSet") <- attr(x, "warpSet")
+    if (!is.null(attr(x, "warping")))
+        attr(regSet, "warping") <- attr(x, "warping")
 
     attr(regSet, "GPA") <- gpa
 

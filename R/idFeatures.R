@@ -1,7 +1,7 @@
 ## use backgeting to identify the features and define a set of reference
 ## features which are needed by function gpaSet
 
-idFeatures <- function(bg, plot=FALSE)
+idFeatures <- function(bg, merge.peak.cluster=TRUE, thres.merge=1/5, plot=FALSE)
 {
     ## 'bg' is the return value of function flowStats:::backGating
 
@@ -14,27 +14,31 @@ idFeatures <- function(bg, plot=FALSE)
         perChannel <- ch[[i]]
        	centInd <- which(perChannel$type=="centroid")
     	center  <- perChannel[centInd, ]
-        ## cluster the centriod based on peak+population
-        center  <- labelCentroid(center)
+        ## cluster the centriod based on peak+population. For example,
+        ## CD8 has two peaks, one peak has 3 population and one has 1 population.
+        ## Then, CD8 has four cluster center
+        center  <- labelCentroid(center) # add a slot: center$cluster
+        
         ## let reference features = median of cluster members
         refFeatures[[i]] <- t(sapply(split(center, center$cluster),
                                 function(a) apply(a[, 1:2], 2, median)))
                   
         perSample = split(center, factor(center$sample))
+
+        ## classifyFeatures based upon the cluster labelling done by labelCluster
         regFeatures[[i]] <- 
              lapply(perSample, classifyFeatures, refFeatures[[i]],
                     by="distance")
 
         #if (plot) .plotResults(perChannel, center)
-
     }
 
     ## combine the members of regFeatures for each samples
+   
     combf <- list()
     for (m in levels(factor(bg$sample))) {
          combf[[m]] <- do.call(rbind, 
-                         lapply(regFeatures, function(a, b) {a[[b]]}, m))
-         ## rownames(combf[[m]]) <- as.character(1:nrow(combf[[m]]))
+                     lapply(regFeatures, function(a, b) {a[[b]]}, m))
     }
     
     reference <- do.call(rbind, refFeatures)
@@ -42,12 +46,17 @@ idFeatures <- function(bg, plot=FALSE)
     reference <- as.data.frame(reference)
     reference$bogus <- rep(FALSE, nrow(reference))
     reference$cluster <- rownames(combf[[1]])
- 
-    
     combf <- lapply(combf, function(x)
                     {x$cluster=rownames(x); x})
     combf[["reference"]] <- reference
-      
+
+    
+    if (merge.peak.cluster) {
+        ## merge clusters and re-calculate the reference points
+        combf <- mergeCluster(combf, thres=thres.merge)
+        ## re-calculate the reference?
+    }
+    
     return(combf)
 }
 
@@ -56,7 +65,7 @@ idFeatures <- function(bg, plot=FALSE)
 ###################
 classifyFeatures <- function(eachSample, refF, by="distance")
 {
-  ## make the size of refF and column names consistant with refF (later)
+  ## make the size of refF and column names consistant with refF 
   ## initialize parameter
   reg <- data.frame(apply(refF, 2, function(x) rep(NA, length(x))),
                     bogus=rep(FALSE, nrow(refF)))
@@ -89,6 +98,7 @@ classifyFeatures <- function(eachSample, refF, by="distance")
   return(reg)
 }
 
+#################
 ###############
 ## plot results
 ###############
@@ -154,6 +164,7 @@ labelCentroid <- function(center) {
  
     perPeak = split(center, factor(center$peak))
     nclust <- 0
+    km <- NULL
     for (i in 1:length(perPeak)) {
         ## if there are more than one population -> no clustering, get median
         if (length(unique(perPeak[[i]]$population))==1) {
@@ -167,18 +178,90 @@ labelCentroid <- function(center) {
             perPeak[[i]]$cluster <- km$cluster+nclust
         }
         nclust <- nclust + length(medPop) 
-        
-        ##plot the result for peak 1
-        ##peaks <- perPeak[[i]]
-        ##peaks$label <- km$cluster
-        ##x11();print(xyplot(x~y, data=peaks, group=peaks$label))
     }
 
-    return(do.call(rbind, perPeak))
     
+    mPeak <- do.call(rbind, perPeak)
+    
+    return(do.call(rbind, perPeak))
 }
 
+## merge cluster
+#mergeCluster <- mergeCluster(mPeak)
+#{
+#    perClust <- split(mPeak, factor(mPeak$cluster))
+#    md <- t(sapply(perClust, function(x) apply(x[, 1:2], 2, median)))
+#    dst <- dist(md, diag=TRUE, upper=TRUE)
+#    ## use Hierarchical cluster analysis to merge the equivalent clusters
+#    ## and give label accordingly
+#    hdst <- hclust(dst)
+#
+#}
 
+mergeCluster <- function(feats, thres=1/5)
+{
+    sampleF <- feats[-which(names(feats)=="reference")]
+    ref <- feats$reference
+    dst <- dist(ref[, 1:2])
+    hdst <- hclust(dst)
+    JMAX = 7
+    nTimes = 1
+    #plot(hdst)
+    ## while loop: continue if the ratio of the shortest and longest distance
+    ## is less than 1/15
+    while(nTimes <= JMAX | min(dst)/max(dst) < thres) {
+        mergeIdx <- which(rowMeans(sign(hdst$merge)) < 0)
+        dst <- as.matrix(dst)
+        
+        ## fix reference (ref) if needed
+        ## fix index (mergeIdx) at which sampleF needed to be altered
+        fixIdx <- NULL
+        for (i in 1:length(mergeIdx)) {
+            nclust <- -hdst$merge[mergeIdx[i], ]
+            dratio <- dst[nclust[1], nclust[2]] / max(dst)   
+            if (dratio < thres) ## replace by the mean values
+                ref[nclust[1], 1:2] <-
+                    (ref[nclust[1], 1:2]+ref[nclust[2], 1:2])/2
+            else
+                fixIdx=cbind(fixIdx, i)
+        }
+        if (!is.null(fixIdx)) mergeIdx <- mergeIdx[-fixIdx]
+        
+        ## if mergeIdx is empty, then the distances between the reference are
+        ## sufficient large. -> no need to continue the loop
+        if (identical(mergeIdx, integer(0))) break
+            
+        ## fix the sampleF: get the one that is closer to the reference features
+        sampleF <- lapply(sampleF, function(sF, ref, cidx) {
+                          ## make sure cidx is an matrix
+                          if (!is.matrix(cidx)) cidx <- matrix(cidx, nrow=1)
+                          
+                          for (j in 1:nrow(cidx)) {
+                            x <- cidx[j,]
+                            dst <- dist(rbind(ref[x[1],], sF[x, ])[, 1:2])
+                            sF[x[1], 1:2] <-
+                              sF[x[which.min(as.numeric(dst)[1:2])], 1:2]
+                          }
+                      return(sF)
+                      }, ref, -hdst$merge[mergeIdx, ])
+        ## delete hdst$merge[mergeIdx, 2] from ref and sampleF
+        del <- -hdst$merge[mergeIdx,2]
+        ref <- ref[-del, ]
+        sampleF <- lapply(sampleF, function(x, del) x[-del, ], del)
+
+        ## get the hierarchical cluster analysis and distance
+        dst <- dist(ref[, 1:2])
+        hdst <- hclust(dst)
+        nTimes <- nTimes + 1
+    }
+    sampleF[["reference"]] <- ref
+    return(sampleF)
+}
+
+is.allNegative <- function(x) {
+    mean(sign(x))<0
+
+}
 .plotFeatures <- function(combf, reference) {
 
    ## per sample

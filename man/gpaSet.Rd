@@ -11,7 +11,8 @@
 }
 
 \usage{
-gpaSet(x, params, register="backgating", bgChannels=NULL, ref.method="mean", 
+gpaSet(x, params, register="backgating", bgChannels=NULL,
+       merge.peak.cluster=TRUE,  ref.method="median", 
        rotation.only=TRUE, iter.max=10, thres=1e-3, plot=FALSE, ...)
 }
 
@@ -27,6 +28,8 @@ gpaSet(x, params, register="backgating", bgChannels=NULL, ref.method="mean",
 
   \item{bgChannels}{A character vector indicating the channels used for
     backgating.}
+
+  \item{merge.peak.cluster}{Logial. Indicating ... (later)}
 
   \item{ref.method}{A character indicating the method to be used for
     calculating the reference feature. Up to this moment, the only avaliable

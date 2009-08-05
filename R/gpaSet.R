@@ -3,7 +3,8 @@
 ## multi-dimensional normalization wheares the warping method with
 ## one-dimentional. 
 gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
-		   ref.method="mean", rotation.only=TRUE, iter.max=10,
+		   ref.method="mean", rotation.only=TRUE, merge.peak.cluster=TRUE,
+                   iter.max=10,
                    thres=1e-3, plot=FALSE, ...) 
 {
     ## check valid arguments
@@ -32,12 +33,12 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     flowCore:::checkClass(iter.max, "numeric")
     flowCore:::checkClass(thres, "numeric")
     flowCore:::checkClass(plot, "logical")  ## for debugging purposes
-
+  
     ## 1. identifying and registering (labelling) features
     if (register=="backgating") {
         cat("Backgating ... \n")
         bg <- flowStats:::backGating(x, xy=params, channels=bgChannels)
-        features <- flowStats:::idFeatures(bg) ## $sample** and $reference
+        features <- flowStats:::idFeatures(bg, merge.peak.clust=TRUE) ## $sample** and $reference
     }
     else { ## use Curve1Filter and landmarkMatrix to find features for each
            ## channels for each flowFrames

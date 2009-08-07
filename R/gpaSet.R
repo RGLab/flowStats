@@ -3,7 +3,8 @@
 ## multi-dimensional normalization wheares the warping method with
 ## one-dimentional. 
 gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
-		   ref.method="mean", rotation.only=TRUE, merge.peak.cluster=TRUE,
+		   ref.method="median", rotation.only=TRUE,
+                   merge.peak.cluster=TRUE,
                    iter.max=10,
                    thres=1e-3, plot=FALSE, ...) 
 {

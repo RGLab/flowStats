@@ -13,7 +13,7 @@
 }
 
 \usage{
-proBin(m, minEvents)
+proBin(m, minEvents=500,channels=NULL)
 }
 
 \arguments{
@@ -23,6 +23,12 @@ proBin(m, minEvents)
   \item{minEvents}{ The \code{minEvents} The minimum number of events in
     each bin. (i.e. the termination criterion for the probability
     binning algorithm)}
+
+  \item{channels}{ A character vector for the Flourescence channels on which
+    probability binning is to be performed. Defaults is NULL, in which case,
+	all flourescence channels are used for probability binning.( Time information,
+	if provided	in the flowFrame is discarded)	
+	}
   
 }
 
@@ -93,8 +99,7 @@ proBin(m, minEvents)
 \examples{
 
 data(GvHD)
-res<-proBin(GvHD[[1]],200) 
-
+res<-proBin(GvHD[[1]],200,channels=c("FSC-H","SSC-H","FL1-H","FL4-H")) 
 }
 
 \keyword{misc}

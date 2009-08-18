@@ -214,14 +214,14 @@ a flowFrame with bins in n dimensional hyperspace, we proceed with a two dimenst
 example from our previous discussion involving CD4 and CD8 populations. This helps
 to simplify the demonstration of the method and interpretation of results. 
 
-From the workflow object containing the warped data, we subset a flowSet containing
-CD4, CD8 and Time parameters. We try to compare the panels using probability 
-binning to identify patients with CD4, CD8 populations different from a control 
-flowSet that we create using the data from all the patients.
+From the workflow object containing the warped data, we extract our data frame of 
+interest. We try to compare the panels using probability binning to identify patients 
+with CD4, CD8 populations different from a control flowFrame that we create using the
+data from all the patients.
 
 <<createData>>=
 dat <- Data(wf[["Warping"]])
-dat<-fsApply(dat,function(x){x[,c("CD4","CD8","Time")]})
+
 @
 
 The dat is visualized below
@@ -240,7 +240,8 @@ subCount <- nrow(exprs(datComb))/length(dat)
 	sf <- sampleFilter(filterId="mySampleFilter", size=subCount)
 	fres <- filter(datComb, sf)
 	ctrlData <- Subset(datComb, fres)
-	ctrlData <- ctrlData[,c("CD4","CD8","Time")]
+	ctrlData <- ctrlData[,-ncol(ctrlData)] ##remove the  column name "original"
+	
 @
 
 The probability binning algorithm can then applied to the control data. The 
@@ -249,14 +250,13 @@ in each bin is approximately 5 percent of the total number of events in the
 control data.
 <<BinControlData>>=
 minRow=subCount*0.05
-refBins<-proBin(ctrlData,minRow)
+refBins<-proBin(ctrlData,minRow,channels=c("CD4","CD8"))
 	
 @
 
 The binned control Data can be visualized using the \Rfunction{plotBins} function.
 Areas in the scatter  plot with a large number of data points have a higher
 density of bins. Each bin also has approximately same number of events.
-
 
 
 <<controlBinsPlot, fig=TRUE>>=

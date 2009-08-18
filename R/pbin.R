@@ -1,9 +1,19 @@
 
-proBin<-function(m,minEvents)
+proBin<-function(m,minEvents=500,channels=NULL)
 { 
-  timeCol <- flowCore:::findTimeChannel(m,strict=FALSE)
-  colNames <-colnames(m) 
-  m<-exprs(m)[, colNames[!(colNames==timeCol)]]
+  if(!is(m,"flowFrame"))
+	stop("m needs to be an object of class flowFrame")
+	
+  timeCol <- flowCore:::findTimeChannel(m,strict=FALSE)  
+  cNames <-colnames(m) 
+  if(length(timeCol)==0){
+		m <- exprs(m)
+  }else{
+	    m <-exprs(m)[, cNames[!(cNames==timeCol)]]
+  }
+  if(is.null(channels)){
+		channels <- colnames(m)
+  }
 
   nodeIndx=1
   node =data.frame(dataIndx=1,visited=FALSE,parent=0,left=0,right=0,stringsAsFactors=FALSE)
@@ -34,10 +44,12 @@ proBin<-function(m,minEvents)
       
       if(nrow(data[[as.character(nodeIndx)]])>minEvents)
       {
-      y<-apply(data[[as.character(nodeIndx)]],2,var)
-        t<-which.max(y)
+		y<-apply(data[[as.character(nodeIndx)]][,channels],2,var)
+		tName <- which.max(y)
+		t <- which(colnames(data[[as.character(nodeIndx)]])== attr(tName,"names"))
+        #t<-which.max(y)
         x<-median(data[[as.character(nodeIndx)]][,t])
-        s1=data[[as.character(nodeIndx)]][,t]>x
+        s1=data[[as.character(nodeIndx)]][,t] > x
         if(!(all(s1) || all(!s1)))
         { 
        
@@ -109,10 +121,13 @@ plotBins<-function(binRes,data,channels=c("FSC-H","SSC-H"),title="",residuals=NU
    stop("Invalid channel(s)")
   
   timeCol <- flowCore:::findTimeChannel(data,strict=FALSE)
-  colNames <-colnames(data) 
-  data<-exprs(data)[, colNames[!(colNames==timeCol)]]
- #  data<-exprs(data) 
-
+  cNames <-colnames(data) 
+  if(length(timeCol)==0){
+		data <- exprs(data)
+  }else{
+		data<- exprs(data)[, cNames[!(cNames==timeCol)]]
+  }
+ 
    plotColX<-which(colnames(data)==channels[1])
    plotColY<-which(colnames(data)==channels[2])
 

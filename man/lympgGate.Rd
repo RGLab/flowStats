@@ -18,13 +18,13 @@
 
 \section{Extends}{
   
-  Class \code{"\link[flowCore:parameterFilter-class]{parameterFilter}"},
+  Class \code{\link[flowCore:parameterFilter-class]{parameterFilter}},
   directly.
   
-  Class \code{"\link[flowCore:concreteFilter-class]{concreteFilter}"},
+  Class \code{\link[flowCore:concreteFilter-class]{concreteFilter}},
   by class "parameterFilter", distance 2.
 
-  Class \code{"\link[flowCore:filter-class]{filter}"}, by class
+  Class \code{\link[flowCore:filter-class]{filter}}, by class
   "parameterFilter", distance 3.
 
 }
@@ -73,13 +73,14 @@ lymphFilter(channels, preselection=as.character(NULL),
 
 \arguments{
   
-  \item{x}{ An object of class \code{\link[flowCore]{flowSet}}. }
+  \item{x}{ An object of class \code{\link[flowCore:flowSet-class]{flowSet}}. }
 
   \item{channels}{ A character vector of length 2 of valid flow
     parameters in \code{x}. }
   
   \item{preselection}{ Either \code{NULL}, in which case this boils down
-    to fitting a regular \code{\link[flowCore]{norm2Filter}}, a
+    to fitting a regular
+    \code{\link[flowCore:norm2Filter-class]{norm2Filter}}, a 
     character scalar giving one of the flow parameters in \code{x}, or a
     named list of numerics specifying the initial rough
     preselection. The latter gets passed on to
@@ -90,12 +91,13 @@ lymphFilter(channels, preselection=as.character(NULL),
     \code{norm2Filter}. }
 
   \item{bwFac}{ The bandwidth factor that gets passed on to
-    \code{\link[flowCore]{curv1Filter}}. }
+    \code{\link[flowCore:curv1Filter-class]{curv1Filter}}. }
 
   \item{filterId}{ A character used as filterId. }
 
   \item{evaluate}{ A logical indicating wether the filter should be
-    resolved (computation of the \code{\link[flowCore]{filterResult}}
+    resolved (computation of the
+    \code{\link[flowCore:filterResult-class]{filterResult}} 
     and the subset). }
 
   \item{\dots}{ Additional arguments. }
@@ -143,7 +145,8 @@ lymphFilter(channels, preselection=as.character(NULL),
   
   \item{n2gate }{The \code{norm2Filter} object. }
 
-  \item{n2gateResults }{The \code{\link[flowCore]{filterResult}} after
+  \item{n2gateResults }{The
+    \code{\link[flowCore:filterResult-class]{filterResult}} after 
     applying the \code{norm2Filter} on the \code{flowSet}. }
 
   for the \code{lymphGate} function. Note that \code{x} and
@@ -170,7 +173,8 @@ lymphFilter(channels, preselection=as.character(NULL),
 
 \author{ Florian Hahne }
 
-\seealso{ \code{\link[flowCore]{norm2Filter}}, \code{\link[flowCore]{curv1Filter}} }
+\seealso{ \code{\link[flowCore:norm2Filter-class]{norm2Filter}},
+  \code{\link[flowCore:curv1Filter-class]{curv1Filter}} } 
 
 \examples{
 

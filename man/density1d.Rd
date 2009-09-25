@@ -22,8 +22,8 @@ density1d(x, stain, alpha = "min", sd = 2, plot = FALSE, borderQuant =
 
 \arguments{
   
- \item{x}{ A \code{\link[flowCore]{flowSet}} or
-    \code{\link[flowCore]{flowFrame}}. }
+ \item{x}{ A \code{\link[flowCore:flowSet-class]{flowSet}} or
+    \code{\link[flowCore:flowSet-class]{flowFrame}}. }
   
   \item{stain}{ A character scalar giving the flow parameter for which
     to compute the separation. }

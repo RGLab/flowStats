@@ -20,8 +20,8 @@ absolute=TRUE, filterId="defaultRectangleGate", positive=TRUE, ...)
 
 \arguments{
   
- \item{x}{ A \code{\link[flowCore]{flowSet}} or
-    \code{\link[flowCore]{flowFrame}}. }
+ \item{x}{ A \code{\link[flowCore:flowSet-class]{flowSet}} or
+    \code{\link[flowCore:flowFrame-class]{flowFrame}}. }
   
   \item{stain}{ A character scalar giving the flow parameter for which
     to compute the separation. }
@@ -104,7 +104,7 @@ absolute=TRUE, filterId="defaultRectangleGate", positive=TRUE, ...)
 \value{
 
   A range gate, more explicitely an object of class
-  \code{\link[flowCore:rectangleGate-class]{rectangelGate}}.  
+  \code{\link[flowCore]{rectangleGate}}.  
 
 }
 
@@ -114,7 +114,7 @@ absolute=TRUE, filterId="defaultRectangleGate", positive=TRUE, ...)
 \seealso{
   
   \code{\link{warpSet}},  \code{\link{rangeGate}},
-  \code{\link[flowCore:rectangleGate-class]{rectangelGate}}
+  \code{\link[flowCore]{rectangleGate}}
     
 }
   

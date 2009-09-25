@@ -18,7 +18,8 @@ proBin(m, minEvents=500,channels=NULL)
 
 \arguments{
   
-  \item{m}{ An object of class \code{\link[flowCore]{flowFrame}}}
+  \item{m}{ An object of class
+  \code{\link[flowCore:flowFrame-class]{flowFrame}}} 
   
   \item{minEvents}{ The \code{minEvents} The minimum number of events in
     each bin. (i.e. the termination criterion for the probability
@@ -26,8 +27,8 @@ proBin(m, minEvents=500,channels=NULL)
 
   \item{channels}{ A character vector for the Flourescence channels on which
     probability binning is to be performed. Defaults is NULL, in which case,
-	all flourescence channels are used for probability binning.( Time information,
-	if provided	in the flowFrame is discarded)	
+    all flourescence channels are used for probability binning.(
+    Time information, if provided in the flowFrame is discarded)	
 	}
   
 }

@@ -14,7 +14,7 @@ autoGate(x, \dots, scale = 2.5)
 
 \arguments{
   
-  \item{x}{ An object of class \code{\link[flowCore]{flowSet}}}
+  \item{x}{ An object of class \code{\link[flowCore:flowSet-class]{flowSet}}}
   
   \item{\dots}{ Named arguments or a list of the ranges used for the
     initial rough preselection. This gets passed on to
@@ -22,7 +22,7 @@ autoGate(x, \dots, scale = 2.5)
     details. }
 
   \item{scale}{ The \code{scale} parameter that gets passed on to
-    \code{\link[flowCore]{norm2Filter}}. }
+    \code{\link[flowCore:norm2Filter-class]{norm2Filter}}. }
 }
 
 \details{
@@ -40,7 +40,8 @@ autoGate(x, \dots, scale = 2.5)
   
   \item{n2gate }{The \code{norm2Filter} object. }
 
-  \item{n2gateResults }{The \code{\link[flowCore]{filterResult}} after
+  \item{n2gateResults }{The
+    \code{\link[flowCore:filterResult-class]{filterResult}} after 
     applying the \code{norm2Filter} on the \code{flowSet}. }
   
 }
@@ -48,7 +49,10 @@ autoGate(x, \dots, scale = 2.5)
 
 \author{ Florian Hahne }
 
-\seealso{ \code{\link{lymphGate}}, \code{\link[flowCore]{norm2Filter}} }
+\seealso{
+  \code{\link{lymphGate}},
+  \code{\link[flowCore:norm2Filter-class]{norm2Filter}}
+} 
 
 \examples{
 

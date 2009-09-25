@@ -68,7 +68,7 @@ peakNr=NULL, clipRange=0.01, nbreaks=11, fres, warpFuns=FALSE, ...)
 
 \details{
 
-  Normalization is archived by first identifying high-density regions
+  Normalization is achived by first identifying high-density regions
   (landmarks) for each \code{\link[flowCore:flowFrame-class]{flowFrame}}
   in the \code{flowSet} for a single channel and subsequently by
   computing warping functions for each \code{flowFrame} that best align

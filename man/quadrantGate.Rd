@@ -15,8 +15,8 @@ filterId="defaultQuadGate", ...)
 
 \arguments{
   
-  \item{x}{ A \code{\link[flowCore]{flowSet}} or
-    \code{\link[flowCore]{flowFrame}}. }
+  \item{x}{ A \code{\link[flowCore:flowSet-class]{flowSet}} or
+    \code{\link[flowCore:flowSet-class]{flowFrame}}. }
   
   \item{stains}{ A character vector of length two giving the two flow
     parameters for which the quad gate is to be computed. }
@@ -48,7 +48,7 @@ filterId="defaultQuadGate", ...)
 
 \value{
   
- An object of class \code{\link[flowCore:quadGate-class]{quadGate}}. 
+ An object of class \code{\link[flowCore]{quadGate}}. 
 
 } 
 
@@ -56,7 +56,7 @@ filterId="defaultQuadGate", ...)
 
 \seealso{
 
-  \code{\link[flowCore:quadGate-class]{quadGate}},
+  \code{\link[flowCore]{quadGate}},
   \code{\link{rangeGate}}
 
 }

@@ -84,13 +84,15 @@ curvRegs <- function(dat, p)
     for(i in seq_along(polM))
     {
         tmp <- polM[[i]]
-        colnames(tmp) <- c("x", "y")
+        colnames(tmp) <- p
         cent <- apply(tmp, 2, mean)
+        ntmp <-   data.frame(x=cent[1], y=cent[2], population=i,
+                                      type="centroid")
+        colnames(ntmp)[seq_along(p)] <- p
         res <- rbind(res,
                      rbind(data.frame(tmp, population=i,
                                       type="polygon"),
-                           data.frame(x=cent[1], y=cent[2], population=i,
-                                      type="centroid")))
+                           ntmp))
     }
     return(res)
 }

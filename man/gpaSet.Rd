@@ -13,8 +13,7 @@
 \usage{
 gpaSet(x, params, register="backgating", bgChannels=NULL,
        ref.method="median", rotation.only=TRUE,
-       merge.peak.cluster=TRUE, 
-       iter.max=10, thres=1e-3, plot=FALSE, ...)
+       clus.thres.merge=0.2,  plot=FALSE, ...)
 }
 
 \arguments{
@@ -37,15 +36,9 @@ gpaSet(x, params, register="backgating", bgChannels=NULL,
   \item{rotation.only}{Logical for coarsing a reflection matrix to a
     rotation matrix.}
   
-  \item{merge.peak.cluster}{Logial. Indicating whether to merge clusters
-    of peaks of high-density areas recognized by backgating on different
-    channels.} 
-  
-  \item{iter.max}{An integer indicating the maximum number of iterations for
-    GPA.}
-
-  \item{thres}{A numeric indicating the threshold of the convergence test for
-    GPA.}
+  \item{clus.thres.merge}{A numerical between 0 to 1 indicating the
+  threshold of ...
+  }
 
   \item{plot}{Logical. Indicating whether to plot the resulting
     figures of feature identification and GPA methods. Mainly used for

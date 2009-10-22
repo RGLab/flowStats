@@ -1,4 +1,5 @@
 import(flowCore)
+import(lattice)
 
 importClassesFrom(methods,
                   character,
@@ -25,17 +26,23 @@ importFrom(KernSmooth,
 importFrom(MASS,
            hubers)
 
+#import(fda)
+importFrom(fda, create.bspline.basis, data2fd, eval.fd, fdPar,
+           landmarkreg)
 
 importFrom(flowViz,
            glpolygon)
 
-importFrom(lattice,
-           trellis.par.get)
-
-import(fda)
-
 importFrom(grDevices,
-           rgb)
+           chull,
+           col2rgb,
+           contourLines,
+           dev.cur,
+           dev.new,
+           dev.off,
+           png,
+           rgb,
+           x11)
 
 importFrom(graphics,
            abline,
@@ -44,7 +51,8 @@ importFrom(graphics,
            par,
            polygon,
 	   plot,
-           rect)
+           rect,
+           text)
 
 importFrom(methods,
            "@<-",

@@ -4,9 +4,7 @@
 ## one-dimentional. 
 gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
 		   ref.method="median", rotation.only=TRUE,
-                   merge.peak.cluster=TRUE,
-                   iter.max=10,
-                   thres=1e-3, plot=FALSE, ...) 
+                   clus.thres.merge=0.2, plot=FALSE, ...) 
 {
     ## check valid arguments
     flowCore:::checkClass(x, "flowSet")
@@ -16,11 +14,12 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     if (length(params) < 2) {
         stop("At least two params are required to apply multi-dimensional
               normalization \n") }
-
+    nDim <- length(params)
+    
     flowCore:::checkClass(register, "character")
     ## what if register=="curv1Filter"
     if (is.null(bgChannels)) {
-       cat("Argument 'bgChannels' is missing. Default with channels other than",
+       message("Argument 'bgChannels' is missing. Default with channels other than", 
            params, ".\n")
        bgChannels <- setdiff(colnames(x), c(params, "time", "Time"))
     }
@@ -31,37 +30,56 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
  
     flowCore:::checkClass(rotation.only, "logical")
     flowCore:::checkClass(ref.method, "character")
-    flowCore:::checkClass(iter.max, "numeric")
-    flowCore:::checkClass(thres, "numeric")
+    #flowCore:::checkClass(iter.max, "numeric")
+    flowCore:::checkClass(clus.thres.merge, "numeric")
     flowCore:::checkClass(plot, "logical")  ## for debugging purposes
   
     ## 1. identifying and registering (labelling) features
     if (register=="backgating") {
-        cat("Backgating ... \n")
+        message("Backgating ... \n")
         bg <- flowStats:::backGating(x, xy=params, channels=bgChannels)
-        features <- flowStats:::idFeatures(bg, merge.peak.clust=TRUE) ## $sample** and $reference
-    }
+        features <- flowStats:::idFeatures(bg, nDim=nDim,
+                                           thres.merge=clus.thres.merge) 
+        }
     else { ## use Curve1Filter and landmarkMatrix to find features for each
            ## channels for each flowFrames
         stop("gpaSet: Only Backgating method is available")
     }
 
-    cat("Procrustes analysis ... \n")
+    message("Procrustes analysis ... \n")
     ## 2. translation: translate the centroid of the labelled features of
     ##    each flowFrames to the origin
     translate <- lapply(features, function(x) colMeans(x[, 1:2], na.rm=TRUE))
     
-    tfeatures <- list() ## translated registered features
+    #tfeatures <- list()## translated registered features
+    tfeatures <- features
     I <- matrix(1, nrow=nrow(features[[1]]), ncol=1)
+
+    #for (i in names(features))
+    #  tfeatures[[i]] <- features[[i]][, 1:2] - I %*% translate[[i]]
+
     for (i in names(features))
-      tfeatures[[i]] <- features[[i]][, 1:2] - I %*% translate[[i]]
- 
-    ## 3. transformation: applying SVD to find rotation matrix and scalling factor
-    
-    SVD <- lapply(tfeatures[-which(names(tfeatures)=="reference")],
-                  iProcrustes,
-                  tfeatures$reference,
-                  rotation.only=rotation.only)
+       tfeatures[[i]][, 1:nDim] <-
+           features[[i]][, 1:nDim] - I %*% translate[[i]]
+
+    ## 3. transformation: applying SVD to find rotation matrix and
+    ## scalling factor
+    samtfeatures <- tfeatures[names(tfeatures)!="reference"]
+    SVD <- lapply(samtfeatures,
+              function(x, y, rotation.only) {
+                  if (nrow(x) != nrow(y)) {
+                      missing <- which(!(y$cluster %in% x$cluster))
+                      y <- y[-missing, ]
+                   }
+                  iProcrustes(x[, 1:nDim], y[, 1:nDim], rotation.only)
+              },
+              tfeatures$reference,
+              rotation.only=TRUE)
+
+    #SVD <- lapply(tfeatures[-which(names(tfeatures)=="reference")],
+    #              iProcrustes,
+    #              tfeatures$reference,
+    #              rotation.only=rotation.only)
     
     ## eliminate boundary points
     for (i in params) {

@@ -10,12 +10,13 @@
 ##     lambda      Robust threshold for outlier accessment. Defult to 1/1.4.
 ##                 A cluster is consider outliers if the number of member is
 ##                 less than median of all clusters' member * lambda.
-##     down.weight Weight bogus features as zero
 ##     plot.workflow   Plot results of workflow of 'idFeatures'
 ##
 ## return value:
 ##     register        A list containg features for each samples.
-##     TransMatrix
+##     TransMatrix     Translation matrix translating the center of the
+##                     figures, e.g., sets of features for each sample,
+##                     to the origin. 
 
 idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=1/1.4,
                                    plot.workflow=FALSE,

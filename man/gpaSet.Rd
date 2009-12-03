@@ -12,8 +12,10 @@
 
 \usage{
 gpaSet(x, params, register="backgating", bgChannels=NULL,
-       ref.method="median", rotation.only=TRUE,
-       clus.thres.merge=0.2,  plot=FALSE, ...)
+       bg=NULL,  rotation.only=TRUE,
+       downweight.missingFeatures=FALSE, thres.sigma=2.5,
+       show.workflow=FALSE,
+       ask=names(dev.cur())!="pdf")
 }
 
 \arguments{
@@ -23,45 +25,61 @@ gpaSet(x, params, register="backgating", bgChannels=NULL,
     interest.}
 
   \item{register}{A character indicating the method to be used for identifying
-    features. Avaliable methods include \dQuote{backgating} and
+    features. Available methods include \dQuote{backgating} and
     \dQuote{curve1Filter}. } 
  
-  \item{bgChannels}{A    character vector indicating the channels used for
-    backgating.}
-
-  \item{ref.method}{A character indicating the method to be used for
-    calculating the reference feature. Up to this moment, the only avaliable
-    method is \dQuote{mean}.}
+  \item{bgChannels}{A character vector indicating the channels used for
+    backgating. If NULL, \code{backGating} will find the appropriate
+    backgating channels.}
+  
+  \item{bg}{A data frame as the returning value of the
+    \code{backGating} function. If not NULL, \code{gpaSet} will skip the
+    \code{backGating} process and use the given data frame to extract
+    potential features.}
 
   \item{rotation.only}{Logical for coarsing a reflection matrix to a
     rotation matrix.}
-  
-  \item{clus.thres.merge}{A numerical between 0 to 1 indicating the
-  threshold of ...
-  }
 
-  \item{plot}{Logical. Indicating whether to plot the resulting
-    figures of feature identification and GPA methods. Mainly used for
-    testing.}
+  \item{downweight.missingFeatures}{Logical. If TRUE, the missing
+  features, labeled as bogus features, are downweighted to zero. See details. }
 
-  \item{...}{Further arguments.}
+  \item{thres.sigma}{A numerical value indicating the threshold of where
+  to cut the tree, e.g., as resulting from \code{diana}, into several clusters.
+  It is default to 2.5 sigma of the distribution of the
+  heights of the cluster points.}
+
+  \item{show.workflow}{Logical. If TRUE, the workflow of 
+    \code{gpaSet} will be displayed.}
+
+  \item{ask}{Logical. If TRUE, the display operates in interactive
+    mode.}
+    
 }
 
 \details{
-   Normalization is acheived by first identifying features for each
+   Normalization is achieved by first identifying features for each
    \code{\link[flowCore:flowFrame-class]{flowFrame}} in the \code{flowSet} for
-   designated channels using backgating, sebsequently leballing features, and
-   finally aligning the feautres to a reference feature in the sense of
-   minimizing minimizing the Frobenus norm of 
+   designated channels using backgating, subsequently labeling features, and
+   finally aligning the features to a reference feature in the sense of
+   minimizing  the Frobenus norm of 
    \deqn{||sFQ - \bar{F}||,}
-   where \eqn{s} is a scaler, \eqn{Q} a rotational matrix, \eqn{F} the matrix of
+   where \eqn{s} is a scalar, \eqn{Q} a rotational matrix, \eqn{F} the matrix of
    features, and \eqn{\bar{F}} the reference feature. Both  \eqn{s} and
-   \eqn{Q} are solved by using signular value decomposition (SVD).  
+   \eqn{Q} are solved by using singular value decomposition (SVD).
 
+   Note that if feature \eqn{F_{ij}} is missing, it is given a bogus
+   value as \eqn{\bar{F}_{ij}}.
+   
+   If \code{downweight.missingFeatures} is TRUE, the cost function
+   becomes
+   \deqn{||s W_0 FQ - W_0 \bar{F}||,}
+   where the weighting function \eqn{W_0} is zero if the corresponding
+   feature is bogus.
+   
 }
 
 \value{
-  The normalized \code{flowSet} with a set of "GPA" attribute.
+  The normalized \code{flowSet} with "GPA" attribute.
 }
 
 \references{in progress}
@@ -71,11 +89,11 @@ gpaSet(x, params, register="backgating", bgChannels=NULL,
 \examples{
 ## Example 1: calling up gpaSet directly
 data(ITN)
-ITN <- ITN[1:8, ]
+data(BackGating)
 dat <- transform(ITN, "CD8"=asinh(CD8))
 
 xy = c("FSC", "SSC")
-s <- gpaSet(dat, params=xy, bgChannels="CD8", ref.method="mean")
+s <- gpaSet(dat, params=xy, bg=BackGating)
 
 if(require(flowViz)) {
    d1 <- densityplot(~., s, channels=c("FSC", "SSC"), 

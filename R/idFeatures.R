@@ -1,163 +1,148 @@
-## identify and labeling significant features using backgating return values and
-## divisive clustering method -- diana.
-idFeatures <- function(bg, nDim, thres.merge=0.2, weight.mfeature=FALSE,
-                           plot=FALSE)
-{
+## Internal use only.
+## Identify and labeling significant features using backgating return values and
+## divisive clustering method (diana from the cluster package).
+##
+## input argument:
+##     bg    A data.frame, must be a return value of the backgating function
+##     nDim  The number of dimension of the data subject to normalization
+##     thres.sigma Robut threshold. Default to 2.5 sigma of the distribution of
+##                 height. Tree cut at mean(height) * (thres.sigma)
+##     lambda      Robust threshold for outlier accessment. Defult to 1/1.4.
+##                 A cluster is consider outliers if the number of member is
+##                 less than median of all clusters' member * lambda.
+##     down.weight Weight bogus features as zero
+##     plot.workflow   Plot results of workflow of 'idFeatures'
+##
+## return value:
+##     register        A list containg features for each samples.
+##     TransMatrix
+
+idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=1/1.4,
+                                   plot.workflow=FALSE,
+                                   ask=names(dev.cur())!="pdf")
+{   
     ## 'bg' is the return value of function flowStats:::backGating
 
-    if (thres.merge > 1) {
-        thres.merge <- 0.2
-        message("idFeatures: thres.merge must between 0 to 1. Defaulting
-        to 0.2.\n")
+    if (lambda > 1) {
+        message("idFeatures: lambda must be between 0 to 1. Defaulting to
+                 1/1.4. \n")
+        lambda <- 1/1.4
     }
     
-    regFeatures <- list()
-    refFeatures <- list()
-    ch <- split(bg, factor(bg$channel))
-    lambda <- 0.1
+    ## 1. take all the centoids from all the backgating and apply 'diana'
+    ##    to get the clusters of features
+    cent <- bg[bg$type=="centroid", ]
+    cent.translate <- .centerFigure(cent, nDim)
     
-    ## identify features on the projection of each bg channels
-    for (i in names(ch))
-    { 
-        perChannel <- ch[[i]]
-        center <- perChannel[perChannel$type=="centroid", ]
-        ## use diversive hierarchical clustering (diff from agglomerative)
-        center<-.useDivCluster(center, 2, thres.merge, h.cluster="diana") 
+    ## cluster centered centroids using 'diana'. cent.clust has attribute
+    ## 'height' and 'cluster'
+    cent.clust <- .useDivCluster(cent.translate$centered, nDim, thres.sigma,
+                                naming.channel=FALSE)
+    ## 2. label the outliers
+    filt.clust <- .filterOutlier(cent.clust, lambda=1/1.4, keep.outlier=TRUE,
+                                      label.outlier=".outlier")
 
-        ## flag the outliers
-        center <- .filterOutlier(center, lambda, channel=i, keep.outlier=TRUE)
-        
-        refFeatures[[i]] <- .calcReference(center)
-                                                       
-        perSample = split(center, factor(center$sample))
-        
-        ## if cluster labeled as an outlier...
-        idx <- grep("outlier", refFeatures[[i]]$cluster)
-        if (length(idx) > 0)
-            refF <- refFeatures[[i]][-idx, ]
-        else
-            refF <- refFeatures[[i]]
+    ## 3. get reference features, do not include outliers
+    ## reference <- .calcReference(filt.clust, nDim) # if keep.outlier=FALSE
+    reference <- .calcReference(
+                    filt.clust[!filt.clust$cluster %in% ".outlier", ], nDim)
 
-        ## classify features for each sample
-        regFeatures[[i]] <- 
-            lapply(perSample, .classifyFeatures,
-                   refF=refF, nDim=nDim)
-
-    }
-
-    ## combine all registered features and group features for each sample
-    combf <- list()
-    for (m in levels(factor(bg$sample))) {
-         combf[[m]] <- do.call(rbind, 
-                     lapply(regFeatures, function(a, b) {a[[b]]}, m))
-    }
-    ## plot the result
-    if (plot)
-        print(lattice::xyplot(FSC~SSC|sample, group=cluster,
-                              data=do.call(rbind,combf),
-                              main="feature labeling",
-                              auto.key=list(space="right")
-                              ))
-    ## combind all the 
-    combf <- .useDivCluster(do.call(rbind, combf),
-                            nDim=2, h.cluster="diana",
-                            thres.merge=thres.merge,
-                            naming.channel=FALSE)
-    ## plot the result
-    if (plot)
-        print(lattice::xyplot(FSC~SSC|sample, group=cluster,
-                              data=combf,
-                              main="feature labeling: using diana",
-                              auto.key=list(space="right")
-                              ))           
-    
-    ## reduce outlier
-    combf <- .filterOutlier(combf, lambda=lambda, keep.outlier=FALSE)
-    reference <- .calcReference(combf)
+    ## 4. register features for each samples (with bogus features)
+    perSample <- split(filt.clust, factor(filt.clust$sample))
+    register  <- lapply(perSample, .classifyFeatures,
+                        refF=reference, nDim=nDim)
+    ## 5. prepare return value register (containing the reference features)
+    reference$sample <- "reference"
     reference$bogus <- rep(FALSE, nrow(reference))
-
+    register$reference <- reference
     
-    ## need to classify the cluster center again, pick the feature that is
-    ## closer to the reference
-    combf <-lapply(split(combf, factor(combf$sample)),
-              function(a, refF, nDim) {
-                 perCluster <- split(a, factor(a$cluster))
-                 reg <- lapply(perCluster, function(b) {
-                     ## take false if there is any
-                     if (sum(!b$bogus)>0)
-                         b <- b[!b$bogus, ]
-                     
-                     tmp <- rbind(refF[b$cluster[1], 1:nDim], b[, 1:nDim])
-                     minD <- b[which.min(as.numeric(dist(tmp))[1:nrow(b)]), ]
-                 })
-                 do.call(rbind, reg)
-              }, reference, nDim)
-    ## check each sample has the same amont of feature
-    ## combf <- .checkFeatureNum(combf, reference, nDim)
-    if (plot)
-        print(lattice::xyplot(FSC ~ SSC | sample, group=cluster,
-                        data=do.call(rbind, combf),
-                        auto.key=list(title="cluster",space="right"),
-                        main="reduced features"))
-        #print(lattice::xyplot(FSC ~ SSC | sample, group=bogus,
-        #                data=do.call(rbind, combf),
-        #                auto.key=list(title="Bogus",space="right"),
-        #                main="reduced features"))
-    combf[["reference"]] <- reference
-
-     return(combf)
+    if (plot.workflow)
+        .plotWorkFlow(cent=cent, cent.translate=cent.translate,
+                      cent.clust=cent.clust,
+                      filt.clust=filt.clust, register=register, ask=ask)
+    
+     return(list(register=register, TransMatrix=cent.translate$TransMatrix))
 }
 
-#################################
-## filter out outlier. 
-#################################
-.filterOutlier <-function(center, lambda, channel=NULL, keep.outlier=FALSE) {
-    nclust <- sapply(split(center, factor(center$cluster)),
-                         function(x) nrow(x))
-    outlier_thres <- round(length(unique(center$sample)) * lambda)
+###############################
+## get the centered figure
+###############################
+.centerFigure <- function(cent, nDim)
+{
+  ## cent: centroids of the return values of backgating
+  ## return translated centroids (called centered figures)
+  TransMatrix <- lapply(split(cent, cent$sample),
+                        function(x) mean(x[, 1:nDim], na.rm=TRUE))
+  cF <- lapply(split(cent, cent$sample),
+               function(x, TransMatrix) {
+                   I <- matrix(1, nrow=nrow(x), ncol=1)
+                   x[, 1:nDim] <- x[, 1:nDim] - I %*% TransMatrix[[x$sample[1]]]
+                   x
+               }, TransMatrix)
+  
+  return(list(centered=do.call(rbind, cF), TransMatrix=TransMatrix))
+}
+
+#################################################
+## filter out outlier cluster and cluster members
+## threshold = lambda * number of total features
+#################################################
+.filterOutlier <-function(center, lambda=1/1.4,
+                          keep.outlier=FALSE, label.outlier=NULL)
+{
+    if (keep.outlier & is.null(label.outlier))
+        label.outlier <- ".outlier"
+    
+    nclust <- table(center$cluster)
+    outlier_thres <- median(table(center$cluster)) * lambda
     outlier <- names(nclust)[nclust <= outlier_thres]
 
-    if (length(outlier) > 0) { ## if there are outliters
-        if (keep.outlier) {
-            center$cluster[center$cluster %in% outlier] <-
-                 paste(channel, "outlier", sep=".")
-        }
-        else
-            center <- center[!center$cluster %in% outlier, ]
-     }
+    ifelse(keep.outlier,
+       center$cluster[center$cluster %in% outlier] <- label.outlier,
+       center <- center[!center$cluster %in% outlier, ])
+
+    attr(center, "outlier_thres") <- outlier_thres
     return(center)
 }
 
 ###########################
 ## calculate the refenrence
 ###########################
-.calcReference <- function(center, method="median")  {
-      ref <- do.call(rbind, lapply(split(center, center$cluster),
-                 function(a) {
-                    ref <- as.data.frame(t(apply(a[, 1:2], 2, median)))
-                    ref$cluster <- a$cluster[1]
-                    return(ref)
+.calcReference <- function(center, nDim=NULL, method="median")  {
+
+    if (is.null(nDim)) stop("Dimension of the variables must be provided")
+    
+    ref <- do.call(rbind, lapply(split(center, center$cluster),
+                   function(a) {
+                      ref <- as.data.frame(t(apply(a[, 1:2], 2, median)))
+                      ref$cluster <- a$cluster[1]
+                      return(ref)
                   }))
 }
 
 
-#################################################
-## use divisive clustering method: diana or diasy
-#################################################
+########################################################
+## use divisive hierarchical clustering, diana-algorithm
+########################################################
 .useDivCluster <- function(center, nDim, naming.channel=TRUE,
-                           thres.merge=0.2, h.cluster="diana") {
+                           thres.sigma=2.5)
+{
     ## sign (or re-sign the cluster label)
     clustD  <- cluster::diana(center[, 1:nDim])
-    heightThres <- max(clustD$height)*thres.merge
+    ## heightThres indicates where the tree should be cut
+    heightThres <- sd(clustD$height) * thres.sigma
 
+    ## cut into n groups by 'heightThres'
     if (naming.channel)
         center$cluster <- paste(center$channel, 
                                 stats::cutree(as.hclust(clustD),
                                               h=heightThres),
-                            sep=".")
+                                sep=".")
     else
         center$cluster <- stats::cutree(as.hclust(clustD), h=heightThres)
-    
+
+    attr(center, "height") <- heightThres
+    attr(center, "cluster") <- clustD
     return(center)
 }
 
@@ -175,8 +160,13 @@ idFeatures <- function(bg, nDim, thres.merge=0.2, weight.mfeature=FALSE,
   reg$cluster <- refF$cluster
   
   perClust <- split(eachSample, factor(eachSample$cluster))
-  if (!identical(grep("outlier", names(perClust)), integer(0)))
-      perClust <- perClust[-grep("outlier", names(perClust))]
+
+  ## ignore outliers (the label not in refF$clust
+  label <- unique(eachSample$cluster)
+  anyOutlier <- label[!label %in% refF$cluster]
+  if (length(anyOutlier))
+      perClust <- perClust[!names(perClust) %in% anyOutlier]
+
 
   dim <- seq_len(nDim)
   
@@ -204,47 +194,6 @@ idFeatures <- function(bg, nDim, thres.merge=0.2, weight.mfeature=FALSE,
   return(reg)
 }
 
-#################
-###############
-## plot results
-###############
-.plotResult <- function(perChannel, center)
-{
-    channel = perChannel$channel[1]
-    print(xyplot(x ~ y | factor(perChannel$sample), 
-                 data=perChannel,
-                 pch=20,
-                 main=paste("backgating on", channel)))
-
-   print(xyplot(x~y, data=center,
-                main=paste("all centroids", channel)))
-    
-   print(xyplot(x~y|factor(center$peak),
-                data=center, 
-                main=paste("centriod per popupations", channel)))
-            
-   print(xyplot(x~y|factor(paste("peak", center$peak)) +
-                  factor(paste("population", center$population)), 
-                data=center, 
-                main=paste("centriod per peak", channel)))
-    	                
-   #print(xyplot(x ~ y|which,
-   #             do.call(make.groups, lapply(regFeatures[[i]], as.data.frame)),
-   #             as.table=TRUE, 
-   #             main=paste("registered features with backgating on", channel)))
-            
-   #Features=regFeatures[[i]]
-   #Features$reference=refFeatures[[i]][, 1:2]
-   #print(xyplot(x ~ y,
-   #             data=do.call(make.groups, lapply(Features, as.data.frame)),
-   #             pch=0:(length(Features)-1), 
-   #   	        group=which, col="black",
-   #   	        key=list(space="right", title="samples",
-   #                text=list(names(Features)), 
-   #                points=list(pch=1:length(Features)-1 )),
-   #   	        main=paste("registered features with backgating on", channel)))
-}
-
 
 ###################################################
 ## check if the number of features for
@@ -266,25 +215,91 @@ idFeatures <- function(bg, nDim, thres.merge=0.2, weight.mfeature=FALSE,
 }
 
 
-.plotFeatures <- function(combf, reference) {
+################################
+## plot the results of workflow
+################################
 
-   ## per sample
-   print(xyplot(x ~ y,
-                data=do.call(make.groups, lapply(combf, as.data.frame)),
-                group=which,
-                auto.key=list(space="right")))
+.plotWorkFlow <- function(cent, cent.translate,
+                          cent.clust, filt.clust, register, ask)
+{
+  par(ask=ask)
+  on.exit(par(ask=FALSE))
+  ## 1. centroid: cent
+  fo <- as.formula(paste(names(cent)[1], "~", names(cent)[2]))
+  mainTitle <- do.call(paste, as.list(unique(cent$channel)))
+  mainTitle <- paste("Centroids of high-density areas yielded by
+                     backgating on channel", mainTitle)
+  print(lattice::xyplot(fo, group=channel,
+                        data=cent, 
+                        auto.key=list(cex=0.7, title="channel", space="right"),
+                        main=mainTitle,
+                        sub="potential features"))
 
-   a = do.call(rbind, combf)
-   xyplot(x~y|factor(a$channel), a)
 
-   #Features=regFeatures[[i]]
-   #Features$reference=refFeatures[[i]][, 1:2]
-   #print(xyplot(x ~ y,
-   #             data=do.call(make.groups, lapply(Features, as.data.frame)),
-   #             pch=0:(length(Features)-1), 
-   #   	        group=which, col="black",
-   #   	        key=list(space="right", title="samples",
-   #                text=list(names(Features)), 
-   #                points=list(pch=1:length(Features)-1 )),
-   #   	        main=paste("registered features with backgating on", channel)))
+  col <- rainbow(length(unique(cent$sample)))
+  key <- list(text=list(levels(factor(cent$sample))),
+              points=list(col=col, pch=20, alpha=0.7),
+              cex=0.7, title="sample")        
+  print(lattice::xyplot(fo, group=sample, 
+                        data=cent,
+                        col=col, pch=20, alpha=0.7,
+                        key=c(key, space="right"),
+                        main=mainTitle,
+                        sub="potential features"))
+  
+  ## 2. centered figure: cent.translate$centered
+  print(lattice::xyplot(fo, group=sample,
+                        data=cent.translate$centered,
+                        col=col, pch=20, alpha=0.7,
+                        key=c(key, space="right"),
+                        sub="potential features",
+                        main="Centered figure: translate the center of
+                              centroids to the origin"))
+  
+  ## 3. clustered,labeled, centered features: cent.clust
+  subTitle <- paste("Clusters containing <",
+                    format(attr(cent.clust, "height"), digit=3),
+                    "members are considered outliers.")
+  
+  print(plot(attr(cent.clust, "cluster"), which.plot=2,
+             xlab="Potential Features",
+             main=paste("Cut the tree at height",
+                         format(attr(cent.clust, "height"), digit=3))
+             ))
+  d <- density(attr(cent.clust, "cluster")$height)
+  print(plot(d, main="Distribution of the cluster (diana) height"))
+  abline(v=attr(cent.clust, "height"), col="grey")
+  text(x= attr(cent.clust, "height"), y=mean(d$y)+2*sd(d$y),
+       labels="cutting the\n tree here", pos=4)
+  
+  print(lattice::xyplot(fo, group=cluster,
+                   data=cent.clust,
+                   auto.key=list(cex=0.7,title="cluster", space="right"),
+                   main="Clusters of potential features",
+                   sub=subTitle))
+  ## plot dendrogram of attr(cent.clust, "cluster")?
+  
+  ## 3. filt.clust
+  subTitle <- paste("Clusters containing < ",
+                    attr(filt.clust, "outlier_thres"),
+                    "members are considered outliers.")
+  print(lattice::xyplot(fo, group=cluster,
+                        data=filt.clust,
+                        auto.key=list(cex=0.7, title="cluster", space="right"),
+                        sub=subTitle,
+                        main="Clusters of features and outliers"))
+                        
+  ## 4. register -- final features and reference features
+  fo <- as.formula(paste(names(cent)[1], "~", names(cent)[2],
+                         " | sample"))
+  print(lattice::xyplot(fo , group=cluster,
+                        data=do.call(rbind, register),
+                        auto.key=list(cex=0.7, title="label",space="right"),
+                        main="Labeled features"))
+  print(lattice::xyplot(fo, group=bogus,
+                        data=do.call(rbind, register),
+                        auto.key=list(cex=0.8, title="Bogus",space="right"),
+                        main="Labeled features",
+                        sub="Missing features are those with bogus=TURE."))
+        
 }

@@ -90,10 +90,14 @@ gpaSet(x, params, register="backgating", bgChannels=NULL,
 ## Example 1: calling up gpaSet directly
 data(ITN)
 data(BackGating)
-dat <- transform(ITN, "CD8"=asinh(CD8))
+
+tl <- transformList(colnames(ITN)[3:7], asinh, transformationId="asinh")
+dat <- transform(ITN, tl)
 
 xy = c("FSC", "SSC")
-s <- gpaSet(dat, params=xy, bg=BackGating)
+bgChannels = c("CD8", "CD4", "CD3")
+## bg <- flowStats:::backGating(x, xy=xy, channels=bgChannels)
+s <- gpaSet(dat, params=xy, bgChannels=bgChannels, bg=BackGating)
 
 if(require(flowViz)) {
    d1 <- densityplot(~., s, channels=c("FSC", "SSC"), 

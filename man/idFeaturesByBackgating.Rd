@@ -11,18 +11,23 @@
 
 \usage{
 idFeaturesByBackgating(bg, nDim, thres.sigma=2.5, lambda=1/1.4,
-                       plot.workflow=TRUE, ask=TURE)
+                       reference.method="median",
+                       plot.workflow=FALSE, ask=names(dev.cur())!="pdf")
 }
 
 \arguments{
   \item{bg}{A data frame containing subpopulations on channels of
-  interests. Must be a returning result from \code{flowStats:::backGating}}
+    interests. Must be a returning result from \code{flowStats:::backGating}}
   \item{nDim}{An integer indicating the length of channels of interest.}
   \item{thres.sigma}{An numerical value indicating the threshold at
-  which to cut tree, e.g., as resulting from 'diana', into several clusters.}
+    which to cut tree, e.g., as resulting from 'diana', into several clusters.}
   \item{lambda}{a numerical value of the threshold for deciding outlier
-  clusters. The default value, 1/1.4, is derived using "robust
-  statistics". See details.}
+    clusters. The default value, 1/1.4, is derived using "robust
+  statistics". See 'details'.}
+  \item{reference.method}{A character vector indicating the method for
+    computing the reference features. If \code{median}, the reference
+    feature is defined by the medain of clusters of features. Valid
+    methods include \code{median} and \code{mean}. }
   \item{plot.workflow}{Logical. If TURE, display the workflow of feature
     identification.}
   \item{ask}{Logical. If TRUE, the display operates in interactive mode.}
@@ -46,21 +51,27 @@ idFeaturesByBackgating(bg, nDim, thres.sigma=2.5, lambda=1/1.4,
   less than the median of the numbers of all clusters' members times 'lambda'.
 }
 
-\value{ A list with items:
+\value{ 
   \item{register}{A list containing registered features for each sample.}
-  \item{TransMatrix}{Transition matrix that translate the center of the
-  figures, constructed by the sets of features, to the origin.}
 }
   
 \author{Chao-Jen Wong}
 \seealso{
   \code{\link[cluster:diana]{diana}},
-  \code{\link{BackGating}}
+  \code{\link{BackGating}}, \code{\link{gpaSet}}.
 }
 
 \examples{
-load(BackGating)
-results <- idFeaturesByBackgating(bg=BackGating, nDim=2,
+\dontrun{
+data(ITN)
+wf <- workFlow(ITN)
+tl <- transformList(colnames(ITN)[3:7], asinh, transformationId="asinh")
+dat <- trnasformList(ITN, tl)
+bg <- backGating(dat, xy=c("FSC", "SSC"), channels="CD3")
+}
+
+data(BackGating)
+results <- flowStats:::idFeaturesByBackgating(bg=BackGating, nDim=2,
                        plot.workflow=TRUE, ask=TRUE)
 
 }

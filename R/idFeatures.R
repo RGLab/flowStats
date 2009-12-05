@@ -17,7 +17,7 @@
 ##     register        A list containg features for each samples.
 ##
 
-idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=1/1.4,
+idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=0.1,
                                    reference.method="median",
                                    plot.workflow=FALSE,
                                    ask=names(dev.cur())!="pdf")
@@ -89,15 +89,18 @@ idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=1/1.4,
 ## filter out outlier cluster and cluster members
 ## threshold = lambda * number of total features
 #################################################
-.filterOutlier <-function(center, lambda=1/1.4,
+.filterOutlier <-function(center, lambda=0.1,
                           keep.outlier=FALSE, label.outlier=NULL)
 {
     if (keep.outlier & is.null(label.outlier))
         label.outlier <- ".outlier"
     
     nclust <- table(center$cluster)
-    outlier_thres <- median(table(center$cluster)) * lambda
-    outlier <- names(nclust)[nclust <= outlier_thres]
+    outlier_thres <- lambda * sum(nclust)
+    #outlier_thres <- median(table(center$cluster)) * lambda
+    outlier <- names(nclust)[nclust < outlier_thres]
+    if (length(outlier) == length(nclust))
+        stop("idFeature: chose smaller lambda.")
 
     ifelse(keep.outlier,
        center$cluster[center$cluster %in% outlier] <- label.outlier,

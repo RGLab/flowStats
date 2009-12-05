@@ -48,10 +48,10 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
             message("Backgating ... \n")
             bg <- flowStats:::backGating(x, xy=params, channels=bgChannels) 
         }
-        features <- idFeaturesByBackgating(bg, nDim=nDim,
+        features <- flowStats:::idFeaturesByBackgating(bg, nDim=nDim,
                        reference.method="median",
                        plot.workflow=show.workflow, ask=ask,
-                       thres.sigma=thres.sigma, lambda=1/1.4)
+                       thres.sigma=thres.sigma, lambda=0.1)
     }
     else { ## nnclust for higher dimensions
         stop("gpaSet: Only Backgating method is available")
@@ -357,7 +357,7 @@ print.GPA <- function(gpaObj, ...)
   xs <- as(list("1.before"=before, "2.after"=after), "flowSet")
   
   f <- filter(xs, curv2Filter(params, bwFac=1.4))
-  print(xyplot(fo, after.gpa, main="after WGPA"))
+  print(flowViz::xyplot(fo, after.gpa, main="after WGPA"))
   print(flowViz::xyplot(fo, xs, filter=f,
                         main="Before and After WGPA",
                         sub="Aggregation of all the flowFrames",

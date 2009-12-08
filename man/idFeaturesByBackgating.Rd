@@ -10,7 +10,7 @@
 }
 
 \usage{
-idFeaturesByBackgating(bg, nDim, thres.sigma=2.5, lambda=1/1.4,
+idFeaturesByBackgating(bg, nDim, thres.sigma=2.5, lambda=0.1,
                        reference.method="median",
                        plot.workflow=FALSE, ask=names(dev.cur())!="pdf")
 }
@@ -21,13 +21,13 @@ idFeaturesByBackgating(bg, nDim, thres.sigma=2.5, lambda=1/1.4,
   \item{nDim}{An integer indicating the length of channels of interest.}
   \item{thres.sigma}{An numerical value indicating the threshold at
     which to cut tree, e.g., as resulting from 'diana', into several clusters.}
-  \item{lambda}{a numerical value of the threshold for deciding outlier
-    clusters. The default value, 1/1.4, is derived using "robust
-  statistics". See 'details'.}
+  \item{lambda}{A numerical value indicating the percentage of the
+    potential features that is used as a threshold for deciding outlier
+    clusters. The default value is 0.1.}
   \item{reference.method}{A character vector indicating the method for
     computing the reference features. If \code{median}, the reference
-    feature is defined by the medain of clusters of features. Valid
-    methods include \code{median} and \code{mean}. }
+    feature is defined by the medain of eac cluster of features. Valid
+    methods include \code{median} and \code{mean} only. }
   \item{plot.workflow}{Logical. If TURE, display the workflow of feature
     identification.}
   \item{ask}{Logical. If TRUE, the display operates in interactive mode.}

@@ -71,6 +71,7 @@ qg
 if(require(flowViz))
 xyplot(`FL2-H`~`FL4-H`, dat, filter=qg)
 qg <- quadrantGate(dat, c("FL2-H", "FL4-H"), alpha=c(0.1, 0.9), plot=TRUE)
-
+qg
+split(dat, qg)
 
 }

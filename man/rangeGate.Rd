@@ -125,5 +125,5 @@ dat <- GvHD[pData(GvHD)$Patient==10]
 dat <- transform(dat, "FL4-H"=asinh(`FL4-H`), "FL3-H"=asinh(`FL3-H`))
 rg <- rangeGate(dat, "FL4-H", plot=TRUE)
 rg
-
+split(dat, rg)
 }

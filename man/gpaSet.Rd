@@ -25,8 +25,8 @@ gpaSet(x, params, register="backgating", bgChannels=NULL,
     interest.}
 
   \item{register}{A character indicating the method to be used for identifying
-    features. Available methods include \dQuote{backgating} and
-    \dQuote{curve1Filter}. } 
+    features. Available method only includes \dQuote{backgating} at the point.
+     } 
  
   \item{bgChannels}{A character vector indicating the channels used for
     backgating. If NULL, \code{backGating} will find the appropriate

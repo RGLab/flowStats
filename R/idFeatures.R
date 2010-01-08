@@ -25,8 +25,8 @@ idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=0.1,
     ## 'bg' is the return value of function flowStats:::backGating
     if (lambda > 1) {
         message("idFeatures: lambda must be between 0 to 1. Defaulting to
-                 1/1.4. \n")
-        lambda <- 1/1.4
+                 0.1. \n")
+        lambda <- 0.1
     }
     
     if (! reference.method %in% c("median", "mean"))
@@ -39,24 +39,23 @@ idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=0.1,
     
     ## cluster centered centroids using 'diana' 
     cent.clust <- .useDivCluster(cent, nDim, thres.sigma,
-                                naming.channel=FALSE)
+                                 naming.channel=FALSE)
     ## 2. label the outliers
     filt.clust <- .filterOutlier(cent.clust, lambda=lambda, keep.outlier=TRUE,
-                                      label.outlier=".outlier")
+                                 label.outlier=".outlier")
 
     ## 3. get reference features, do not include outliers
     ## reference <- .calcReference(filt.clust, nDim) # if keep.outlier=FALSE
     reference <- .calcReference(
                     filt.clust[!filt.clust$cluster %in% ".outlier", ], nDim,
-                                method=reference.method)
+                    method=reference.method)
 
     ## 4. register features for each samples (with bogus features)
     perSample <- split(filt.clust, factor(filt.clust$sample))
     register  <- lapply(perSample, .classifyFeatures,
                         refF=reference, nDim=nDim)
     ## 5. prepare return value register (containing the reference features)
-    reference$sample <- "reference"
-    reference$bogus <- rep(FALSE, nrow(reference))
+   
     register$reference <- reference
     
     if (plot.workflow)
@@ -114,15 +113,21 @@ idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=0.1,
 ## calculate the refenrence
 ###########################
 .calcReference <- function(center, nDim=NULL, method="mean")  {
-
+  
+    ## return value: ref is a data frame with columns of channels of interest,
+    ## cluster, sample, and bogus.
+  
     if (is.null(nDim)) stop("Dimension of the variables must be provided")
     
     ref <- do.call(rbind, lapply(split(center, center$cluster),
                    function(a) {
-                      ref <- as.data.frame(t(apply(a[, 1:2], 2, method)))
+                      ref <- as.data.frame(t(apply(a[, 1:nDim], 2, method)))
                       ref$cluster <- a$cluster[1]
                       return(ref)
                   }))
+    ref$sample <- "reference"
+    ref$bogus <- rep(FALSE, nrow(ref))
+    return(ref)
 }
 
 
@@ -154,13 +159,15 @@ idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=0.1,
 ###################
 .classifyFeatures <- function(eachSample, refF, nDim)
 {
-  ## make the size of refF and column names consistant with refF 
-  ## initialize parameter
-
-  reg <- data.frame(apply(refF, 2, function(x) rep(NA, length(x))),
-                    sample=rep(eachSample$sample[1], nrow(refF)),
-                    bogus=rep(TRUE, nrow(refF)))
-  reg$cluster <- refF$cluster
+  ## initialize parameter: dim and dim names of reg are equeal to that of refF
+  reg <- refF
+  reg[, 1:nDim] <- NA
+  reg$sample <- rep(eachSample$sample[1], nrow(refF))
+  
+  #reg <- data.frame(apply(refF, 2, function(x) rep(NA, length(x))),
+  #                  sample=rep(eachSample$sample[1], nrow(refF)),
+  #                  bogus=rep(TRUE, nrow(refF)))
+  #reg$cluster <- refF$cluster
   
   perClust <- split(eachSample, factor(eachSample$cluster))
 

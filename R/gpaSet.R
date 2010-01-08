@@ -140,7 +140,7 @@ print.GPA <- function(gpaObj, ...)
       message("\n", i, ":\n", sep="")
       print(gpaObj[[i]])
   }
-  invisible(x)
+  invisible()
 }
   
 

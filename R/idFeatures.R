@@ -38,8 +38,8 @@ idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=0.1,
     # cent.translate <- .centerFigure(cent, nDim)
     
     ## cluster centered centroids using 'diana' 
-    cent.clust <- .useDivCluster(cent, nDim, thres.sigma,
-                                 naming.channel=FALSE)
+    cent.clust <- .useDivCluster(cent, nDim, thres.sigma, cut.by.height=TRUE)
+
     ## 2. label the outliers
     filt.clust <- .filterOutlier(cent.clust, lambda=lambda, keep.outlier=TRUE,
                                  label.outlier=".outlier")
@@ -109,9 +109,9 @@ idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=0.1,
     return(center)
 }
 
-###########################
-## calculate the refenrence
-###########################
+##############################
+## calculate the refenrence ##
+##############################
 .calcReference <- function(center, nDim=NULL, method="mean")  {
   
     ## return value: ref is a data frame with columns of channels of interest,
@@ -131,35 +131,34 @@ idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=0.1,
 }
 
 
-########################################################
-## use divisive hierarchical clustering, diana-algorithm
-########################################################
-.useDivCluster <- function(center, nDim, naming.channel=TRUE,
-                           thres.sigma=2.5) {
+###########################################################
+## use divisive hierarchical clustering, diana-algorithm ##
+###########################################################
+.useDivCluster <- function(center, nDim, thres.sigma=2.5,
+                           cut.by.height=TRUE, k=2) {
     ## sign (or re-sign the cluster label)
     clustD  <- cluster::diana(center[, 1:nDim])
-    ## heightThres indicates where the tree should be cut
-    heightThres <- sd(clustD$height) * thres.sigma
-    ## cut into n groups by 'heightThres'
-    if (naming.channel)
-        center$cluster <- paste(center$channel, 
-                                stats::cutree(as.hclust(clustD),
-                                              h=heightThres),
-                            sep=".")
-    else
+
+    ## cut into n groups by 'heightThres' or k
+    if (cut.by.height) {
+        ## heightThres indicates where the tree should be cut
+        heightThres <- sd(clustD$height) * thres.sigma
         center$cluster <- stats::cutree(as.hclust(clustD), h=heightThres)
+    }
+    else
+        center$cluster <- stats::cutree(as.hclust(clustD), k=k)
 
     attr(center, "height") <- heightThres
     attr(center, "cluster") <- clustD
     return(center)
 }
 
-###################
-## classifyFeatures
-###################
+######################
+## classifyFeatures ##
+######################
 .classifyFeatures <- function(eachSample, refF, nDim)
 {
-  ## initialize parameter: dim and dim names of reg are equeal to that of refF
+  ## initialize parameter: dim and dim names of reg are equeal xzto that of refF
   reg <- refF
   reg[, 1:nDim] <- NA
   reg$sample <- rep(eachSample$sample[1], nrow(refF))

@@ -53,7 +53,7 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
                        plot.workflow=show.workflow, ask=ask,
                        thres.sigma=thres.sigma, lambda=0.1)
     }
-    else { ## nnclust for higher dimensions
+    else { ## nnclus and curv1Filter for higher dimensions
         stop("gpaSet: Only Backgating method is available")
     }
 
@@ -74,6 +74,7 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
 
     ## 4. alignment: translation, rotation/scaling, un-centered
     tmatrix <- .combTransMatrix(downweight.missingFeatures, TransMatrix)
+      
     expData <- fsApply(x, function(y) {
         sampleName <- keyword(y)$ORIGINALGUID
         newSet <- exprs(y)[, params]
@@ -96,12 +97,12 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     ## update parameters slot: minRange, maxRange, pData, and parameters
     regSet <- fsApply(expData, function(y) {
         exprs(y)[, params] <- .translate(exprs(y)[, params], -abs(restoreRange))
-        tmp <- parameters(y)
-        oldRange <- pData(tmp)[names, c("minRange", "maxRange")]
+        pars <- parameters(y)
+        oldRange <- pData(pars)[names, c("minRange", "maxRange")]
         
-        pData(tmp)[names, c("minRange", "maxRange")] <-
+        pData(pars)[names, c("minRange", "maxRange")] <-
             .getMinMaxRange(oldRange, exprs(y)[, params])
-        y@parameters <- tmp
+        y@parameters <- pars
         y})
     
     ## construct gpa object
@@ -268,9 +269,9 @@ print.GPA <- function(gpaObj, ...)
   return(tfeatures)
 }
 
-########################################################
-## GPA: get rotation matrix (Q) and scalling factor (s)
-########################################################
+##########################################################
+## GPA: get rotation matrix (Q) and scalling factor (s) ##
+##########################################################
 .getSVD <- function(CenteredF, nDim, downweight.missingFeatures)
 { ## CenteredF: centered features
   ## downweight.missingFeatures: if FALSE, treat the bogus features as real. if TRUE
@@ -295,9 +296,36 @@ print.GPA <- function(gpaObj, ...)
   return(SVD)
 }
 
-################################################################
-## GPA: plot the workflow -- alignment of features and flowsets
-################################################################
+
+##########################################################
+## use SVD and translation matrix to transform the data ##
+##########################################################
+.usingSVD <- function(y, SVD, tmatrix, TransMatrix=NULL) {
+        if (is(y, "flowFrame")) {
+            sampleName <- keyword(y)$ORIGINALGUID
+            newSet <- exprs(y)[, params]
+            newSet <- .translate(newSet, tmatrix[sampleName, ])
+            scal   <- ifelse(is.nan(SVD[[sampleName]]$scal), 1,
+                         SVD[[sampleName]]$scal)
+            newSet <- scal * (newSet %*% SVD[[sampleName]]$Q)
+            trans2 <- ifelse(!length(TransMatrix$transM2),
+                             0, TransMatrix$transM2[[sampleName]])
+            newSet <- .translate(newSet, -trans2)
+            exprs(y)[, params] <- newSet
+            y
+        }
+        else if (is.matrix(y)) {
+            newSet <- .translate(y, tmatrix)
+            scal <- ifelse(s.nan(SVD$scal), 1, SVD$scal)
+            newSet <- scal * (newSet %*% SVD[[sampleName]]$Q)
+            trans2 <- ifelse(is.null(TransMatrix),
+                             0, TransMatrix$transM2)
+            newSet <- .translate(newSet, -trans2)
+        }
+    }
+##################################################################
+## GPA: plot the workflow -- alignment of features and flowsets ##
+##################################################################
 .plotGPAprocess <- function(params, features, CenteredF, SVD, TransMatrix,
                             before.gpa, after.gpa,
                             nDim, downweight.missingFeatures,  ask=ask)

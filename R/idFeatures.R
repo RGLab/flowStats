@@ -138,17 +138,20 @@ idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=0.1,
                            cut.by.height=TRUE, k=2) {
     ## sign (or re-sign the cluster label)
     clustD  <- cluster::diana(center[, 1:nDim])
-
+    
     ## cut into n groups by 'heightThres' or k
     if (cut.by.height) {
         ## heightThres indicates where the tree should be cut
         heightThres <- sd(clustD$height) * thres.sigma
         center$cluster <- stats::cutree(as.hclust(clustD), h=heightThres)
+        attr(center, "height") <- heightThres
+        
     }
-    else
+    else {
         center$cluster <- stats::cutree(as.hclust(clustD), k=k)
+        attr(center, "k") <- k
+    }
 
-    attr(center, "height") <- heightThres
     attr(center, "cluster") <- clustD
     return(center)
 }

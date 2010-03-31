@@ -1,23 +1,20 @@
 import(flowCore)
-import(lattice)
 
 importClassesFrom(methods,
                   character,
                   list,
                   numeric)
 
-importMethodsFrom(Biobase,
-                  exprs,
-                  "exprs<-",
-                  pData,
-                  "pData<-",
-                  phenoData,
-                  "phenoData<-",
-                  sampleNames)
-
-importMethodsFrom(flowViz, "plot")
+importMethodsFrom(flowViz,
+                  addName,
+                  contour,
+                  densityplot,
+                  flowPlot,
+                  glpolygon,
+                  xyplot)
 
 importFrom(Biobase,
+           openVignette,
            listLen)
 
 importFrom(KernSmooth,
@@ -26,12 +23,8 @@ importFrom(KernSmooth,
 importFrom(MASS,
            hubers)
 
-#import(fda)
 importFrom(fda, create.bspline.basis, data2fd, eval.fd, fdPar,
            landmarkreg)
-
-importFrom(flowViz,
-           glpolygon)
 
 importFrom(grDevices,
            chull,
@@ -53,6 +46,11 @@ importFrom(graphics,
 	   plot,
            rect,
            text)
+
+importFrom(lattice, make.groups, panel.abline, panel.number,
+           panel.points, panel.polygon, panel.segments,
+           panel.stripplot, panel.text, stripplot, trellis.par.get,
+           which.packet, xyplot)
 
 importFrom(methods,
            "@<-",

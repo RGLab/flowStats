@@ -96,7 +96,8 @@ dat <- transform(ITN, tl)
 
 xy = c("FSC", "SSC")
 bgChannels = c("CD8", "CD4", "CD3")
-## bg <- flowStats:::backGating(x, xy=xy, channels=bgChannels)
+## bg <- flowStats:::backGating(dat, xy=xy, channels=bgChannels)
+## using pre-generated backgating results: BackGating 
 s <- gpaSet(dat, params=xy, bgChannels=bgChannels, bg=BackGating)
 
 if(require(flowViz)) {

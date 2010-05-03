@@ -102,3 +102,52 @@ oneDGate <- function(...){
     .Deprecated(new="rangeGate")
     rangeGate(...)
 }
+
+## =================================================================================
+## rangeFilter
+## ---------------------------------------------------------------------------------
+## This is basically an abstraction of the lymphGate function. It allows us
+## to use it as a regular gate object.
+## ---------------------------------------------------------------------------------
+setClass("rangeFilter",
+         representation=representation(alpha="character",
+                                       sd="numeric",
+                                       borderQuant="numeric"),
+         contains="parameterFilter",
+         prototype=list(filterId="defaultRangeFilter", 
+         alpha="min",
+         sd= 2,
+         borderQuant=0.1))
+         
+## Constructor. We allow for the following inputs:
+##  alpha is always a character and sd and borderQuant both are always
+##     numerics of length 1.
+##  stain is a list of characters and/or transformations, y is missing         
+rangeFilter <- function(stain, alpha="min", sd=2, borderQuant=0.1,
+                       filterId="defaultRangeFilter")
+{
+    flowCore:::checkClass(filterId, "character", 1)
+    flowCore:::checkClass(alpha, "character", 1)
+    flowCore:::checkClass(sd, "numeric", 1)
+    flowCore:::checkClass(borderQuant, "numeric", 1)        
+    new("rangeFilter", parameters=stain, alpha=alpha,
+        sd=sd, borderQuant=borderQuant, filterId=as.character(filterId))    
+}
+
+setMethod("%in%",
+          signature=signature("flowFrame",
+                              table="rangeFilter"),
+          definition=function(x, table)
+      {
+          
+          if(length(parameters(table)) != 1)
+              stop("range filters require exactly one parameters.")
+          tmp <- rangeGate(x, stain=parameters(table),
+                           alpha=table@alpha,
+                           sd=table@sd,
+                           borderQuant=table@borderQuant,
+                           filterId=table@filterId )
+          filter(x, tmp)
+        })
+
+

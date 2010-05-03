@@ -1,6 +1,7 @@
 \name{rangeGate}
 
 \alias{rangeGate}
+\alias{rangeFilter}
 \alias{oneDGate}
 
 \title{ Find most likely separation between positive and negative
@@ -16,6 +17,9 @@
 \usage{
 rangeGate(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
 absolute=TRUE, filterId="defaultRectangleGate", positive=TRUE, ...)
+
+rangeFilter(stain, alpha="min", sd=2, borderQuant=0.1, 
+filterId="defaultRangeFilter")
 }
 
 \arguments{
@@ -98,8 +102,22 @@ absolute=TRUE, filterId="defaultRectangleGate", positive=TRUE, ...)
   population into positive and negative and compute the split point
   between those clusteres, similar to the two population case.
   
+  
+  The \code{rangeFilter} class and constructor provide the means to
+  treat \code{rangeGate} as regular \code{flowCore} filters.
+  
 }
 
+\section{Methods}{
+  
+  \describe{
+  
+     \item{\%in\%}{\code{signature(x =
+	"flowFrame", table = "rangeFilter")}: the work horse for doing the
+      actual filtering. Internally, this simply calls the \code{rangeGate}
+      function. }
+  }
+}
 
 \value{
 
@@ -109,7 +127,7 @@ absolute=TRUE, filterId="defaultRectangleGate", positive=TRUE, ...)
 }
 
 
-\author{ Florian Hahne }
+\author{ Florian Hahne, Kyongryun Lee }
 
 \seealso{
   
@@ -126,4 +144,7 @@ dat <- transform(dat, "FL4-H"=asinh(`FL4-H`), "FL3-H"=asinh(`FL3-H`))
 rg <- rangeGate(dat, "FL4-H", plot=TRUE)
 rg
 split(dat, rg)
+
+rf <- rangeFilter("FL4-H")
+filter(dat, rf)
 }

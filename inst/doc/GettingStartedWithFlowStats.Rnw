@@ -89,7 +89,7 @@ through back-gating: we know that CD4 positive cells are a subset of
 T-cells, so by estimating CD4 positive cells first we can get a rough
 idea on where to find the T-cells in the CD3 SSC projection.
 
-<<lymphGate>>=
+<<lymphGate, keep.source=TRUE>>=
 lg <- lymphGate(Data(wf[["asinh"]]), channels=c("SSC", "CD3"),
                 preselection="CD4", filterId="TCells", eval=FALSE,
                 scale=2.5)
@@ -175,9 +175,10 @@ qgate <- quadrantGate(Data(wf[["Warping"]]), stains=c("CD4", "CD8"),
                       filterId="CD4CD8", sd=3)
 add(wf, qgate, parent="Warping")
 @ 
-<<quadGatePlot, fig=TRUE>>=
+<<quadGatePlot, fig=TRUE, keep.source=TRUE>>=
 print(xyplot(CD8 ~ CD4 | PatientID, wf[["CD4+CD8+"]],
-             par.settings=list(gate=list(fill="transparent", col="red"))))
+             par.settings=list(gate=list(fill="transparent", 
+                               col="red"))))
 @ 
 
 In a final step we might be interested in finding the proportion of

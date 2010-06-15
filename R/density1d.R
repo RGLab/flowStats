@@ -1,6 +1,6 @@
 ## Find most likely separator between peaks in 1D
 density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
-                      absolute=TRUE, inBetween=FALSE, ...)
+                      absolute=TRUE, inBetween=FALSE, refLine=NULL, ...)
 {
     ## some type checking first
     flowCore:::checkClass(x, c("flowFrame", "flowSet"))
@@ -12,6 +12,10 @@ density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
     flowCore:::checkClass(plot, "logical", 1)
     flowCore:::checkClass(borderQuant, "numeric", 1)
     flowCore:::checkClass(absolute, "logical", 1)
+    if (!is.null(refLine))
+        flowCore:::checkClass(refLine, "numeric", 1)
+    flowCore:::checkClass(inBetween, "logical", 1)
+    
     ## collapse to flowFrame
     if(is(x, "flowSet"))
        x <- as(x, "flowFrame")
@@ -21,8 +25,10 @@ density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
         vrange[is.nan(vrange)] <- 0
         vrange[1] <- min(vrange[1], min(exprs(x)[,stain], na.rm=TRUE))
     }
-    else
+    else  
         vrange <- range(exprs(x)[,stain], na.rm=TRUE)
+
+    vrange[1] <- ifelse(is.null(refLine), vrange[1], max(vrange[1], refLine))
     inc <- diff(vrange)/1e5
     exprf <- char2ExpressionFilter(sprintf("`%s` > %s & `%s` < %s", stain,
                                            vrange[1]+inc, stain, vrange[2]-inc))
@@ -30,10 +36,10 @@ density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
     bnds <- curvPeaks(fres, exprs(tmp)[, stain], borderQuant=borderQuant)
     ## define 'positive' and 'negative' peaks by proximity to anchors
     anchors <- quantile(as.numeric(vrange), c(0.25, 0.5))
-    anc <- abs(sapply(anchors, "-", bnds$peaks[,"x",drop=FALSE]))
+    anc <- abs(sapply(anchors, "-", bnds$peaks[, "x", drop=FALSE]))
     dens <- density(exprs(tmp)[, stain])
     ## only one peak: use robust estimation of mode and variance for boundary
-    est <- hubers(exprs(tmp[,stain]))
+    est <- hubers(exprs(tmp[, stain]))
     if(is.null(nrow(anc)))
     {
         class <- which.min(abs(est$mu - anchors))
@@ -89,9 +95,10 @@ density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
 ## A wrapper around density1D directly creating a range gate.
 rangeGate <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
                      absolute=TRUE, filterId="defaultRectangleGate",
-                     positive=TRUE, ...){
+                     positive=TRUE, refLine=NULL, ...)
+{
     loc <- density1d(x=x, stain=stain, alpha=alpha, sd=sd, plot=plot,
-                     borderQuant=borderQuant, absolute=absolute, ...)
+                     borderQuant=borderQuant, absolute=absolute, refLine=refLine, ...) 
     bounds <- if(positive) list(c(loc, Inf)) else list(c(-Inf, loc))
     names(bounds) <- stain
     rectangleGate(bounds, filterId=filterId)
@@ -123,7 +130,7 @@ setClass("rangeFilter",
 ##  alpha is always a character and sd and borderQuant both are always
 ##     numerics of length 1.
 ##  stain is a list of characters and/or transformations, y is missing         
-rangeFilter <- function(stain, alpha="min", sd=2, borderQuant=0.1,
+rangeFilter <- function(stain, alpha="min", sd=2, borderQuant=0.1, 
                        filterId="defaultRangeFilter")
 {
     flowCore:::checkClass(filterId, "character", 1)

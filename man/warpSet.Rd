@@ -13,7 +13,8 @@
 
 \usage{
 warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL,
-peakNr=NULL, clipRange=0.01, nbreaks=11, fres, warpFuns=FALSE, ...)
+        peakNr=NULL, clipRange=0.01, nbreaks=11, fres, bwFac=1.3,
+        warpFuns=FALSE, ...)
 }
 
 
@@ -57,6 +58,9 @@ peakNr=NULL, clipRange=0.01, nbreaks=11, fres, warpFuns=FALSE, ...)
   \item{fres}{A named list of \code{filterResultList} objects. This can
     be used to speed up the process since the \code{curv1Filter} step
     can take quite some time.}
+
+  \item{bwFac}{Numeric of lenght 1 used to set the bandwidth factor by
+    \code{\link{curv1Filter}} for smoothing of the density estimate. }
   
   \item{warpFuns}{Logical indcating whether to return the normalized
     \code{flowSet} or a list of warping functions.}

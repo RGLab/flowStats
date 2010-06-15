@@ -1,7 +1,8 @@
 ## Align data in a flowSet by estimating high density regions and using this
 ## information as landmarks. This works separately on each parameter.
 warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
-                    peakNr=NULL, clipRange=0.01, nbreaks=11, fres, warpFuns=FALSE,
+                    peakNr=NULL, clipRange=0.01, nbreaks=11, fres, bwFac=1.3,
+                    warpFuns=FALSE,
                     ...)
 {
     ## Some type-checking first
@@ -22,6 +23,7 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
         x <- Subset(x, sampleFilter(size=subsample))
     }
     flowCore:::checkClass(monwrd, "logical", 1)
+    flowCore:::checkClass(bwFac, "numeric", 1)
      
     ## find landmarks
     if(missing(fres))
@@ -29,7 +31,7 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
         fres <- list()
         for(p in stains){
             cat("\rEstimating landmarks for channel", p, "...")
-            fres[[p]] <- filter(x, curv1Filter(p, bwFac=1.3))
+            fres[[p]] <- filter(x, curv1Filter(p, bwFac=bwFac))
         }
         cat("\n")    
     }

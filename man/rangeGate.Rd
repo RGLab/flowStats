@@ -2,6 +2,8 @@
 
 \alias{rangeGate}
 \alias{rangeFilter}
+\alias{rangeFilter-class}
+\alias{\%in\%,flowFrame,rangeFilter-method}
 \alias{oneDGate}
 
 \title{ Find most likely separation between positive and negative
@@ -16,7 +18,8 @@
 
 \usage{
 rangeGate(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
-absolute=TRUE, filterId="defaultRectangleGate", positive=TRUE, ...)
+absolute=TRUE, filterId="defaultRectangleGate", positive=TRUE,
+refLine=NULL, ...)
 
 rangeFilter(stain, alpha="min", sd=2, borderQuant=0.1, 
 filterId="defaultRangeFilter")
@@ -66,6 +69,12 @@ filterId="defaultRangeFilter")
 
   \item{positive}{ Create a range gate that includes the positive
     (\code{TRUE}) or the negative (\code{FALSE}) population. }
+
+  \item{refLine}{Either \code{NULL} or a numeric of lenth 1. If
+    \code{NULL}, this parameter is ignored. When it is set to a numeric, the
+    minor sub-population (if any) below this reference line 
+    will be igored while determining the separator between positive and
+    negative. }  
   
   \item{\dots}{ Further arguments. }
 }
@@ -144,6 +153,10 @@ dat <- transform(dat, "FL4-H"=asinh(`FL4-H`), "FL3-H"=asinh(`FL3-H`))
 rg <- rangeGate(dat, "FL4-H", plot=TRUE)
 rg
 split(dat, rg)
+
+## Test rangeGate when settting refLine=0; it does not do anything since
+## there is no sub-population below zero.
+rangeGate(dat, "FL4-H", plot=FALSE, refLine=0)
 
 rf <- rangeFilter("FL4-H")
 filter(dat, rf)

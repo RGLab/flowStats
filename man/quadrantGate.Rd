@@ -10,7 +10,7 @@
 
 \usage{
 quadrantGate(x, stains, alpha=c("min", "min"), sd=c(2, 2), plot=FALSE,
-filterId="defaultQuadGate", ...)
+    filterId="defaultQuadGate", refLine.1=NULL, refLine.2=NULL, ...)
 }
 
 \arguments{
@@ -28,6 +28,18 @@ filterId="defaultQuadGate", ...)
 
   \item{filterId}{ Character, the name assigned to the resulting
     filter. }
+
+  \item{refLine.1}{Either \code{NULL} or a numeric of lenth 1. If
+    \code{NULL}, this parameter is ignored. When it is set to a numeric, the
+    minor sub-population (if any) below this reference line in the first
+    stain channel will be igored while determining the separator between
+    positive and negative.}
+
+  \item{refLine.2}{Either \code{NULL} or a numeric of lenth 1. If
+    \code{NULL}, this parameter is ignored. When it is set to a numeric, the
+    minor sub-population (if any) below this reference line in the second
+    stain channel will be igored while determining the separator between
+    positive and negative.}
 
   \item{\dots}{ Additional arguments }
 }
@@ -68,8 +80,10 @@ dat <- GvHD[pData(GvHD)$Patient==10]
 dat <- transform(dat, "FL4-H"=asinh(`FL4-H`), "FL2-H"=asinh(`FL2-H`))
 qg <- quadrantGate(dat, c("FL2-H", "FL4-H"))
 qg
+
 if(require(flowViz))
 xyplot(`FL2-H`~`FL4-H`, dat, filter=qg)
+
 qg <- quadrantGate(dat, c("FL2-H", "FL4-H"), alpha=c(0.1, 0.9), plot=TRUE)
 qg
 split(dat, qg)

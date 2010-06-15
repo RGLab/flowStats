@@ -17,7 +17,7 @@
 
 \usage{
 density1d(x, stain, alpha = "min", sd = 2, plot = FALSE, borderQuant =
-0.1, absolute = TRUE, inBetween = FALSE, ...)
+0.1, absolute = TRUE, inBetween = FALSE, refLine=NULL, ...)
 }
 
 \arguments{
@@ -62,7 +62,12 @@ density1d(x, stain, alpha = "min", sd = 2, plot = FALSE, borderQuant =
   \item{inBetween}{Force the algorithm to put the separator in between
     two peaks. If there are more than two peaks, this argument is
     ignored.}
-  
+
+  \item{refLine}{Either \code{NULL} or a numeric of lenth 1. If
+    \code{NULL}, this parameter is ignored. When it is set to a numeric, the
+    minor sub-population (if any) below this reference line 
+    will be igored while determining the separator between positive and
+    negative.}
   \item{\dots}{ Further arguments. }
 }
 

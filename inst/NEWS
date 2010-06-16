@@ -1,0 +1,26 @@
+Changes in flowStats 1.7.3 patched
+==================================
+
+NEW FEATURES
+#. Add an argument 'bwFac' to the warpSet function to allow finer control to
+   the smoothing of the density kernal estimation (in curv1Filter). This
+   bandwidth factor would affect the number of landmarks.
+
+
+Changes in flowStats 1.7.2 patched
+==================================
+
+NEW FEATURES
+
+#. The 'denstity1d' function now takes the 'refLine' argument allowing the
+   algorithm to ignore sub-population below the reference line defined by
+   'refLine'.  
+#. The 'quadrantGate' and 'rangeGate' take 'refLine' ('refLine.1' and
+   'refLine.2') allowing the algorithm to ignore sub-population below the
+   reference lines defined by 'refLine', 'refLine.1', and 'refLine.2'.
+
+BUG FIXES
+
+#. Add alias for 'rangeFilter-class' and '%in%' for sigularlist flowFrame and
+   rangeFilter. 
+

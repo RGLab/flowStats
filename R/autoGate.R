@@ -31,7 +31,8 @@ autoGate <- function(x, ..., scale = 2.5)
 ##   a list: The same as for autoGate, numerics defining the initial rectangular
 ##                       selection
 lymphGate <- function(x, channels, preselection=NULL, scale=2.5,
-                      bwFac=1.3, filterId="defaultLymphGate", evaluate=TRUE, ...)
+                      bwFac=1.3, filterId="defaultLymphGate",
+                      evaluate=TRUE, plot=FALSE, ...)
 {
     ## some type-checking first
     flowCore:::checkClass(channels, "character", 2)
@@ -81,6 +82,14 @@ lymphGate <- function(x, channels, preselection=NULL, scale=2.5,
         fr <- filter(x, bcn2g)
         xr <- Subset(x, fr)
     }
+ 
+    if (evaluate & plot) {
+        fm <- formula(paste(sapply(channels, function(ch) paste("`", ch, "`", sep="")),
+                            collapse="~"))
+        print(xyplot(fm, x, filter=bcn2g))
+
+    }
+    
     return(list(x=xr, n2gate=bcn2g, n2gateResults=fr))
 }
 
@@ -136,7 +145,8 @@ setMethod("%in%",
                            scale=table@scale,
                            bwFac=table@bwFac,
                            filterId=table@filterId,
-                           eval=TRUE)
+                           eval=TRUE,
+                           plot=FALSE)
           tmp$n2gateResults@subSet
       })
 

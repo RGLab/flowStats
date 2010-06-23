@@ -63,8 +63,8 @@
 }
 
 \usage{
-lymphGate(x, channels, preselection=NULL, scale=2.5,
-          bwFac=1.3, filterId="defaultLymphGate", evaluate=TRUE, \dots)
+lymphGate(x, channels, preselection=NULL, scale=2.5,  bwFac=1.3,
+          filterId="defaultLymphGate", evaluate=TRUE, plot=FALSE, \dots)
 
 lymphFilter(channels, preselection=as.character(NULL),
             scale=2.5, bwFac=1.3, filterId="defaultLymphFilter")
@@ -100,6 +100,8 @@ lymphFilter(channels, preselection=as.character(NULL),
     \code{\link[flowCore:filterResult-class]{filterResult}} 
     and the subset). }
 
+  \item{plot}{Logical. Produce plots of filter results}
+  
   \item{\dots}{ Additional arguments. }
   
 }

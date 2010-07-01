@@ -94,7 +94,7 @@ lg <- lymphGate(Data(wf[["asinh"]]), channels=c("SSC", "CD3"),
                 preselection="CD4", filterId="TCells", eval=FALSE,
                 scale=2.5)
 add(wf, lg$n2gate, parent="asinh")
-<<lymphGatePlot, fig=TRUE>>=
+<<lymphGatePlot, keep.source=TRUE, fig=TRUE>>=
 library(flowViz)
 print(xyplot(SSC ~ CD3| PatientID, wf[["TCells+"]],
       par.settings=list(gate=list(col="red", 
@@ -191,7 +191,7 @@ CD69rg <- rangeGate(Data(wf[["Warping"]]), stain="CD69",
                     alpha=0.75, filterId="CD4+CD8-CD69", sd=2.5)
 add(wf, CD69rg, parent="CD4+CD8-")
 @
-<<rangeGatePlot, fig=TRUE>>=
+<<rangeGatePlot, keep.source=TRUE, fig=TRUE>>=
 print(densityplot(PatientID ~ CD69, Data(wf[["CD4+CD8-"]]), main = "CD4+",
             groups=GroupID, refline=CD69rg@min))
 @ 

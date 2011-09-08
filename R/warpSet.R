@@ -68,9 +68,9 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
             density(z, from=from, to=to, n=nb, na.rm=TRUE)$y
         }))
         argvals <- seq(from, to, len=nb) 
-        fdobj   <- data2fd(densY, argvals, wbasis, 
-                           argnames = c("x", "samples", "density"))
-
+#        fdobj   <- data2fd(densY, argvals, wbasis, 
+#                           argnames = c("x", "samples", "density"))
+		fdobj   <- Data2fd(y=densY, argvals=argvals, basisobj=wbasis)
         ## create matrix of landmarks from curv1Filter peaks
         cat("Registering curves for parameter", p, "...\n")
         landmarks <- landmarkMatrix(x, fres, p, border=clipRange, peakNr=peakNr,

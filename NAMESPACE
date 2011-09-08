@@ -23,7 +23,7 @@ importFrom(KernSmooth,
 importFrom(MASS,
            hubers)
 
-importFrom(fda, create.bspline.basis, data2fd, eval.fd, fdPar,
+importFrom(fda, create.bspline.basis, Data2fd, eval.fd, fdPar,
            landmarkreg)
 
 importFrom(grDevices,

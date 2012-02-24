@@ -17,7 +17,7 @@
 
 \usage{
 density1d(x, stain, alpha = "min", sd = 2, plot = FALSE, borderQuant =
-0.1, absolute = TRUE, inBetween = FALSE, refLine=NULL, ...)
+0.1, absolute = TRUE, inBetween = FALSE, refLine=NULL,rare=FALSE,bwFac=1.2, ...)
 }
 
 \arguments{
@@ -68,6 +68,8 @@ density1d(x, stain, alpha = "min", sd = 2, plot = FALSE, borderQuant =
     minor sub-population (if any) below this reference line 
     will be igored while determining the separator between positive and
     negative.}
+  \item{rare}{Either \code{TRUE} or \code{FALSE}, assumes that there is one major peak, and that the rare positive population is to the right of it. Uses a robust estimate of mean and variance to gate the positive cells.}
+  \item{bwFac}{The bandwidth for smoothing the density estimate. User-tunable}
   \item{\dots}{ Further arguments. }
 }
 

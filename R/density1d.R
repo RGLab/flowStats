@@ -1,6 +1,6 @@
 ## Find most likely separator between peaks in 1D
 density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
-                      absolute=TRUE, inBetween=FALSE, refLine=NULL, ...)
+                      absolute=TRUE, inBetween=FALSE, refLine=NULL,rare=FALSE,bwFac = 1.2, ...)
 {
     ## some type checking first
     flowCore:::checkClass(x, c("flowFrame", "flowSet"))
@@ -32,8 +32,8 @@ density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
     inc <- diff(vrange)/1e5
     exprf <- char2ExpressionFilter(sprintf("`%s` > %s & `%s` < %s", stain,
                                            vrange[1]+inc, stain, vrange[2]-inc))
-    fres <- filter(tmp <- Subset(x, exprf), curv1Filter(stain))
-    bnds <- curvPeaks(fres, exprs(tmp)[, stain], borderQuant=borderQuant)
+    fres <- filter(tmp <- Subset(x, exprf), curv1Filter(stain,bwFac=bwFac))
+    bnds <- flowStats:::curvPeaks(fres, exprs(tmp)[, stain], borderQuant=borderQuant)
     ## define 'positive' and 'negative' peaks by proximity to anchors
     anchors <- quantile(as.numeric(vrange), c(0.25, 0.5))
     anc <- abs(sapply(anchors, "-", bnds$peaks[, "x", drop=FALSE]))
@@ -59,7 +59,11 @@ density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
         right <- ifelse(sum(class==2)>0, min(bnds$regions[class==2, "left"]),
                         max(bnds$regions[class==1, "right"]))
     }
-    if(all(class==1))
+
+	
+	
+	##if rare==true then assume there is only one major peak and the rare population is at the right tail
+    if(rare||all(class==1))
         bound <- est$mu + sd * est$s
     else if(all(class==2))
         bound <- est$mu - sd * est$s

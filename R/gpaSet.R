@@ -316,7 +316,7 @@ print.GPA <- function(gpaObj, ...)
         }
         else if (is.matrix(y)) {
             newSet <- .translate(y, tmatrix)
-            scal <- ifelse(s.nan(SVD$scal), 1, SVD$scal)
+            scal <- ifelse(is.nan(SVD$scal), 1, SVD$scal)
             newSet <- scal * (newSet %*% SVD[[sampleName]]$Q)
             trans2 <- ifelse(is.null(TransMatrix),
                              0, TransMatrix$transM2)

@@ -45,6 +45,10 @@ landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL, densities
         apply(matrix(unlist(peaks[(listLen(peaks)==peakNr)]), ncol=peakNr, byrow=T) ,2, mean)
     }else fnrPeaks
      resRegions <- list()
+	 #Check if any peaks are detected as significant (why the 0.1 threshold above?)
+	if(is.na(fnrPeaks)){
+		return(FALSE);
+	}
     if(fnrPeaks==1){
         single <- which(listLen(peaks)==1)
         med <- median(unlist(peaks[single]), na.rm=TRUE)

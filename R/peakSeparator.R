@@ -293,7 +293,7 @@ pruneRegions <- function(pols, dt, st)
     else
        return(pols)
     d <- hdMat(pols)
-    sel <- which(hdMat(pols) < dt, arr=TRUE)
+    sel <- which(hdMat(pols) < dt, arr.ind=TRUE)
     sel <- sel[apply(sel, 1, diff)!=0, ]
     while(length(sel))
     {
@@ -302,7 +302,7 @@ pruneRegions <- function(pols, dt, st)
              
         pols <- pols[-sel[1,2]]
         d <- hdMat(pols)
-        sel <- which(hdMat(pols) < dt, arr=TRUE)
+        sel <- which(hdMat(pols) < dt, arr.ind=TRUE)
         sel <- sel[apply(sel, 1, diff)!=0, ]
     }
     return(pols)

@@ -1,6 +1,8 @@
 \name{warpSet}
 \alias{warpSet}
-
+\alias{warpSetNCDF}
+\alias{warpSetGS}
+\alias{warpSetNCDFLowMem}
 \title{Normalization based on landmark registration}
 
 \description{
@@ -13,8 +15,8 @@
 
 \usage{
 warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL,
-        peakNr=NULL, clipRange=0.01, nbreaks=11, fres, bwFac=1.3,
-        warpFuns=FALSE, ...)
+        peakNr=NULL, clipRange=0.01, nbreaks=11, fres, bwFac=2,
+        warpFuns=FALSE,target=NULL, ...)
 }
 
 
@@ -64,7 +66,7 @@ warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL,
   
   \item{warpFuns}{Logical indcating whether to return the normalized
     \code{flowSet} or a list of warping functions.}
-  
+  \item{target}{Character vector specifying the target sample to which other samples in the \code{flowSet} should be normalized. If \code{NULL}, then the mean of the peaks is used.} 
   \item{\dots}{ Further arguments that are passed on to
     \code{landmarkreg}. }
   

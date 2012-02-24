@@ -13,7 +13,79 @@
 ## The peaks with density value less than peak.density.thr*maximum.peak.density are discarded.
 ## and of the peaks with distance less than peak.distance.thr*range.data only one is considered.
 
+##Normalize a GatingSet, allowing for normalization on a subset of gates
+gaussNormGS <- function(gatingset, channel.names, max.lms=2, base.lms=NULL,peak.density.thr=0.05,peak.distance.thr=0.05,debug=FALSE,fname='',gate=NULL){
+	if(!inherits(gatingset,"GatingSet"))
+		stop("gatingset must be of class GatingSet")
+	if(!gatingset[[1]]@isNcdf)
+		stop("gatingset not gated using netcdf. Just use the regular gaussNorm function, please");
+	if(is.null(gate)){
+		ncflowset<-graph:::nodeData(gatingset[[1]]@tree,gatingset[[1]]@nodes[1],"data")[[1]][["data"]]$ncfs
+	}else{
+		ncflowset<-Subset(gatingset,gate)
+	}
+	#Update the column names on the ncflowset so that they are consistent with the column names on the GatingSet
+	colnames(ncflowset)<-colnames(getData(gatingset[[1]]))
+	normed<-gaussNormNC(ncflowset=ncflowset,channel.names=channel.names,max.lms=max.lms,base.lms=base.lms,peak.density.thr=peak.density.thr,peak.distance.thr=peak.distance.thr,debug=debug,fname=fname);
+	return(normed);
+}
 ## Output: -returns the normalized flowset.
+gaussNormNC <- function(ncflowset, channel.names, max.lms=2, base.lms=NULL,  peak.density.thr=0.05, peak.distance.thr=0.05, debug=FALSE, fname=''){
+  remb.flowset=remBoundaryNC(ncflowset, channel.names) #This method needs to be rewritten to deal with large data sets.
+  expr.list=c(1:length(	ncflowset))  
+  normalized<-ncdfFlow:::clone.ncdfFlowSet(ncflowset)
+  if(length(max.lms)==1){
+    max.lms=rep(max.lms, times=length(channel.names))
+  }
+  if(length(max.lms)!=length(channel.names)){
+    cat('Error: length of max.lms and channel.names doesn\'t match\n')
+    return(NULL)
+  }
+  names(max.lms)=channel.names
+  lms=extract.landmarksNC(ncflowset,remb.flowset, expr.list, channel.names, max.lms,  peak.density.thr, peak.distance.thr)
+  if(is.null(base.lms))
+    base.lms=extract.base.landmarks(lms$filter, channel.names, max.lms)
+  
+  ## finds the best matching between landmarks and base landmarks.
+  ## the score of a matching is defined as a function of the distance between landmark and the base landmark and the score of the landmark itself.
+  matched.lms=match.all.lms(lms, base.lms, channel.names, max.lms)
+  confidence=compute.confidence(matched.lms, base.lms)
+  cat('\nAdjusting the distance between landmarks\n')  
+  newRange=matrix(ncol=length(channel.names), nrow=2)
+  colnames(newRange)=channel.names
+  newRange[,channel.names] <- c(Inf, -Inf)  
+  for(i in expr.list){
+    cat('.')
+    if(fname != '')
+      file.name=paste(fname, as.character(i), sep='.')
+    else
+      file.name=''
+    ## normalizing sample i. 	
+    tmp<-flowFrame(normalize.one.exprNC(ncflowset,remb.flowset$index[[i]],i, base.lms, lms$filter[,i], lms$original[,i], matched.lms[,i], channel.names, max.lms, file.name, debug))
+	parameters(tmp)<-parameters(ncflowset[[i]])
+	description(tmp)<-description(ncflowset[[i]])
+	ncdfFlow:::addFrame(normalized,tmp,sampleNames(ncflowset)[i])
+    for(p in channel.names){
+      newRange[1,p] <- min(newRange[1,p], min(exprs(normalized[[i]])[,p], na.rm=TRUE))
+      newRange[2,p] <- max(newRange[2,p], max(exprs(normalized[[i]])[,p], na.rm=TRUE))
+    } 
+  }
+  cat('\n')
+  restoreBoundaryNC(ncflowset,normalized, remb.flowset, channel.names)
+  #updating the new ranges.
+  for(i in expr.list){
+    for(p in channel.names){
+      ip <- match(p, pData(parameters(normalized[[i]]))$name)
+      tmp <- parameters(normalized[[i]])
+      oldRanges <- unlist(range(ncflowset[[i]],p))
+      pData(tmp)[ip, c("minRange", "maxRange")] <- c(min(oldRanges[1], newRange[1,p]),
+                                                     max(oldRanges[2], newRange[2,p]))
+      normalized[[i]]@parameters <- tmp
+      
+    }
+  }
+  list(flowset=normalized, confidence=confidence)
+}
 
 gaussNorm <- function(flowset, channel.names, max.lms=2, base.lms=NULL,  peak.density.thr=0.05, peak.distance.thr=0.05, debug=FALSE, fname=''){
   remb.flowset=remBoundary(flowset, channel.names)
@@ -70,13 +142,79 @@ gaussNorm <- function(flowset, channel.names, max.lms=2, base.lms=NULL,  peak.de
 
 ## shifts the data in such a way that the peak at matched.lms[i] is moved to matched.lms[i+1] for each i.
 ## base.lms, lms.lis and lms.original are passed for the debug purposes only. 
+##Works on ncdfFlowSet.
+normalize.one.exprNC <- function(data,indices,i,base.lms,lms.list,lms.original,matched.lms,channel.names,max.lms,fname='',debug=FALSE){
+	norm.data=exprs(data[[i]]);
+	norm.data[indices,]<-NA;
+	if(debug==TRUE){
+		if(fname=='')
+		x11()
+		else
+		png(filename=fname, bg="white",width=1800,height=1000)      
+		par(mfrow=c(1, length(which(max.lms!=0))))
+	}
+	cn=1
+	i=0
+	## normalizing each channel.
+	for (p in channel.names){
+		i=i+1
+		if(max.lms[i]==0){
+			norm.data[,p]=data[[i]][,p]
+		}
+		else{
+			## registering the data of channel p given the matching landmarks.
+			norm.data[,p]=register.channel(norm.data[,p], matched.lms[[p]])
+			## drawing the pre- and post- normalization density curves.
+			if(debug==TRUE){
+				if(length(lms.list[[p]])==0){
+					A1=density(na.omit(data[,p]))
+					xlim=c(min(A1$x, na.rm=T), max(A1$x, na.rm=T))
+					ylim=c(min(A1$y, na.rm=T), max(A1$y, na.rm=T))
+					par(mfg=c(1, cn))
+					plot(A1, type="l", col= "black", xlim=xlim, ylim=ylim, xlab=p, main='No lms is found')
+				}
+				else{
+					A1=density(na.omit(data[,p]))
+					A2=density(na.omit(norm.data[,p]))      
+					xlim=c(min(min(A1$x, na.rm=T), min(A2$x, na.rm=T)), max(max(A1$x, na.rm=T), max(A2$x, na.rm=T)))
+					ylim=c(min(min(A1$y, na.rm=T), min(A2$y, na.rm=T)), max(max(A1$y, na.rm=T), max(A2$y, na.rm=T)))
+					par(mfg=c(1, cn))
+					plot(A1, type="l", col= "blue", xlim=xlim, ylim=ylim, xlab=p, main='')
+					Lms=matched.lms[[p]][seq(1, length(matched.lms[[p]]), by=2)]
+					M.Lms=matched.lms[[p]][seq(2, length(matched.lms[[p]]), by=2)]
+					M.Lms.index=1
+					for(k in 1:(length(M.Lms)))
+					M.Lms.index[k]=which(base.lms[[p]]==M.Lms[k])
+					points(Lms, returny(A1, Lms), pch=19, col="red")          
+					text(Lms, returny(A1, Lms), as.character(M.Lms.index), pos=3, col='red')          
+					points(lms.original[[p]], returny(A1, lms.original[[p]]), pch=21, col="black") ##all the peaks
+					par(mfg=c(1, cn))
+					plot(A2, type="l", col="red", xlim=xlim, ylim=ylim, xlab=p)   
+					points(M.Lms, returny(A2, M.Lms), pch=15, col="blue")          
+					text(M.Lms, returny(A2, M.Lms), as.character(M.Lms.index), pos=3, col='blue')          
+				}
+				cn=cn+1        
+			}      
+		}
+	}
+	if(debug){
+		if(fname=='')
+		readline()
+		dev.off()
+	}
+	return (norm.data)
+}
+
+
+## shifts the data in such a way that the peak at matched.lms[i] is moved to matched.lms[i+1] for each i.
+## base.lms, lms.lis and lms.original are passed for the debug purposes only. 
 normalize.one.expr <- function(data, base.lms, lms.list, lms.original, matched.lms, channel.names, max.lms, fname='', debug=FALSE){
   norm.data=data
   if(debug==TRUE){
     if(fname=='')
       x11()
     else
-      png(file=fname, bg="white",width=1800,height=1000)      
+      png(filename=fname, bg="white",width=1800,height=1000)      
     par(mfrow=c(1, length(which(max.lms!=0))))
   }
   cn=1
@@ -132,6 +270,46 @@ normalize.one.expr <- function(data, base.lms, lms.list, lms.original, matched.l
   
 }
 
+#Works on ncdfFlowSet rather than flowSet
+## computes the channel landmarks for each flowset experiment in expr.list.
+## max.lms is the maximum number of landmarks we want to shift when normalizing the data.
+## for each landmark a score is assigned which is a function of its sharpness and its density value.
+## output:
+##       lms.list$original: list of all landmarks
+##       lms.list$score:    the score of lms.list$original landmarks
+##       lms.list$filtered: max.lms top score landmarks.
+extract.landmarksNC<-function(ncflowset,indices,expr.list, channel.names, max.lms,  peak.density.thr, peak.distance.thr){
+	## defining output variables.
+	lms.list=list()    
+	lms.list$original=matrix(vector("list"), length(channel.names), length(expr.list))
+	lms.list$score=matrix(vector("list"), length(channel.names), length(expr.list))  
+	lms.list$filter=matrix(vector("list"), length(channel.names), length(expr.list))
+	row.names(lms.list$original)=channel.names
+	row.names(lms.list$score)=channel.names  
+	row.names(lms.list$filter)=channel.names  
+	max.lms.num=0
+	c=1
+	## iterating over channels.
+	for( p in channel.names){
+		if(max.lms[c]!=0){
+			j=1
+			for(i in expr.list){        
+				data=exprs(ncflowset[[i]])
+				## finding the landmarks of channel p of sample i.
+				data[indices$index[[i]],]<-NA
+				lms=landmarker(data, p, max.lms[c])
+				lms.list$original[p, j]=list(lms)
+				## returns the max.lms[c] top score landmarks.
+				filtered=filter.lms(lms, data[,p], max.lms[c],  peak.density.thr, peak.distance.thr)
+				lms.list$filter[p, j]=list(filtered$lms)
+				lms.list$score[p, j]=list(filtered$score)
+				j=j+1
+			}
+		}
+		c=c+1
+	}
+	return(lms.list)
+}
 
 ## computes the channel landmarks for each flowset experiment in expr.list.
 ## max.lms is the maximum number of landmarks we want to shift when normalizing the data.
@@ -590,6 +768,31 @@ score.lms <- function(lms, data, max.lms, peak.density.thr, peak.distance.thr){
   return(score)  
 }
 
+#Returns the indices of each flowFrame with boundary values that should be NA. In contrast to remBoundary, doesn't copy the data and doesn't return the NA'd flowSet
+remBoundaryNC<-function(ncflowset,channel.names){
+	ranges<-fsApply(ncflowset,range);
+	index=list()
+	res=list()
+	for(i in 1:length(ncflowset)){
+		d=exprs(ncflowset[[i]])
+		index[[i]]=vector()
+		for(p in channel.names){
+			ind=which(d[,p]==ranges[[i]][1,p])
+			index[[i]]=append(index[[i]],ind)
+			#d[ind,p]=NA
+			ind=which(d[,p]==ranges[[i]][2,p])
+			index[[i]]=append(index[[i]],ind)
+			#d[ind,p]=NA
+		}
+		#res[[i]]=new('flowFrame', exprs=d)
+		#parameters(res[[i]])=parameters(flowset[[i]])
+	}
+	#names(res)=sampleNames(flowset)
+	#res=as(res, 'flowSet')
+	#phenoData(res)=phenoData(flowset)
+	return(list(index=index))   
+}
+
 #setting the boundary values to NA. Also returns the indices of the NA values for recovery.
 remBoundary <- function(flowset, channel.names){
   ranges <- fsApply(flowset, range)
@@ -613,6 +816,15 @@ remBoundary <- function(flowset, channel.names){
   res=as(res, 'flowSet')
   phenoData(res)=phenoData(flowset)
   return(list(index=index, res=res))   
+}
+
+#Restore the boundary values that were NA in the ncdfFlowSet
+restoreBoundaryNC <- function(org.flowset, normalized.flowset,remb.flowset,channel.names){
+	for(i in 1:length(org.flowset)){
+		for(p in channel.names){
+			exprs(normalized.flowset[[i]])[remb.flowset$index[[i]], p]=exprs(org.flowset[[i]])[remb.flowset$index[[i]], p]
+		}
+	}
 }
 
 #Restore the boundary values that were set to NA.

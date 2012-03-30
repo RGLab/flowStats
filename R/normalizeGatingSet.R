@@ -208,7 +208,10 @@ normalizeGatingSet<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SS
 						}else{
 							#TODO assign flowset to gatingset.
 							for(j in seq_along(x)){
-								assign("data",result[[j]],graph:::nodeDataDefaults(x[[j]]@tree,"data"))
+								odat<-getData(x[[j]])
+								inds<-flowWorkspace:::getIndices(x[[j]],getNodes(x[[j]])[g])
+								odat@exprs[inds,]<-result[[j]]@exprs
+								assign("data",odat,graph:::nodeDataDefaults(x[[j]]@tree,"data"))
 							}
 						}
 					}

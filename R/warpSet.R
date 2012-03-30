@@ -23,7 +23,7 @@ warpSetGS <- function(x,stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 			}
 		}
 		colnames(flowset)<-colnames(getData(x[[1]]))
-		warped<-warpSet(x=flowset,stains=stains,grouping=grouping,monwrd=monwrd,subsample=subsample,peakNr=peakNr,clipRange=clipRange,nbreaks=nbreaks,fres=fres,bwFac=bwFac,warpFuns=warpFuns,...);
+		warped<-warpSet(x=flowset,stains=stains,grouping=grouping,monwrd=monwrd,subsample=subsample,peakNr=peakNr,clipRange=clipRange,nbreaks=nbreaks,fres=fres,bwFac=bwFac,warpFuns=warpFuns,target=target,...);
 	}else{
 		if(is.null(gate)){
 			#ncflowset<-graph:::nodeData(x[[1]]@tree,x[[1]]@nodes[1],"data")[[1]][["data"]]$ncfs

@@ -10,7 +10,7 @@ warpSetGS <- function(x,stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 	#return the normalized data
 	if(!inherits(x,"GatingSet"))
 		stop("x must be of class GatingSet")
-	if(!x[[1]]@isNcdf){
+	if(!flowWorkspace:::isNcdf(x[[1]])){
 		#TODO code the regular flowSet (not ncdfFlowSet) normalization code.
 		message("Gating Set not gated using netcdf. We'll use the regular warpSet function");
 		if(is.null(gate)){
@@ -661,6 +661,7 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 		extend <- 0.15
 		from <- min(sapply(ranges, function(z) z[1,p]-diff(z[,p])*extend), na.rm=TRUE)
 		to <- max(sapply(ranges, function(z) z[2,p]+diff(z[,p])*extend), na.rm=TRUE)
+#		browser()
 		wbasis <- create.bspline.basis(rangeval=c(from, to),
 				norder=4, breaks=seq(from, to, len=nbreaks))
 		WfdPar <- fdPar(wbasis, 1, 1e-4)

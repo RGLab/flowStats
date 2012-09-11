@@ -21,7 +21,7 @@ importMethodsFrom(flowCore, "%in%", "%subset%", Subset, assign,
                   "identifier<-", keyword, ncol, nrow, pData,
                   "pData<-", parameters, "parameters<-", phenoData,
                   "phenoData<-", print, sampleNames, sort, split,
-                  summary, tail,colnames)
+                  summary, tail,colnames,normalize)
 
 importMethodsFrom(flowViz, densityplot, glpolygon, xyplot)
 

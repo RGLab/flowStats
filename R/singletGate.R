@@ -1,5 +1,10 @@
+#' Creates a singlet polygon gate using the prediction bands from a robust linear model
+#'
+#' @param prediction_level a numeric value between 0 and 1 specifying the level
+#' to use for the prediction bands.
 singletGate <- function(x, area, height, sidescatter = NULL, lower = NULL, upper = NULL,
-                        maxit = 100, nsd = 5) {
+                        maxit = 100, nsd = 5, prediction_level = 0.99,
+                        filter_id = "singlet") {
   flowCore:::checkClass(x, "flowFrame")
   flowCore:::checkClass(area, "character")
   flowCore:::checkClass(height, "character")
@@ -58,8 +63,28 @@ singletGate <- function(x, area, height, sidescatter = NULL, lower = NULL, upper
   sreg <- sum((fitted(model) - huber(x[, "H"])$mu)^2)
   stot <- sreg + serr
   R <- serr / stot
+
+  # Creates polygon gate based on the prediction bands at the minimum and maximum
+  # xChannel observation using the trained robust linear model.
+  x <- as.data.frame(x)
+  min_x <- min(x$A)
+  max_x <- max(x$A)
+  x_extrema <- subset(x, A == min_x | A == max_x)
+  x_extrema <- x_extrema[order(x_extrema$A), ]
+  predictions <- predict(model, x_extrema, interval = "prediction", level = prediction_level)
+
+  # Create a matrix of the vertices using the prediction bands at the minimum
+  # and maximum values of x. The ordering matters. Must go clockwise.
+  # Otherwise, the polygon is not convex and makes an X-shape.
+  gate_vertices <- rbind(cbind(min_x, predictions[1, "lwr"]),
+                         cbind(min_x, predictions[1, "upr"]),
+                         cbind(max_x, predictions[2, "upr"]),
+                         cbind(max_x, predictions[2, "lwr"]))
+  colnames(gate_vertices) <- c(area, height)
+
+  polygon_gate <- polygonGate(gate_vertices, filterId = filter_id)
   
-  retme <- list(indices = indices, Rsquared = R, model = model)
+  retme <- list(indices = indices, Rsquared = R, model = model, gate = polygon_gate)
 
   class(retme) <- "singletFilter"
   retme

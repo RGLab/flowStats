@@ -1,4 +1,4 @@
-singletGate <- function(x, area, height, sidescatter, lower = NULL, upper = NULL,
+singletGate <- function(x, area, height, sidescatter = NULL, lower = NULL, upper = NULL,
                         maxit = 100, nsd = 5) {
   flowCore:::checkClass(x, "flowFrame")
   flowCore:::checkClass(area, "character")
@@ -24,15 +24,23 @@ singletGate <- function(x, area, height, sidescatter, lower = NULL, upper = NULL
     upper <- abs(nsd)
   }
 
-  x <- exprs(x[, c(area, height, sidescatter)])
-  newcols <- c("A", "H", "SSC")
-  oldcols <- colnames(x)
-  colnames(x) <- newcols
-
   # Model the forward scatter height as a function of
   # area + side scatter + side scatter / area
   # (of the models tested, this gave the best R-squared, around 0.78)
-  form <- as.formula("H ~ A + SSC + I(SSC / A)")
+  # If no side scatter variable is provided (i.e., 'sidescatter' is NULL), then
+  # we model the forward scatter height versus forward scatter area.
+  x <- exprs(x[, c(area, height, sidescatter)])
+  oldcols <- colnames(x)
+
+  if (!is.null(sidescatter)) {
+    newcols <- c("A", "H", "SSC")
+    form <- as.formula("H ~ A + SSC + I(SSC / A)")
+  } else {
+    newcols <- c("A", "H")
+    form <- as.formula("H ~ A")
+  }
+  colnames(x) <- newcols
+  
   model <- rlm(form, as.data.frame(x), maxit = maxit)
 
   if (!model$converged) {
@@ -44,11 +52,14 @@ singletGate <- function(x, area, height, sidescatter, lower = NULL, upper = NULL
   # Threshold taken from lower/upper, either number of sd, or a quantile.
   indices <- findInterval(resid(model),
                           with(est, c(mu + lower * s, mu + upper * s))) == 1
+
+  # Calculation of the model's R^2 (Rsquared) value to assess model fit.
   serr <- sum(resid(model)^2)
   sreg <- sum((fitted(model) - huber(x[, "H"])$mu)^2)
   stot <- sreg + serr
   R <- serr / stot
-  retme <- list(indices = indices, Rsquared = R)
+  
+  retme <- list(indices = indices, Rsquared = R, model = model)
 
   class(retme) <- "singletFilter"
   retme

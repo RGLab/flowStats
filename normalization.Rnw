@@ -39,8 +39,8 @@ options(replace.assign=TRUE,width=90)
 datapath<-"~/rglab/workspace/flowStats/data/FCSRAWDATA"
 ws<-openWorkspace(file.path(datapath,"XML/080 Batch 1057 M.xml"))
 G<-parseWorkspace(ws,name=4,path=file.path(datapath,"FCS/1057-M-080")
-					,subset=c(10:11)
-					,isNcdf=TRUE
+					,subset=c(10:15)
+#					,isNcdf=TRUE
 					)
 @					
 <<plot1,eval=TRUE>>=
@@ -64,7 +64,7 @@ G1<-normalize(data=G[-3]
 <<plot2,eval=TRUE>>=
 ##the plots after normalization
 densityplot(~`<APC-A>` ,getData(G1,6))
-plotGate(G1,9)
+plotGate(G1,9,xbin=128)
 @
 
 

@@ -131,8 +131,6 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 		})
 
 .normalizeGatingSet<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,...){
-	#Sanity check
-#	flowCore:::checkClass(x,"GatingSet")
 	samples<-flowWorkspace:::getSamples(x)
 	valid<-target%in%samples
 	if(!is.null(target)){
@@ -258,8 +256,6 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	
 	#Get all the non-boolean gates, breadth first traversal
 	#Do a breadth-first traversal
-#	browser()
-	
 	nodelist<-getNodes(x[[1]],order="bfs")
 	
 	bfsgates<-unlist(lapply(nodelist,function(curNode){
@@ -288,8 +284,8 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	unnormalized<-colnames(getData(x[[1]]))
 	
 	message("cloning the getingSet...")
-	if(flowWorkspace:::isNcdf(x[[1]]))
-		x<-clone(x)	
+#		browser()
+	x<-clone(x)	
 	
 	#for each gate, grab the dimensions and check if they are normalized.
 	#Normalize what hasn't been normalized yet, then do the gating.
@@ -328,35 +324,29 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 					stains<-dims[wh.dim]
 					if(length(stains)!=0&gateHasSufficientData(x,g,...)){
 						npks<-np[[i]]
-						#TODO code for non ncdfFlowSet
+
 						result<-warpSetGS(x,stains=stains,gate=g,target=target,subsample=subsample,chunksize=chunksize,peakNr=npks,bwFac=bwFac,...)
+#						browser()						
 						if(flowWorkspace:::isNcdf(x[[1]])){
 							sapply(sampleNames(result),function(s)ncdfFlow:::updateIndices(result,s,NA))
-							
-							#assign result to the Gating set data environment
-							lfile<-flowWorkspace:::getNcdf(x)@file
-							lapply(x,function(gh)assign("ncfs",result,graph:::nodeDataDefaults(gh@tree,"data")[["data"]]))		
+							ncFlowSet(x)<-result
 						}else{
-							assign("ncfs",result,graph:::nodeDataDefaults(x[[1]]@tree,"data")[["data"]])							
-							#TODO assign flowset to gatingset.
-#							for(j in seq_along(x)){
-#								odat<-getData(x[[j]])
-#								inds<-getIndices(x[[j]],g)
-#								odat@exprs[inds,]<-result[[j]]@exprs
-#								assign("data",odat,graph:::nodeDataDefaults(x[[j]]@tree,"data"))
-#							}
+							oldfs<-ncFlowSet(x)
+							for(j in getSamples(x)){
+								inds<-flowWorkspace::getIndices(x[[j]],g)
+								oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
+							}
+							ncFlowSet(x)<-oldfs
 						}
+						
 					}
 					recompute(x,i);			
-#					for( j in seq_along(x)){
-#						flowWorkspace:::writeGatesToNetCDF(x[[j]])
-#					}		
+		
 				}
 			}
 			
 		}
 		
-		#flowWorkspace:::writeGatingSetGatesToNetCDFParallel(x,isNew=FALSE)
 	}
 	x
 }

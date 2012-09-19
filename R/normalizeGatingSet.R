@@ -284,9 +284,9 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	unnormalized<-colnames(getData(x[[1]]))
 	
 	message("cloning the getingSet...")
-#		browser()
+		
 	x<-clone(x)	
-	
+#	browser()
 	#for each gate, grab the dimensions and check if they are normalized.
 	#Normalize what hasn't been normalized yet, then do the gating.
 	#Set a target sample by name
@@ -322,11 +322,12 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 					parentgates[[as.character(g)]]$normalized<-c(parentgates[[as.character(g)]]$normalized,dims[wh.dim]);
 					parentgates[[as.character(g)]]$unnormalized<-setdiff(parentgates[[as.character(g)]]$unnormalized,dims)
 					stains<-dims[wh.dim]
+#					browser()	
 					if(length(stains)!=0&gateHasSufficientData(x,g,...)){
 						npks<-np[[i]]
 
 						result<-warpSetGS(x,stains=stains,gate=g,target=target,subsample=subsample,chunksize=chunksize,peakNr=npks,bwFac=bwFac,...)
-#						browser()						
+											
 						if(flowWorkspace:::isNcdf(x[[1]])){
 							sapply(sampleNames(result),function(s)ncdfFlow:::updateIndices(result,s,NA))
 							ncFlowSet(x)<-result

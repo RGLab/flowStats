@@ -40,30 +40,36 @@ datapath<-"~/rglab/workspace/flowStats/data/FCSRAWDATA"
 ws<-openWorkspace(file.path(datapath,"XML/080 Batch 1057 M.xml"))
 G<-parseWorkspace(ws,name=4,path=file.path(datapath,"FCS/1057-M-080")
 					,subset=c(10:15)
-#					,isNcdf=TRUE
+					,isNcdf=TRUE
 					)
+getPopStats(G)[c(6,9),-3]	
 @					
 <<plot1,eval=TRUE>>=
 ##before normalization
 densityplot(~`<APC-A>` ,getData(G[-3],6))
-plotGate(G[-3],9)
+densityplot(~`<APC Cy7-A>` ,getData(G[-3],5))
+plotGate(G[-3],6,xbin=128)
+plotGate(G[-3],9,xbin=128)
 @
 		
 <<norm,eval=FALSE>>=
 #select the gate Granzyme B+ to normalizae
-skip.g<-(1:length(getNodes(G[[1]])))[-9]
+skip.g<-(1:length(getNodes(G[[1]])))[-c(6,9)]
 #select APC to normalize
 dims<-colnames(getData(G[[1]]))
-skip.d<-dims[-9]
+skip.d<-dims[-c(9,11)]
 #run the normalization method
 G1<-normalize(data=G[-3]
 				,target="517616.fcs"
 				,skipgates=skip.g
 				,skipdims=skip.d
 				)
+getPopStats(G1)[c(6,9),]				
 <<plot2,eval=TRUE>>=
 ##the plots after normalization
+
 densityplot(~`<APC-A>` ,getData(G1,6))
+plotGate(G1,6,xbin=128)
 plotGate(G1,9,xbin=128)
 @
 

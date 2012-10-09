@@ -67,19 +67,16 @@ singletGate <- function(x, area, height, sidescatter = NULL, lower = NULL, upper
   # Creates polygon gate based on the prediction bands at the minimum and maximum
   # xChannel observation using the trained robust linear model.
   x <- as.data.frame(x)
-  min_x <- min(x$A)
-  max_x <- max(x$A)
-  x_extrema <- subset(x, A == min_x | A == max_x)
-  x_extrema <- x_extrema[order(x_extrema$A), ]
+  x_extrema <- rbind(x[which.min(x$A), ], x[which.max(x$A), ])
   predictions <- predict(model, x_extrema, interval = "prediction", level = prediction_level)
 
   # Create a matrix of the vertices using the prediction bands at the minimum
   # and maximum values of x. The ordering matters. Must go clockwise.
   # Otherwise, the polygon is not convex and makes an X-shape.
-  gate_vertices <- rbind(cbind(min_x, predictions[1, "lwr"]),
-                         cbind(min_x, predictions[1, "upr"]),
-                         cbind(max_x, predictions[2, "upr"]),
-                         cbind(max_x, predictions[2, "lwr"]))
+  gate_vertices <- rbind(cbind(x_extrema$A[1], predictions[1, "lwr"]),
+                         cbind(x_extrema$A[1], predictions[1, "upr"]),
+                         cbind(x_extrema$A[2], predictions[2, "upr"]),
+                         cbind(x_extrema$A[2], predictions[2, "lwr"]))
   colnames(gate_vertices) <- c(area, height)
 
   polygon_gate <- polygonGate(gate_vertices, filterId = filter_id)

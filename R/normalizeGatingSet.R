@@ -339,9 +339,9 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 							}
 							ncFlowSet(x)<-oldfs
 						}
-						
+						recompute(x,i);	
 					}
-					recompute(x,i);			
+								
 		
 				}
 			}
@@ -356,7 +356,14 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 #Set the threshold at 500 events for each flowFrame.
 gateHasSufficientData<-function(x=NULL,g=NULL,minCountThreshold=500,...){
 	#x could be flowSet or ncdfFlowSet
-	return(all(unlist(lapply(x,function(x)nrow(getData(x,g))>=minCountThreshold))))
+	res<-unlist(lapply(x,function(x)nrow(getData(x,g))>=minCountThreshold))
+	if(all(res))
+		return(TRUE)
+	else
+	{
+		warning("not enough events to normalize: ",names(res[!res]))
+		return(FALSE)
+	}
 }
 #		hierarchy
 #})

@@ -270,7 +270,10 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 				}
 			}))
 	
+
 	np<-vector("list",length(bfsgates))
+	
+	names(np)<-bfsgates
 	for(p in seq_along(nPeaks)){
 		np[[p]]<-nPeaks[[p]]
 	}
@@ -324,7 +327,8 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 					stains<-dims[wh.dim]
 #					browser()	
 					if(length(stains)!=0&gateHasSufficientData(x,g,...)){
-						npks<-np[[i]]
+						#choose the np element by name
+						npks<-np[[as.character(i)]]
 
 						result<-warpSetGS(x,stains=stains,gate=g,target=target,subsample=subsample,chunksize=chunksize,peakNr=npks,bwFac=bwFac,...)
 											

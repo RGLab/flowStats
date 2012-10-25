@@ -42,7 +42,7 @@ ws<-openWorkspace(file.path(datapath,"XML/080 Batch 1057 M.xml"))
 G1<-parseWorkspace(ws,name=4
 					,path=file.path(datapath,"FCS/1057-M-080")
 #					,path="/shared/silo_researcher/Gottardo_R/gfinak_working/NormalizationData/0880-M-080/"
-					,subset=c(10:11)
+					,subset=c(10:12)
 #					,subset=c("431345.fcs")
 					,isNcdf=TRUE
 #					,useInternal=F
@@ -65,31 +65,28 @@ getPopStats(G)[c(6,9),-3]
 densityplot(~`<APC-A>` ,getData(G1,6))
 densityplot(~`<APC-A>` ,getData(G2,6))
 
-G<-rbind2(G1[1],G2[2])
-G<-rbind2(G1[2],G)
-G<-rbind2(G,G2[1])
+G<-rbind2(G1,G2)
 
 archive(G,file="tmp.tar")
 G3<-clone(G)
 G<-unarchive("tmp.tar")
-G<-unarchive(file="~/rglab/workspace/flowStats/data/NormalizationData/GatingSet1")
+
+G<-G[!getSamples(G)%in%"517620.fcs"]
 
 densityplot(~`<APC-A>` ,getData(G,6))
-densityplot(~`<APC Cy7-A>` ,getData(G[-3],5))
-plotGate(G2[[1]],1:5,xbin=128)
-plotGate(G[-3],9,xbin=128)
-plotGate(G[[1]],xbin=128)
+densityplot(~`<APC-A>` ,getData(G,76))
 @
 		
 <<norm,eval=FALSE>>=
 #select the gate Granzyme B+ to normalizae
-skip.g<-(1:length(getNodes(G[[1]])))[-c(6,9)]
+#skip.g<-(1:length(getNodes(G[[1]])))[-c(6,9)]
+skip.g<-(1:length(getNodes(G[[1]])))[-c(9,144)]
 #select APC to normalize
 dims<-colnames(getData(G[[1]]))
-skip.d<-dims[-c(9,11)]
+skip.d<-dims[-c(9)]
 #run the normalization method
 G_norm<-normalize(data=G
-				,target="517616.fcs"
+				,target="517614.fcs"
 				,skipgates=skip.g
 				,skipdims=skip.d
 				)
@@ -98,8 +95,11 @@ getPopStats(G_norm)[c(6,9),]
 ##the plots after normalization
 
 densityplot(~`<APC-A>` ,getData(G_norm,6))
-plotGate(G_norm,6,xbin=128)
-plotGate(G_norm,9,xbin=128)
+densityplot(~`<APC-A>` ,getData(G_norm,76))
+plotGate(G,9,xbin=64)
+plotGate(G_norm,9,xbin=64)
+plotGate(G,144,xbin=64)
+plotGate(G_norm,144,xbin=64)
 @
 
 

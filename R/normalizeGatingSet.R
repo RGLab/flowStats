@@ -256,7 +256,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	
 	#Get all the non-boolean gates, breadth first traversal
 	#Do a breadth-first traversal
-	nodelist<-getNodes(x[[1]],order="bfs")
+	nodelist<-getNodes(x[[1]],order="bfs",prefix=TRUE)
 	
 	bfsgates<-unlist(lapply(nodelist,function(curNode){
 #							browser()

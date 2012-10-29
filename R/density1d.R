@@ -40,6 +40,138 @@ hubers1<-function (y, k = 1.5, mu, s, initmu = median(y), tol = 1e-06)
 	}
 	list(mu = mu0, s = s0)
 }
+density1d_simple <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
+		absolute=TRUE, inBetween=FALSE, refLine=NULL,rare=FALSE,bwFac = 1.2
+		,sig=NULL
+		,peakNr=NULL
+		,cutoff=0.05
+		, ...)
+{
+	
+	## some type checking first
+	flowCore:::checkClass(x, c("flowFrame", "flowSet"))
+	flowCore:::checkClass(stain, "character", 1)
+	if(!stain %in% colnames(x))
+		stop("'", stain,"' is not a valid parameter in this flowFrame")
+	
+	flowCore:::checkClass(alpha, c("character", "numeric"), 1)
+#	browser()
+	flowCore:::checkClass(sd, "numeric", 1)
+	flowCore:::checkClass(plot, "logical", 1)
+	flowCore:::checkClass(borderQuant, "numeric", 1)
+	flowCore:::checkClass(absolute, "logical", 1)
+	if (!is.null(refLine))
+		flowCore:::checkClass(refLine, "numeric", 1)
+	flowCore:::checkClass(inBetween, "logical", 1)
+	
+	## collapse to flowFrame
+	if(is(x, "flowSet"))
+		x <- as(x, "flowFrame")
+#   browser()
+#   den<-density(exprs(x)[,stain])
+	#get density curve peaks	
+	fres<-filter(x,curv1Filter(stain,bwFac=bwFac))
+	fres<-filterDetails(fres)
+	fhat<-fres[[1]]$fsObj$fhat
+	
+#	bnds <- flowStats:::curvPeaks(fres, exprs(tmp)[, stain], borderQuant=borderQuant)
+	#fitted curve points
+	curve<-data.frame(x=fhat[[1]][[1]],y=fhat$est)
+#	browser()
+	curve_filtered<-subset(curve,y>=cutoff)
+	#peak boudaries
+	boundaries<-fres[[1]]$boundaries
+	nPeaks<-length(boundaries)
+#	plot(curve)
+#	browser()
+	if(rare||nPeaks==1)
+	{
+		if(nPeaks==1)
+		{
+			peak_mode<-curve_filtered[which.max(curve_filtered$y),]
+			#duplicate the lhs of the peak and try to get correct estimation of mean and sd
+			#without the distortion of another peak
+			if(!is.null(sig))
+				if(sig=="L")
+				{
+					
+					halfS<-curve[curve$x<=peak_mode[,"x"],]
+					
+				}else if(sig=="R")
+				{
+					halfS<-curve[curve$x>=peak_mode[,"x"],]
+				}else
+					stop("invalid value for 'sig' !")
+			
+		}else  
+		{
+			##pick LHS of far left peak or RHS of far right peak 
+			#when there are more than 1 peak
+			if(!is.null(sig))
+				if(sig=="L")
+				{
+					lpeak_bnd<-boundaries[[1]]
+					subCurve<-subset(curve,x>=lpeak_bnd[1]&x<=lpeak_bnd[2])
+					peak_mode<-subCurve[which.max(subCurve$y),]	
+					halfS<-curve[curve$x<=peak_mode$x,]
+				}else if(sig=="R")
+				{
+					rpeak_bnd<-boundaries[[nPeaks]]
+					subCurve<-subset(curve,x>=rpeak_bnd[1]&x<=rpeak_bnd[2])
+					peak_mode<-subCurve[which.max(subCurve$y),]	
+					halfS<-curve[curve$x>=peak_mode$x,]
+				}else
+					stop("invalid value for 'sig' !")
+#			plot(halfS)
+			
+		}
+		if(is.null(sig))
+		{
+			#use entire signal to estimate mode and sd
+			est <- hubers(curve$x)
+		}else
+		{
+#			browser()
+			sd1<-sqrt(mean((halfS$x-peak_mode[,"x"])^2*halfS$y))*2
+			
+			est<-list(mu=peak_mode[,"x"],s=sd1)	
+		}
+		
+		loc <- est$mu + sd * est$s
+			
+	}else
+	{
+		#pick lowest valley
+		valleys<-do.call(rbind
+				,lapply(1:(nPeaks-1),function(i){
+							#		browser()
+							#get valley boundaries
+							valleyLbound<-max(boundaries[[i]])
+							valleyRbound<-min(boundaries[[i+1]])
+							
+							#
+							subCurve<-subset(curve,x>=valleyLbound&x<=valleyRbound)
+							#		plot(subCurve)
+							subCurve[which.min(subCurve$y),]
+							
+						})
+		)   	
+		
+		loc<-valleys[which.min(valleys$y),"x"]
+			
+			
+	}
+	## create output if needed
+#	browser()
+	if(plot){
+		plot(curve,type="l", main=paste("breakpoint for parameter", stain), cex.main=1, ...)
+		abline(v = loc, col = 2, lwd = 2)
+		
+	}
+#	browser()
+	return(loc)
+}
+
 ## Find most likely separator between peaks in 1D
 density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
                       absolute=TRUE, inBetween=FALSE, refLine=NULL,rare=FALSE,bwFac = 1.2
@@ -103,13 +235,8 @@ density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
     anc <- abs(sapply(anchors, "-", bnds$peaks[, "x", drop=FALSE]))
     dens <- density(exprs(tmp)[, stain])
     ## only one peak: use robust estimation of mode and variance for boundary
-#	browser()
-	
-	#duplicate the left side of the peak and try to get correct estimation of mean and sd
-	#without the distortion of another population from right side of peaks
-	
 	signals<-exprs(tmp[, stain])
-	
+		
 #		browser()
     if(is.null(nrow(anc)))
     {
@@ -206,9 +333,13 @@ density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
 ## A wrapper around density1D directly creating a range gate.
 rangeGate <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
                      absolute=TRUE, filterId="defaultRectangleGate",
-                     positive=TRUE, refLine=NULL, ...)
+                     positive=TRUE, refLine=NULL,simple=FALSE, ...)
 {
-    loc <- density1d(x=x, stain=stain, alpha=alpha, sd=sd, plot=plot,
+	if(simple)
+		loc <- density1d_simple(x=x, stain=stain, alpha=alpha, sd=sd, plot=plot,
+				borderQuant=borderQuant, absolute=absolute, refLine=refLine, ...)
+	else	
+    	loc <- density1d(x=x, stain=stain, alpha=alpha, sd=sd, plot=plot,
                      borderQuant=borderQuant, absolute=absolute, refLine=refLine, ...) 
     bounds <- if(positive) list(c(loc, Inf)) else list(c(-Inf, loc))
     names(bounds) <- stain

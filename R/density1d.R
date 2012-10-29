@@ -81,8 +81,17 @@ density1d_simple <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuan
 	curve_filtered<-subset(curve,y>=cutoff)
 	#peak boudaries
 	boundaries<-fres[[1]]$boundaries
+	#filter peaks as well
+	isNoise<-unlist(lapply(boundaries,function(curbn){
+#				browser()
+				subCurve<-subset(curve,x>=curbn[1]&x<=curbn[2])
+				peak_mode<-subCurve[which.max(subCurve$y),]	
+				peak_mode$y<cutoff
+			}))
+	boundaries<-boundaries[!isNoise]
 	nPeaks<-length(boundaries)
 #	plot(curve)
+#	plot(curve_filtered)
 #	browser()
 	if(rare||nPeaks==1)
 	{
@@ -102,7 +111,7 @@ density1d_simple <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuan
 					halfS<-curve[curve$x>=peak_mode[,"x"],]
 				}else
 					stop("invalid value for 'sig' !")
-			
+#			plot(halfS)
 		}else  
 		{
 			##pick LHS of far left peak or RHS of far right peak 

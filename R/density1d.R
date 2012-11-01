@@ -45,6 +45,7 @@ density1d_simple <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuan
 		,sig=NULL
 		,peakNr=NULL
 		,cutoff=0.05
+		,valley="min"
 		, ...)
 {
 	
@@ -150,7 +151,8 @@ density1d_simple <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuan
 			
 	}else
 	{
-		#pick lowest valley
+		
+		#get valleys
 		valleys<-do.call(rbind
 				,lapply(1:(nPeaks-1),function(i){
 							#		browser()
@@ -164,9 +166,11 @@ density1d_simple <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuan
 							subCurve[which.min(subCurve$y),]
 							
 						})
-		)   	
-		
-		loc<-valleys[which.min(valleys$y),"x"]
+				)   	
+		if(valley=="min")#pick lowest valley
+			loc<-valleys[which.min(valleys$y),"x"]
+		else
+			loc<-valleys[valley,"x"]
 			
 			
 	}

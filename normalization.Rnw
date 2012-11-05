@@ -72,7 +72,7 @@ G3<-clone(G)
 G<-unarchive("tmp.tar")
 
 G<-G[!getSamples(G)%in%"517620.fcs"]
-
+getPopStats(G)[c(6,9),]
 densityplot(~`<APC-A>` ,getData(G,6))
 densityplot(~`<APC-A>` ,getData(G,76))
 @

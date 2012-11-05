@@ -69,13 +69,13 @@ density1d_simple <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuan
 	if(is(x, "flowSet"))
 		x <- as(x, "flowFrame")
 #   browser()
-#   den<-density(exprs(x)[,stain])
+
 	#get density curve peaks	
 	fres<-filter(x,curv1Filter(stain,bwFac=bwFac))
 	fres<-filterDetails(fres)
 	fhat<-fres[[1]]$fsObj$fhat
-	
-#	bnds <- flowStats:::curvPeaks(fres, exprs(tmp)[, stain], borderQuant=borderQuant)
+	rawSig<-fres[[1]]$fsObj$x
+
 	#fitted curve points
 	curve<-data.frame(x=fhat[[1]][[1]],y=fhat$est)
 #	browser()
@@ -104,12 +104,13 @@ density1d_simple <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuan
 			if(!is.null(sig))
 				if(sig=="L")
 				{
-					
-					halfS<-curve[curve$x<=peak_mode[,"x"],]
+					halfS<-rawSig[rawSig<=peak_mode[,"x"]]
+#					halfCurve<-curve[curve$x<=peak_mode[,"x"],]
 					
 				}else if(sig=="R")
 				{
-					halfS<-curve[curve$x>=peak_mode[,"x"],]
+#					halfCurve<-curve[curve$x>=peak_mode[,"x"],]
+					halfS<-rawSig[rawSig>=peak_mode[,"x"]]
 				}else
 					stop("invalid value for 'sig' !")
 #			plot(halfS)
@@ -123,13 +124,16 @@ density1d_simple <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuan
 					lpeak_bnd<-boundaries[[1]]
 					subCurve<-subset(curve,x>=lpeak_bnd[1]&x<=lpeak_bnd[2])
 					peak_mode<-subCurve[which.max(subCurve$y),]	
-					halfS<-curve[curve$x<=peak_mode$x,]
+#					halfCurve<-curve[curve$x<=peak_mode$x,]
+					halfS<-rawSig[rawSig<=peak_mode[,"x"]]
 				}else if(sig=="R")
 				{
 					rpeak_bnd<-boundaries[[nPeaks]]
 					subCurve<-subset(curve,x>=rpeak_bnd[1]&x<=rpeak_bnd[2])
 					peak_mode<-subCurve[which.max(subCurve$y),]	
-					halfS<-curve[curve$x>=peak_mode$x,]
+#					halfCurve<-curve[curve$x>=peak_mode$x,]
+					halfS<-rawSig[rawSig>=peak_mode[,"x"]]
+			
 				}else
 					stop("invalid value for 'sig' !")
 #			plot(halfS)
@@ -142,9 +146,14 @@ density1d_simple <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuan
 		}else
 		{
 #			browser()
-			sd1<-sqrt(mean((halfS$x-peak_mode[,"x"])^2*halfS$y))*2
+#			sd1<-sqrt(mean((halfCurve$x-peak_mode[,"x"])^2*halfCurve$y))*2
+#			sd1<-sqrt(mean((halfS-peak_mode[,"x"])^2))
+			sd1<-median(abs(halfS-peak_mode[,"x"]))
+#			sd1<-hubers(halfS)$s
+			est<-list(mu=peak_mode[,"x"],s=sd1)
 			
-			est<-list(mu=peak_mode[,"x"],s=sd1)	
+			
+			
 		}
 		
 		loc <- est$mu + sd * est$s
@@ -177,7 +186,7 @@ density1d_simple <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuan
 	## create output if needed
 #	browser()
 	if(plot){
-		plot(curve,type="l", main=paste("breakpoint for parameter", stain), cex.main=1, ...)
+		plot(curve,type="l",main=paste("breakpoint for parameter", stain), cex.main=1, ...)
 		abline(v = loc, col = 2, lwd = 2)
 		
 	}

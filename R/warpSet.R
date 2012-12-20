@@ -67,7 +67,7 @@ warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=N
 	#expData should now be x...
 #	browser()
 	if(isNew){
-		expData<-ncdfFlow:::clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,fileName=newNcFile)
+		expData<-ncdfFlow:::clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,ncdfFile=newNcFile)
 	}else{
 		expData<-x;
 	}
@@ -360,7 +360,7 @@ warpSetNCDF <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 	#expData <- as(x, "list")
 	#expData should now be x...
 	if(isNew){
-		expData<-ncdfFlow:::clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,fileName=newNcFile)
+		expData<-ncdfFlow:::clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,ncdfFile=newNcFile)
 	}else{
 		expData<-x;
 	}

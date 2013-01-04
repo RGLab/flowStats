@@ -53,7 +53,7 @@ importFrom(lattice, make.groups, panel.abline, panel.number,
            panel.stripplot, panel.text, stripplot, trellis.focus,
            trellis.par.get, trellis.unfocus, which.packet)
 
-importFrom(methods, "@<-", as, is, new, selectMethod)
+importFrom(methods, as, is, new, selectMethod)
 
 importFrom(mvoutlier, pcout)
 

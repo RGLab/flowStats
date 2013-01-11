@@ -286,7 +286,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	#Initialize master channel list
 	unnormalized<-colnames(getData(x[[1]]))
 	
-	message("cloning the getingSet...")
+	message("cloning the gatingSet...")
 		
 	x<-clone(x)	
 #	browser()

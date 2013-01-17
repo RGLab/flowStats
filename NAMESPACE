@@ -81,7 +81,8 @@ export("lymphGate",
        "calcPBChiSquare",
        "gpaSet",
        "iProcrustes",
-       "normQA"
+       "normQA",
+       "singletGate"
        )
 
 exportClasses("lymphFilter","rangeFilter")

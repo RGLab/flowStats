@@ -365,7 +365,7 @@ gateHasSufficientData<-function(x=NULL,g=NULL,minCountThreshold=500,...){
 		return(TRUE)
 	else
 	{
-		warning("not enough events to normalize: ",names(res[!res]))
+		warning("not enough events to normalize: ",paste(names(res[!res]),collapse="\n"))
 		return(FALSE)
 	}
 }

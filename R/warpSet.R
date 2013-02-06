@@ -220,11 +220,11 @@ warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=N
 			names(funsBack)<-samples
 			for(j in seq_along(funs)){
 				funs[[samples[[j]]]] <- function(x) x - z
-				e1 <- new.env()
+				e1 <- new.env(hash=TRUE, parent=emptyenv())
 				e1$z <- offsets[samples[[j]]]
 				environment(funs[[samples[[j]]]]) <- e1
 				funsBack[[samples[[j]]]] <- function(x) x + z
-				e2 <- new.env()
+				e2 <- new.env(hash=TRUE,parent=emptyenv())
 				e2$z <- offsets[samples[[j]]]
 				environment(funsBack[[samples[[j]]]]) <- e2
 			}
@@ -486,11 +486,11 @@ warpSetNCDF <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 			names(funsBack)<-samples
 			for(j in seq_along(funs)){
 				funs[[samples[[j]]]] <- function(x) x - z
-				e1 <- new.env()
+				e1 <- new.env(hash=TRUE,parent=emptyenv())
 				e1$z <- offsets[samples[[j]]]
 				environment(funs[[samples[[j]]]]) <- e1
 				funsBack[[samples[[j]]]] <- function(x) x + z
-				e2 <- new.env()
+				e2 <- new.env(hash=TRUE,parent=emptyenv())
 				e2$z <- offsets[samples[[j]]]
 				environment(funsBack[[samples[[j]]]]) <- e2
 			}
@@ -731,11 +731,11 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 			funs <- funsBack <- vector("list", length(landmarks))
 			for(j in seq_along(funs)){
 				funs[[j]] <- function(x) x - z
-				e1 <- new.env()
+				e1 <- new.env(hash=TRUE,parent=emptyenv())
 				e1$z <- offsets[j]
 				environment(funs[[j]]) <- e1
 				funsBack[[j]] <- function(x) x + z
-				e2 <- new.env()
+				e2 <- new.env(hash=TRUE,parent=emptyenv())
 				e2$z <- offsets[j]
 				environment(funsBack[[j]]) <- e2
 			}

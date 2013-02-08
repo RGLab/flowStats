@@ -35,7 +35,6 @@ singletGate <- function(x, area, height, sidescatter = NULL
 
   \item{filterId}{ Character, the name assigned to the resulting
     filter. }
-
     
   
 }

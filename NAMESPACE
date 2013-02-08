@@ -21,7 +21,7 @@ importMethodsFrom(flowCore, "%in%", "%subset%", Subset, assign,
                   "identifier<-", keyword, ncol, nrow, pData,
                   "pData<-", parameters, "parameters<-", phenoData,
                   "phenoData<-", print, sampleNames, sort, split,
-                  summary, tail,colnames)
+                  summary, tail,colnames,normalize)
 
 importMethodsFrom(flowViz, densityplot, glpolygon, xyplot)
 
@@ -53,7 +53,7 @@ importFrom(lattice, make.groups, panel.abline, panel.number,
            panel.stripplot, panel.text, stripplot, trellis.focus,
            trellis.par.get, trellis.unfocus, which.packet)
 
-importFrom(methods, as, is, new, selectMethod)
+importFrom(methods,  as, is, new, selectMethod)
 
 importFrom(mvoutlier, pcout)
 
@@ -81,10 +81,13 @@ export("lymphGate",
        "calcPBChiSquare",
        "gpaSet",
        "iProcrustes",
-       "normQA")
+       "normQA",
+       "singletGate"
+       )
 
 exportClasses("lymphFilter","rangeFilter")
 
+exportMethods("normalize")
 
 
 exportMethods("%in%")

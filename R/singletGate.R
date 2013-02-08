@@ -80,9 +80,9 @@ singletGate <- function(x, area, height, sidescatter = NULL, lower = NULL, upper
   colnames(gate_vertices) <- c(area, height)
 
   polygon_gate <- polygonGate(gate_vertices, filterId = filter_id)
-  
-  retme <- list(indices = indices, Rsquared = R, model = model, gate = polygon_gate)
+  polygon_gate
+#  retme <- list(indices = indices, Rsquared = R, model = model, gate = polygon_gate)
 
-  class(retme) <- "singletFilter"
-  retme
+#  class(retme) <- "singletFilter"
+#  retme
 }

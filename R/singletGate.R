@@ -2,31 +2,13 @@
 #'
 #' @param prediction_level a numeric value between 0 and 1 specifying the level
 #' to use for the prediction bands.
-singletGate <- function(x, area, height, sidescatter = NULL, lower = NULL, upper = NULL,
-                        maxit = 100, nsd = 5, prediction_level = 0.99,
-                        filter_id = "singlet") {
+singletGate <- function(x, area, height, sidescatter = NULL, maxit = 100,
+                        prediction_level = 0.99, filter_id = "singlet") {
   flowCore:::checkClass(x, "flowFrame")
   flowCore:::checkClass(area, "character")
   flowCore:::checkClass(height, "character")
   if (length(area) + length(height) != 2) {
-    stop("stains must be of length 2, specifying the FSC area and FSC height channels")
-  }
-
-  if (!(is.null(lower) & is.null(upper))) {
-    flowCore:::checkClass(lower, "numeric")
-    flowCore:::checkClass(upper, "numeric")
-
-    if (lower > 1 | lower < 0 | upper > 1 | upper < 0) {
-      stop("lower and upper must be in the range [0,1]")
-    }
-    lower <- qnorm(lower)
-    upper <- qnorm(upper)
-  }
-	
-  if (!is.null(nsd)) {
-    flowCore:::checkClass(nsd, "numeric")
-    lower <- -abs(nsd)
-    upper <- abs(nsd)
+    stop("The 'area' and 'height' channels must be provided.")
   }
 
   # Model the forward scatter height as a function of
@@ -53,17 +35,6 @@ singletGate <- function(x, area, height, sidescatter = NULL, lower = NULL, upper
   }
   est <- huber(resid(model))
 
-  # Filter outliers based on the residuals.
-  # Threshold taken from lower/upper, either number of sd, or a quantile.
-  indices <- findInterval(resid(model),
-                          with(est, c(mu + lower * s, mu + upper * s))) == 1
-
-  # Calculation of the model's R^2 (Rsquared) value to assess model fit.
-  serr <- sum(resid(model)^2)
-  sreg <- sum((fitted(model) - huber(x[, "H"])$mu)^2)
-  stot <- sreg + serr
-  R <- serr / stot
-
   # Creates polygon gate based on the prediction bands at the minimum and maximum
   # xChannel observation using the trained robust linear model.
   x <- as.data.frame(x)
@@ -79,10 +50,5 @@ singletGate <- function(x, area, height, sidescatter = NULL, lower = NULL, upper
                          cbind(x_extrema$A[2], predictions[2, "lwr"]))
   colnames(gate_vertices) <- c(area, height)
 
-  polygon_gate <- polygonGate(gate_vertices, filterId = filter_id)
-  
-  retme <- list(indices = indices, Rsquared = R, model = model, gate = polygon_gate)
-
-  class(retme) <- "singletFilter"
-  retme
+  polygonGate(gate_vertices, filterId = filter_id)
 }

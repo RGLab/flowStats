@@ -1,0 +1,106 @@
+%% LyX 2.0.3 created this file. For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass{article}
+\usepackage[sc]{mathpazo}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{url}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false]
+ {hyperref}
+\hypersetup{
+ pdfstartview={XYZ null null 1}}
+\usepackage{breakurl}
+\begin{document}
+
+<<setup, include=FALSE, cache=FALSE>>=
+# this is equivalent to \SweaveOpts{...}
+opts_chunk$set(fig.path='output/figure/',fig.align='center', fig.show='asis'
+				,fig.width=6, fig.height=6
+				,fig.keep='all'
+				,dev='png'
+				,dev.args=list(bg='transparent',pointsize=16)
+				, echo=TRUE ,message=FALSE,warning=FALSE,results='hide')
+options(replace.assign=TRUE,width=90)
+@
+
+
+\title{Normalization of GatingSet (C parser)}
+
+\author{rglab.org}
+
+\maketitle
+<<parse,eval=FALSE>>=
+#parse workspace
+datapath<-"~/rglab/workspace/flowStats/data/FCSRAWDATA"
+#ws<-openWorkspace("/shared/silo_researcher/Gottardo_R/gfinak_working/NormalizationData/XML files/080 batch 0880.xml")
+ws<-openWorkspace(file.path(datapath,"XML/080 Batch 1057 M.xml"))
+G1<-parseWorkspace(ws,name=4
+					,path=file.path(datapath,"FCS/1057-M-080")
+#					,path="/shared/silo_researcher/Gottardo_R/gfinak_working/NormalizationData/0880-M-080/"
+					,subset=c(10:12)
+#					,subset=c("431345.fcs")
+					,isNcdf=TRUE
+#					,useInternal=F
+					)
+G2<-parseWorkspace(ws,name=4
+		,path=file.path(datapath,"FCS/1057-M-080")
+#					,path="/shared/silo_researcher/Gottardo_R/gfinak_working/NormalizationData/0880-M-080/"
+		,subset=c(13:14)
+#					,subset=c("431345.fcs")
+					,isNcdf=TRUE
+#					,useInternal=F
+)
+					
+getPopStats(G1[[1]])[,2:3]					
+getPopStats(G1[[1]])[1:10,c(1,4)]
+getPopStats(G)[c(6,9),-3]	
+@					
+<<plot1,eval=TRUE>>=
+##before normalization
+densityplot(~`<APC-A>` ,getData(G1,6))
+densityplot(~`<APC-A>` ,getData(G2,6))
+
+G<-rbind2(G1,G2)
+
+archive(G,file="tmp.tar")
+G3<-clone(G)
+G<-unarchive("tmp.tar")
+
+G<-G[!getSamples(G)%in%"517620.fcs"]
+getPopStats(G)[c(6,9),]
+densityplot(~`<APC-A>` ,getData(G,6))
+densityplot(~`<APC-A>` ,getData(G,76))
+@
+		
+<<norm,eval=FALSE>>=
+#select the gate Granzyme B+ to normalizae
+#skip.g<-(1:length(getNodes(G[[1]])))[-c(6,9)]
+skip.g<-(1:length(getNodes(G[[1]])))[-c(9,144)]
+#select APC to normalize
+dims<-colnames(getData(G[[1]]))
+skip.d<-dims[-c(9)]
+#run the normalization method
+G_norm<-normalize(data=G
+				,target="517614.fcs"
+				,skipgates=skip.g
+				,skipdims=skip.d
+				)
+getPopStats(G_norm)[c(6,9),]				
+<<plot2,eval=TRUE>>=
+##the plots after normalization
+
+densityplot(~`<APC-A>` ,getData(G_norm,6))
+densityplot(~`<APC-A>` ,getData(G_norm,76))
+plotGate(G,9,xbin=64)
+plotGate(G_norm,9,xbin=64)
+plotGate(G,144,xbin=64)
+plotGate(G_norm,144,xbin=64)
+@
+
+
+\end{document}

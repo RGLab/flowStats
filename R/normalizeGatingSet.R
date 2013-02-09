@@ -121,9 +121,16 @@ comparativeNormalizationPlot<-function(x,y,g,s,g2=NULL){
 }
 
 
-normalizeGatingSet<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,...){
-	#Sanity check
-	flowCore:::checkClass(x,"GatingSet")
+
+
+setMethod("normalize",c("GatingSetInternal","missing"),function(data,x="missing",...){
+			.normalizeGatingSetInternal(x=data,...)			
+		})
+setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
+			.normalizeGatingSet(x=data,...)			
+		})
+
+.normalizeGatingSet<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,...){
 	samples<-flowWorkspace:::getSamples(x)
 	valid<-target%in%samples
 	if(!is.null(target)){
@@ -134,9 +141,17 @@ normalizeGatingSet<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SS
 
 	#Get all the non-boolean gates, breadth first traversal
 	#Do a breadth-first traversal
-	bfsgates<-lapply(x,function(y)RBGL::bfs(y@tree)[which(sapply(RBGL::bfs(y@tree),function(x)!flowWorkspace:::.isBooleanGate.graphNEL(y,x)))])
-	gates<-lapply(x,function(y)flowWorkspace:::getNodes(y))
-	#oncdf<-flowWorkspace:::getNcdf(x)@file
+#	browser()
+	bfsgates<-lapply(x,function(y)
+							RBGL::bfs(y@tree)[which(sapply(RBGL::bfs(y@tree)
+																	,function(x)
+																	!flowWorkspace:::.isBooleanGate.graphNEL(y,x)
+														)
+													)
+												]
+						)
+	gates<-lapply(x,function(y)getNodes(y))
+	
 	#reorder the bfsgates so that indices match the order in getNodes
 	for(i in seq_along(bfsgates)){
 		bfsgates[[i]]<-match(bfsgates[[i]],gates[[i]])
@@ -206,6 +221,7 @@ normalizeGatingSet<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SS
 							lfile<-flowWorkspace:::getNcdf(x)@file
 							lapply(x,function(gh)assign("ncfs",result,graph:::nodeDataDefaults(gh@tree,"data")[["data"]]))		
 						}else{
+							browser()
 							#TODO assign flowset to gatingset.
 							for(j in seq_along(x)){
 								odat<-getData(x[[j]])
@@ -227,11 +243,131 @@ normalizeGatingSet<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SS
 		x
 }
 
+.normalizeGatingSetInternal<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,...){
+
+#	browser()
+	samples<-getSamples(x)
+	valid<-target%in%samples
+	if(!is.null(target)){
+		if(!valid){
+			stop("target ",target," not in the GatingSet")
+		}
+	}
+	
+	#Get all the non-boolean gates, breadth first traversal
+	#Do a breadth-first traversal
+	nodelist<-getNodes(x[[1]],order="bfs",prefix=TRUE)
+	
+	bfsgates<-unlist(lapply(nodelist,function(curNode){
+#							browser()
+				if(curNode=="root")
+					return(0)
+				else
+				{
+					curNodeInd<-as.integer(strsplit(curNode,split="\\.")[[1]][1])+1
+					if(class(getGate(x[[1]],curNodeInd))!="BooleanGate")
+						return(curNodeInd)
+				}
+			}))
+	
+
+	np<-vector("list",length(bfsgates))
+	
+	names(np)<-bfsgates
+	for(p in seq_along(nPeaks)){
+		np[[p]]<-nPeaks[[p]]
+	}
+	#gate-specific channel list to track normalization
+	parentgates<-list();	
+	
+	#Keep a vector of normalized dimensions
+	unnormalized<-NULL
+	
+	#Initialize master channel list
+	unnormalized<-colnames(getData(x[[1]]))
+	
+	message("cloning the gatingSet...")
+		
+	x<-clone(x)	
+#	browser()
+	#for each gate, grab the dimensions and check if they are normalized.
+	#Normalize what hasn't been normalized yet, then do the gating.
+	#Set a target sample by name
+	for(i in bfsgates){
+		
+		gate<-getGate(x[[1]],i)
+		
+		#Root node
+		if(class(gate)=="logical"){ #implies gate is NA, since NA is class logical, otherwise some flowCore gate class.
+			next;
+		}else{
+			#check which dimensions are normalized already
+			dims<-parameters(gate)
+			dims<-setdiff(dims,skipdims)
+			if(length(dims)>0)
+			{
+				
+				#Data will be subset at gate g (parent) and normalized on dims of i (child)
+				#keep a list of normalized and unnormalized channels for each parent gate..
+				#Check the gate being normalized.. make sure 74 is done correctly
+				if(!i%in%skipgates){
+#					browser()
+					#Get the PARENT gate (since we'll be gating the data using gate i)
+					g<-getParent(x[[1]],i)
+					#initialize gate-specific normalization list
+					if(is.null(parentgates[[as.character(g)]])){
+						parentgates[[as.character(g)]]<-list();
+						parentgates[[as.character(g)]]$unnormalized<-unnormalized
+						parentgates[[as.character(g)]]$normalized<-NULL
+					}
+					
+					wh.dim<-dims%in%parentgates[[as.character(g)]]$unnormalized
+					parentgates[[as.character(g)]]$normalized<-c(parentgates[[as.character(g)]]$normalized,dims[wh.dim]);
+					parentgates[[as.character(g)]]$unnormalized<-setdiff(parentgates[[as.character(g)]]$unnormalized,dims)
+					stains<-dims[wh.dim]
+#					browser()	
+					if(length(stains)!=0&gateHasSufficientData(x,g,...)){
+						#choose the np element by name
+						npks<-np[[as.character(i)]]
+
+						result<-warpSetGS(x,stains=stains,gate=g,target=target,subsample=subsample,chunksize=chunksize,peakNr=npks,bwFac=bwFac,...)
+											
+						if(flowWorkspace:::isNcdf(x[[1]])){
+							sapply(sampleNames(result),function(s)ncdfFlow:::updateIndices(result,s,NA))
+							ncFlowSet(x)<-result
+						}else{
+							oldfs<-ncFlowSet(x)
+							for(j in getSamples(x)){
+								inds<-flowWorkspace::getIndices(x[[j]],g)
+								oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
+							}
+							ncFlowSet(x)<-oldfs
+						}
+						recompute(x,i);	
+					}
+								
+		
+				}
+			}
+			
+		}
+		
+	}
+	x
+}
+
 #Function to check if each flowFrame at the given gate has enough data to normalize. 
 #Set the threshold at 500 events for each flowFrame.
 gateHasSufficientData<-function(x=NULL,g=NULL,minCountThreshold=500,...){
 	#x could be flowSet or ncdfFlowSet
-	return(all(unlist(lapply(x,function(x)nrow(getData(x,g))>=minCountThreshold))))
+	res<-unlist(lapply(x,function(x)nrow(getData(x,g))>=minCountThreshold))
+	if(all(res))
+		return(TRUE)
+	else
+	{
+		warning("not enough events to normalize: ",names(res[!res]))
+		return(FALSE)
+	}
 }
 #		hierarchy
 #})

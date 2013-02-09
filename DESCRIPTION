@@ -21,14 +21,14 @@ Collate: autoGate.R
 	 getPeakRegions.R
 	 singletGate.R
 	 curvPeaks.R
-         gaussNorm.R
+   gaussNorm.R
 	 landmarkMatrix.R
 	 landmarkMatrixWithoutFilterResult.R 
+	 normalize-methods.R
 	 peakSeparator.R
 	 warpSet.R
 	 pbin.R
 	 gpaSet.R
 	 iProcrustes.R
 	 idFeatures.R
-	 normalizeGatingSet.R
-	 
+

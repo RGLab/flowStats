@@ -10,7 +10,10 @@
 
 \usage{
 quadrantGate(x, stains, alpha=c("min", "min"), sd=c(2, 2), plot=FALSE,
-    filterId="defaultQuadGate", refLine.1=NULL, refLine.2=NULL, ...)
+    filterId="defaultQuadGate", refLine.1=NULL, refLine.2=NULL
+				 		,rare=c(FALSE,FALSE)
+				 		,sig=c(NULL,NULL)
+						,...)
 }
 
 \arguments{
@@ -40,7 +43,12 @@ quadrantGate(x, stains, alpha=c("min", "min"), sd=c(2, 2), plot=FALSE,
     minor sub-population (if any) below this reference line in the second
     stain channel will be igored while determining the separator between
     positive and negative.}
-
+	
+	\item{rare}{logical flags for two channels, Refer to \code{\link{density1d}} for more details.
+	}
+	
+	\item{sig}{parameters for two channels. Refer to \code{\link{density1d}} for more details.
+	}
   \item{\dots}{ Additional arguments }
 }
 

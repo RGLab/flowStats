@@ -17,8 +17,14 @@
 
 \usage{
 density1d(x, stain, alpha = "min", sd = 2, plot = FALSE, borderQuant =
-0.1, absolute = TRUE, inBetween = FALSE, refLine=NULL,rare=FALSE,bwFac=1.2, ...)
+0.1, absolute = TRUE, inBetween = FALSE, refLine=NULL,rare=FALSE,bwFac=1.2
+,sig=NULL,peakNr=NULL, ...)
 }
+
+
+			  		
+					
+			  		
 
 \arguments{
   
@@ -70,6 +76,9 @@ density1d(x, stain, alpha = "min", sd = 2, plot = FALSE, borderQuant =
     negative.}
   \item{rare}{Either \code{TRUE} or \code{FALSE}, assumes that there is one major peak, and that the rare positive population is to the right of it. Uses a robust estimate of mean and variance to gate the positive cells.}
   \item{bwFac}{The bandwidth for smoothing the density estimate. User-tunable}
+  \item{sig}{a value of c(NULL,"L","R"),when sig is not NULL,use the half (left or right) of signal to estimate the std and mean.}
+  \item{peakNr}{when peakNr is not NULL,drop the less significant peaks by their heights}
+  
   \item{\dots}{ Further arguments. }
 }
 

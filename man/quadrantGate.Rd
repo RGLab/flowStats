@@ -82,7 +82,7 @@ quadrantGate(x, stains, alpha=c("min", "min"), sd=c(2, 2), plot=FALSE,
 }
 
 \examples{
-
+\dontrun{
 data(GvHD)
 dat <- GvHD[pData(GvHD)$Patient==10]
 dat <- transform(dat, "FL4-H"=asinh(`FL4-H`), "FL2-H"=asinh(`FL2-H`))
@@ -95,5 +95,5 @@ xyplot(`FL2-H`~`FL4-H`, dat, filter=qg)
 qg <- quadrantGate(dat, c("FL2-H", "FL4-H"), alpha=c(0.1, 0.9), plot=TRUE)
 qg
 split(dat, qg)
-
+}
 }

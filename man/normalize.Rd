@@ -56,7 +56,7 @@ Greg Finak <gfinak@fhcrc.org>
 See also \code{\link[flowWorkspace]{GatingSet-class}}, \code{\link[flowWorkspace]{GatingHierarchy-class}}, \code{\link[flowWorkspace]{includedGate2ExcludedGate}}, \code{\link[flowWorkspace]{includedChannel2ExcludedChannel}}, \code{\link[ncdfFlow]{ncdfFlowSet}}
 }
 \examples{
-\donotrun{
+\dontrun{
 #open an xml flowJo workspace
 ws<-openWorkspace("test.xml"))
 #parse it into a GatingSet

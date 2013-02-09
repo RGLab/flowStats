@@ -218,7 +218,8 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 					 		sapply(sampleNames(result),function(s)ncdfFlow:::updateIndices(result,s,NA))
 					
 							#assign result to the Gating set data environment
-							lfile<-flowWorkspace:::getNcdf(x)@file
+#							lfile<-flowWorkspace:::getNcdf(x)@file
+                                                        lfile<-flowWorkspace:::ncFlowSet(x)@file
 							lapply(x,function(gh)assign("ncfs",result,graph:::nodeDataDefaults(gh@tree,"data")[["data"]]))		
 						}else{
 							browser()
@@ -365,7 +366,7 @@ gateHasSufficientData<-function(x=NULL,g=NULL,minCountThreshold=500,...){
 		return(TRUE)
 	else
 	{
-		warning("not enough events to normalize: ",names(res[!res]))
+		warning("not enough events to normalize: ",paste(names(res[!res]),collapse="\n"))
 		return(FALSE)
 	}
 }

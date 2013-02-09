@@ -13,7 +13,7 @@
 }
 
 \usage{
-singletGate <- function(x, area, height, sidescatter = NULL, maxit = 100,
+singletGate (x, area, height, sidescatter = NULL, maxit = 100,
                         prediction_level = 0.99, filter_id = "singlet")
 }
 

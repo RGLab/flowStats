@@ -19,7 +19,7 @@
 \usage{
 rangeGate(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
 absolute=TRUE, filterId="defaultRectangleGate", positive=TRUE,
-refLine=NULL, ...)
+refLine=NULL, simple = FALSE,...)
 
 rangeFilter(stain, alpha="min", sd=2, borderQuant=0.1, 
 filterId="defaultRangeFilter")
@@ -75,7 +75,8 @@ filterId="defaultRangeFilter")
     minor sub-population (if any) below this reference line 
     will be igored while determining the separator between positive and
     negative. }  
-  
+  \item{simple}{ \code{logical} scalar indicating whether to use a simple peak finding version of density1d algorithm.
+   }
   \item{\dots}{ Further arguments. }
 }
 

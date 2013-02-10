@@ -3,7 +3,7 @@
 #' @param prediction_level a numeric value between 0 and 1 specifying the level
 #' to use for the prediction bands.
 singletGate <- function(x, area, height, sidescatter = NULL, maxit = 100,
-                        prediction_level = 0.99, filter_id = "singlet") {
+                        prediction_level = 0.99, filterId = "singlet") {
   flowCore:::checkClass(x, "flowFrame")
   flowCore:::checkClass(area, "character")
   flowCore:::checkClass(height, "character")
@@ -50,5 +50,5 @@ singletGate <- function(x, area, height, sidescatter = NULL, maxit = 100,
                          cbind(x_extrema$A[2], predictions[2, "lwr"]))
   colnames(gate_vertices) <- c(area, height)
 
-  polygonGate(gate_vertices, filterId = filter_id)
+  polygonGate(gate_vertices, filterId = filterId)
 }

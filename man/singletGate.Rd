@@ -14,7 +14,7 @@
 
 \usage{
 singletGate (x, area, height, sidescatter = NULL, maxit = 100,
-                        prediction_level = 0.99, filter_id = "singlet")
+                        prediction_level = 0.99, filterId = "singlet")
 }
 
 \arguments{
@@ -43,7 +43,7 @@ singletGate (x, area, height, sidescatter = NULL, maxit = 100,
   the bands.
 
   The robust linear model is trained using the \code{\link[MASS]{rlm}}
-  function from the \code{\link{MASS}} package.
+  function from the \code{MASS} package.
   
 }
 

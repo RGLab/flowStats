@@ -9,13 +9,15 @@
 The method will step through the gating hierarchy in a breadth first search manner and normalize each dimension and gate not explicitly excluded in skipdims,or skipgates. The normalization approach is based on warpSet, but uses sequential normalization to alternately normalize then perform gating of the cell populations.  This often helps with feature registration of popualtions lower in the gating hierarchy. FSC and SSC, as well as time are generally excluded by default. The rule of thumb, is to only normalize a channel in a gate if it is absolutely warranted.
 }
 \usage{
-normalizedata,x="missing",...)
+normalize(data,x,...)
 }
 \arguments{
 
 	\item{data}{
 	The \code{GatingSet} to be normalized.
-}\item{\dots}{
+}
+\item{x}{\code{missing}. Not used in here.}
+\item{\dots}{
 		Arguments passed to downstream functions.
 		
 		target:

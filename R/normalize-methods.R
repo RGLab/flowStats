@@ -266,7 +266,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 				else
 				{
 					curNodeInd<-as.integer(strsplit(curNode,split="\\.")[[1]][1])+1
-					if(class(getGate(x[[1]],curNodeInd))!="BooleanGate")
+					if(!flowWorkspace:::.isBoolGate(getGate(x[[1]],curNodeInd)))
 						return(curNodeInd)
 				}
 			}))

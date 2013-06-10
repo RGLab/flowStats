@@ -438,7 +438,7 @@ warpSetNCDF <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 				return(x);
 			}
 		}
-		rm(fres);gc();
+#		rm(fres);gc(); #shouldn't remove it since next stain still needs it
 		## check if we remove signal between groups
 		sig <- 0.05
 		if(!is.null(grouping)){

@@ -154,7 +154,6 @@ warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=N
 			fres[[k]][[p]]<-list();gc();
 		}
 	}
-	rm(fres);gc()
 	## create matrix of landmarks from peaks.. append to the chunked landmarks.. and all stains.
 	
 	dns<-list()
@@ -438,7 +437,6 @@ warpSetNCDF <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 				return(x);
 			}
 		}
-		rm(fres);gc();
 		## check if we remove signal between groups
 		sig <- 0.05
 		if(!is.null(grouping)){

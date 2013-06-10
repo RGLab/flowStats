@@ -244,7 +244,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 		x
 }
 
-.normalizeGatingSetInternal<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,...){
+.normalizeGatingSetInternal<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,ncdfFile = NULL, ...){
 
 #	browser()
 	samples<-getSamples(x)
@@ -266,7 +266,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 				else
 				{
 					curNodeInd<-as.integer(strsplit(curNode,split="\\.")[[1]][1])+1
-					if(!flowWorkspace:::.isBoolGate(getGate(x[[1]],curNodeInd)))
+					if(!flowWorkspace:::.isBoolGate(x[[1]],curNodeInd))
 						return(curNodeInd)
 				}
 			}))
@@ -289,7 +289,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	
 	message("cloning the gatingSet...")
 		
-	x<-clone(x)	
+	x<-clone(x, ncdfFile = ncdfFile)	
 #	browser()
 	#for each gate, grab the dimensions and check if they are normalized.
 	#Normalize what hasn't been normalized yet, then do the gating.

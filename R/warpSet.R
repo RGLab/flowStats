@@ -56,6 +56,7 @@ warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=N
 		warpFuns=FALSE,target=NULL,chunksize=10,isNew=FALSE,newNcFile=NULL,
 		...)
 {
+    .Deprecated("warpSetNCDF")
 	## Some type-checking first
 	flowCore:::checkClass(x, "flowSet")
 	flowCore:::checkClass(stains, "character")

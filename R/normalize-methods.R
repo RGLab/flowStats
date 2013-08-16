@@ -123,128 +123,12 @@ comparativeNormalizationPlot<-function(x,y,g,s,g2=NULL){
 
 
 
-setMethod("normalize",c("GatingSetInternal","missing"),function(data,x="missing",...){
-			.normalizeGatingSetInternal(x=data,...)			
-		})
 setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 			.normalizeGatingSet(x=data,...)			
 		})
 
-.normalizeGatingSet<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,...){
-	samples<-flowWorkspace:::getSamples(x)
-	valid<-target%in%samples
-	if(!is.null(target)){
-		if(!valid){
-			stop("target ",target," not in the GatingSet")
-		}
-	}
 
-	#Get all the non-boolean gates, breadth first traversal
-	#Do a breadth-first traversal
-#	browser()
-	bfsgates<-lapply(x,function(y)
-							RBGL::bfs(y@tree)[which(sapply(RBGL::bfs(y@tree)
-																	,function(x)
-																	!flowWorkspace:::.isBooleanGate.graphNEL(y,x)
-														)
-													)
-												]
-						)
-	gates<-lapply(x,function(y)getNodes(y))
-	
-	#reorder the bfsgates so that indices match the order in getNodes
-	for(i in seq_along(bfsgates)){
-		bfsgates[[i]]<-match(bfsgates[[i]],gates[[i]])
-	}
-	bfsgates<-unique(do.call(rbind,bfsgates))
-	np<-vector("list",max(bfsgates))
-	for(p in seq_along(nPeaks)){
-		np[[p]]<-nPeaks[[p]]
-	}
-	#gate-specific channel list to track normalization
-	parentgates<-list();	
-	
-	#Keep a vector of normalized dimensions
-	unnormalized<-NULL
-
-	#Initialize master channel list
-	unnormalized<-colnames(getData(x[[1]]))
-
-		#Create a new gating set for the normalized data.
-		#So we need a new data environment in a new gatingset object
-		#x will be our new gatingset object and will be returned as a copy
-		#which environments need to be reassigned?? all of them?
-		#Copy the metadata, group, and data environments to new environments
-		#Then update the data.
-		#For ALL gates.. I should only need to do this once.
-		#should cloning the gating set copy the ncdf files by default?
-	if(flowWorkspace:::isNcdf(x[[1]]))
-		x<-flowWorkspace:::cloneGatingSet(x,clone.data=TRUE,clone.gating=TRUE)	
-
-	#for each gate, grab the dimensions and check if they are normalized.
-	#Normalize what hasn't been normalized yet, then do the gating.
-	#Set a target sample by name
-	for(i in bfsgates){
-		gate<-flowWorkspace:::getGate(x[[1]],i)
-
-		#Root node
-		if(class(gate)=="logical"){ #implies gate is NA, since NA is class logical, otherwise some flowCore gate class.
-			next;
-			}else{
-				#check which dimensions are normalized already
-				dims<-flowWorkspace:::getDimensions(x[[1]],flowWorkspace:::getNodes(x[[1]])[i])
-				dims<-setdiff(dims,skipdims)
-				#Get the PARENT gate (since we'll be gating the data using gate i)
-				g<-flowWorkspace:::getParent(x[[1]],i)
-				#initialize gate-specific normalization list
-				if(is.null(parentgates[[as.character(g)]])){
-					parentgates[[as.character(g)]]<-list();
-					parentgates[[as.character(g)]]$unnormalized<-unnormalized
-					parentgates[[as.character(g)]]$normalized<-NULL
-				}
-				#Data will be subset at gate g (parent) and normalized on dims of i (child)
-				#keep a list of normalized and unnormalized channels for each parent gate..
-				#Check the gate being normalized.. make sure 74 is done correctly
-				if(!i%in%skipgates){
-					wh.dim<-dims%in%parentgates[[as.character(g)]]$unnormalized
-					parentgates[[as.character(g)]]$normalized<-c(parentgates[[as.character(g)]]$normalized,dims[wh.dim]);
-					parentgates[[as.character(g)]]$unnormalized<-setdiff(parentgates[[as.character(g)]]$unnormalized,dims)
-					stains<-dims[wh.dim]
-					if(length(stains)!=0&gateHasSufficientData(x,g,...)){
-						npks<-np[[i]]
-						#TODO code for non ncdfFlowSet
-						result<-warpSetGS(x,stains=stains,gate=g,target=target,subsample=subsample,chunksize=chunksize,peakNr=npks,bwFac=bwFac,...)
-						if(flowWorkspace:::isNcdf(x[[1]])){
-					 		sapply(sampleNames(result),function(s)ncdfFlow:::updateIndices(result,s,NA))
-					
-							#assign result to the Gating set data environment
-#							lfile<-flowWorkspace:::getNcdf(x)@file
-                                                        lfile<-flowWorkspace:::ncFlowSet(x)@file
-							lapply(x,function(gh)assign("ncfs",result,graph:::nodeDataDefaults(gh@tree,"data")[["data"]]))		
-						}else{
-							browser()
-							#TODO assign flowset to gatingset.
-							for(j in seq_along(x)){
-								odat<-getData(x[[j]])
-								inds<-flowWorkspace:::getIndices(x[[j]],getNodes(x[[j]])[g])
-								odat@exprs[inds,]<-result[[j]]@exprs
-								assign("data",odat,graph:::nodeDataDefaults(x[[j]]@tree,"data"))
-							}
-						}
-					}
-						flowWorkspace:::recomputeGate(x,i);			
-						for( j in seq_along(x)){
-							flowWorkspace:::writeGatesToNetCDF(x[[j]])
-						}		
-				}
-			}
-			
-			#flowWorkspace:::writeGatingSetGatesToNetCDFParallel(x,isNew=FALSE)
-		}
-		x
-}
-
-.normalizeGatingSetInternal<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,ncdfFile = NULL, ...){
+.normalizeGatingSet<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,ncdfFile = NULL, ...){
 
 #	browser()
 	samples<-getSamples(x)

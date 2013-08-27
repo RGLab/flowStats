@@ -27,7 +27,7 @@ warpSetGS <- function(x,stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 	}else{
 		if(is.null(gate)){
 			#ncflowset<-graph:::nodeData(x[[1]]@tree,x[[1]]@nodes[1],"data")[[1]][["data"]]$ncfs
-			ncflowset<-flowWorkspace:::ncFlowSet(x)
+			ncflowset<-flowWorkspace:::flowData(x)
 			#subset for the correct samples
 			ncflowset<-ncflowset[flowWorkspace:::getSamples(x)]
 			#ncflowset<-ncflowset[setdiff(sampleNames(ncflowset),setdiff(sampleNames(ncflowset),getSamples(x)))]

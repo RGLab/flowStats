@@ -219,14 +219,14 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 											
 						if(flowWorkspace:::isNcdf(x)){
 							sapply(sampleNames(result),function(s)ncdfFlow:::updateIndices(result,s,NA))
-							ncFlowSet(x)<-result
+							flowData(x)<-result
 						}else{
-							oldfs<-ncFlowSet(x)
+							oldfs<-flowData(x)
 							for(j in getSamples(x)){
 								inds<-flowWorkspace::getIndices(x[[j]],g)
 								oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
 							}
-							ncFlowSet(x)<-oldfs
+							flowData(x)<-oldfs
 						}
 						recompute(x,i);	
 					}

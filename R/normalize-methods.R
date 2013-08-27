@@ -6,7 +6,7 @@ getNormGateList<-function(x){
 	flowCore:::checkClass(x,"GatingSet")
 	bfsgates<-lapply(x,function(y)which(sapply(RBGL::bfs(y@tree),function(x)!flowWorkspace:::.isBooleanGate.graphNEL(y,x))))
 	bfsgates<-unique(do.call(rbind,bfsgates))
-	return(data.frame(gate=flowWorkspace:::getNodes(x[[1]])[bfsgates],index=t(bfsgates)))
+	return(data.frame(gate=flowWorkspace:::getNodes(x[[1]], showHidden = TRUE)[bfsgates],index=t(bfsgates)))
 }
 plotAllGates<-function(gh,cex=2,gsubset=NULL){
   nodes<-RBGL::bfs(gh@tree)
@@ -54,13 +54,13 @@ plotSameGate<-function(gs,cex=2,gsubset=NULL,names=NULL){
 		stop("names must be same length as gating set")
 	}
 	for(i in 1:(length(gs)-1)){
-		nodes<-flowWorkspace:::getNodes(gs[[i]])
+		nodes<-flowWorkspace:::getNodes(gs[[i]], showHidden = TRUE)
 		print(flowWorkspace:::plotGate(gs[[i]],nodes[g1],lwd=2,pch='.',cex=cex,main=names[i]),split=c(grid[i,1],grid[i,2],cs,rs),more=T)
 		if(!is.null(g2)){
 			flowWorkspace:::plotGate(gs[[i]],nodes[g2],lwd=2,add=T)
 		}
 	}
-	nodes<-flowWorkspace:::getNodes(gs[[length(gs)]])
+	nodes<-flowWorkspace:::getNodes(gs[[length(gs)]], showHidden = TRUE)
 	print(flowWorkspace:::plotGate(gs[[length(gs)]],nodes[g1],lwd=2,pch='.',cex=cex,main=names[length(gs)]),split=c(grid[length(gs),1],grid[length(gs),2],cs,rs),more=F)
 	if(!is.null(g2)){
 		flowWorkspace:::plotGate(gs[[length(gs)]],nodes[g2],lwd=2,add=T)
@@ -83,7 +83,7 @@ comparativeNormalizationPlot<-function(x,y,g,s,g2=NULL){
 	flowCore:::checkClass(y,"GatingSet")
 	flowCore:::checkClass(g,"numeric")
 	flowCore:::checkClass(s,"numeric")
-	if(g>length(flowWorkspace::getNodes(x[[1]]))){
+	if(g>length(flowWorkspace::getNodes(x[[1]], showHidden = TRUE))){
 		stop("Gate index out of bounds")
 	}
 	if(s>length(x)){
@@ -98,7 +98,7 @@ comparativeNormalizationPlot<-function(x,y,g,s,g2=NULL){
 		G2<-NULL
 	}
 	par<-flowWorkspace::getParent(x[[1]],g)
-	dims<-flowWorkspace::getDimensions(x[[1]],flowWorkspace::getNodes(x[[1]])[g])
+	dims<-flowWorkspace::getDimensions(x[[1]],flowWorkspace::getNodes(x[[1]], showHidden = TRUE)[g])
 	form<-sapply(dims,function(f)as.formula(paste("~`",f,"`",sep="")))
 	print(densityplot(form[[1]],flowWorkspace::getData(x,par),main="Raw"),split=c(1,1,3,2),more=TRUE)
 	print(densityplot(form[[1]],flowWorkspace::getData(y,par),main="Normalized"),split=c(1,2,3,2),more=TRUE)
@@ -141,7 +141,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	
 	#Get all the non-boolean gates, breadth first traversal
 	#Do a breadth-first traversal
-	nodelist<-getNodes(x[[1]],order="bfs",prefix=TRUE)
+	nodelist<-getNodes(x[[1]],order="bfs",prefix=TRUE, showHidden = TRUE)
 	
 	bfsgates<-unlist(lapply(nodelist,function(curNode){
 #							browser()
@@ -217,7 +217,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 
 						result<-warpSetGS(x,stains=stains,gate=g,target=target,subsample=subsample,chunksize=chunksize,peakNr=npks,bwFac=bwFac,...)
 											
-						if(flowWorkspace:::isNcdf(x[[1]])){
+						if(flowWorkspace:::isNcdf(x)){
 							sapply(sampleNames(result),function(s)ncdfFlow:::updateIndices(result,s,NA))
 							ncFlowSet(x)<-result
 						}else{

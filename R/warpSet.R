@@ -10,13 +10,13 @@ warpSetGS <- function(x,stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 	#return the normalized data
 	if(!inherits(x,"GatingSet"))
 		stop("x must be of class GatingSet")
-	if(!flowWorkspace:::isNcdf(x[[1]])){
+	if(!flowWorkspace:::isNcdf(x)){
 		#TODO code the regular flowSet (not ncdfFlowSet) normalization code.
 		message("Gating Set not gated using netcdf. We'll use the regular warpSet function");
 		if(is.null(gate)){
 			flowset<-getData(x);
 		}else{
-			if(gate<=length(flowWorkspace:::getNodes(x[[1]]))){
+			if(gate<=length(flowWorkspace:::getNodes(x[[1]], showHidden = TRUE))){
 				flowset<-getData(x,gate);
 			}else{
 				stop("gate ",gate," out of range");
@@ -34,7 +34,7 @@ warpSetGS <- function(x,stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 			
 		}else{
 			#check if the gate is in range
-			if(gate<=length(flowWorkspace:::getNodes(x[[1]]))){
+			if(gate<=length(flowWorkspace:::getNodes(x[[1]], showHidden = TRUE))){
 				ncflowset<-Subset(x,gate)
 				#subset for the correct samples
 				#ncflowset<-ncflowset[setdiff(sampleNames(ncflowset),setdiff(sampleNames(ncflowset),getSamples(x)))]

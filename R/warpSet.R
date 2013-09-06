@@ -530,10 +530,10 @@ warpSetNCDF <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 			chunkindices<-split(1:length(funs),chunkgroups)
 			for(k in seq_along(chunkfuns)){
 				#read in the data first for the current chunk
-				if(exists("thiDat")){
-					rm(thisDat)
-					gc(chunksize)
-				}
+#				if(exists("thiDat")){
+#					rm(thisDat)
+#					gc(chunksize)
+#				}
                 
                 thisChunksample <- chunksamples[[k]]
                 thisChunkFuns <- chunkfuns[[k]]

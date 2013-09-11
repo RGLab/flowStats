@@ -64,7 +64,7 @@ gaussNormNC <- function(ncflowset, channel.names, max.lms=2, base.lms=NULL,  pea
     tmp<-flowFrame(normalize.one.exprNC(ncflowset,remb.flowset$index[[i]],i, base.lms, lms$filter[,i], lms$original[,i], matched.lms[,i], channel.names, max.lms, file.name, debug))
 	parameters(tmp)<-parameters(ncflowset[[i]])
 	description(tmp)<-description(ncflowset[[i]])
-	ncdfFlow:::addFrame(normalized,tmp,sampleNames(ncflowset)[i])
+	normalized[[sampleNames(ncflowset)[i]]] <- tmp
     for(p in channel.names){
       newRange[1,p] <- min(newRange[1,p], min(exprs(normalized[[i]])[,p], na.rm=TRUE))
       newRange[2,p] <- max(newRange[2,p], max(exprs(normalized[[i]])[,p], na.rm=TRUE))

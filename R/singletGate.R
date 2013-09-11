@@ -13,21 +13,25 @@
 #' observations to subsample can be given in \code{subsample_pct}. By default, no
 #' subsampling is applied.
 #' 
-#' @param x a \code{flowFrame} object
-#' @param area channel name of area
-#' @param height channel name of height
-#' @param sidescatter channel name of sidescatter to use. (Default: ignored)
+#' @param x a \code{\link[flowCore:flowFrame-class]{flowFrame}} object
+#' @param area character giving the channel name that records the signal
+#' intensity as peak area
+#' @param height character giving the channel name that records the signal
+#' intensity as peak heightchannel name of height
+#' @param sidescatter character giving an optional channel name for the
+#' sidescatter signal. By default, ignored.
 #' @param prediction_level a numeric value between 0 and 1 specifying the level
-#' to use for the prediction bands.
+#' to use for the prediction bands
 #' @param subsample_pct a numeric value between 0 and 1 indicating the percentage
 #' of observations that should be randomly selected from \code{x} to construct
-#' the gate.
-#' @param wider gate logical value. If \code{TRUE}, the prediction bands used to
+#' the gate. By default, no subsampling is performed.
+#' @param wider_gate logical value. If \code{TRUE}, the prediction bands used to
 #' construct the singlet gate use the robust fitted weights, which increase
 #' prediction uncertainty, especially for large FSC-A. This leads to wider gates,
 #' which are sometimes desired.
 #' @param filterId the name for the filter that is returned
 #' @param ... additional arguments passed to \code{\link[MASS]{rlm}}
+#' @return a \code{\link[flowCore]{polygonGate}} object with the singlet gate
 singletGate <- function(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
                         prediction_level = 0.99, subsample_pct = NULL,
                         wider_gate = FALSE, filterId = "singlet", ...) {

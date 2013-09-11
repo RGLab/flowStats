@@ -24,10 +24,12 @@ normalize(data,x,...)
 		The target sample to normalize the other samples in the gating set to. A \code{character} vector. Must match a sample name in \code{x}, otherwise \code{NULL} will use the mean (average) of the peaks identified in all samples
 
  		skipgates:
-		A \code{numeric} vector of gate indices that are to be skipped (i.e. not normalized). The index calculation is a bit convoluted. We provide a mapping function \code{\link[flowWorkspace]{includedGate2ExcludedGate}} to map from flowJo gate path names to indices.
+		A \code{numeric} vector of gate indices that are to be skipped (i.e. not normalized).  
+		
 
   		skipdims:
-		A \code{character} vector of parameter names to be omitted during sequential normalization. For convenience, a mapping function \code{\link[flowWorkspace]{includedChannel2ExcludedChannel}} performs the mapping from explicitly including dimensions for normalization, to a list of excluded dimensions for the function call.
+		A \code{character} vector of parameter names to be omitted during sequential normalization.  
+		
 		
 		chunksize:
 		For a memory-efficient implementation of normalization, set the \code{chunksize},(an \code{integer}), which will peform normalization on chunks of the data of size \code{chunksize}. 
@@ -53,7 +55,7 @@ Greg Finak <gfinak@fhcrc.org>
 }
 
 \seealso{
-See also \code{\link[flowWorkspace]{GatingSet-class}}, \code{\link[flowWorkspace]{GatingHierarchy-class}}, \code{\link[flowWorkspace]{includedGate2ExcludedGate}}, \code{\link[flowWorkspace]{includedChannel2ExcludedChannel}}, \code{\link[ncdfFlow]{ncdfFlowSet}}
+See also \code{\link[flowWorkspace]{GatingSet-class}}, \code{\link[flowWorkspace]{GatingHierarchy-class}},  \code{\link[ncdfFlow]{ncdfFlowSet}}
 }
 \examples{
 \dontrun{

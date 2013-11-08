@@ -35,10 +35,11 @@ warpSetGS <- function(x,stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 		}else{
 			#check if the gate is in range
 			if(gate<=length(flowWorkspace:::getNodes(x[[1]], showHidden = TRUE))){
-				ncflowset<-Subset(x,gate)
+#				browser()
+              ncflowset <- getData(x,gate)
 				#subset for the correct samples
 				#ncflowset<-ncflowset[setdiff(sampleNames(ncflowset),setdiff(sampleNames(ncflowset),sampleNames(x)))]
-				ncflowset<-ncflowset[flowWorkspace:::sampleNames(x)]
+				ncflowset <- ncflowset[sampleNames(x)]
 			}else{
 				stop("gate ",gate," out of range");
 			}

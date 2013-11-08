@@ -128,7 +128,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 		})
 
 
-.normalizeGatingSet<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,ncdfFile = NULL, ...){
+.normalizeGatingSet <- function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,ncdfFile = NULL, minCountThreshold = 500, ...){
 
 #	browser()
 	samples<-sampleNames(x)
@@ -211,7 +211,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 					parentgates[[as.character(g)]]$unnormalized<-setdiff(parentgates[[as.character(g)]]$unnormalized,dims)
 					stains<-dims[wh.dim]
 #					browser()	
-					if(length(stains)!=0&gateHasSufficientData(x,g,...)){
+					if(length(stains)!=0&gateHasSufficientData(x,g, minCountThreshold = minCountThreshold, ...)){
 						#choose the np element by name
 						npks<-np[[as.character(i)]]
 

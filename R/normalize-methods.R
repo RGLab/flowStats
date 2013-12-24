@@ -49,7 +49,7 @@ plotSameGate<-function(gs,cex=2,gsubset=NULL,names=NULL){
 		g2<-gsubset[2]
 	g1<-gsubset[1]
 	if(is.null(names)){
-		names<-flowWorkspace:::getSamples(gs)
+		names<-flowWorkspace:::sampleNames(gs)
 	}else if(length(names)!=length(gs)){
 		stop("names must be same length as gating set")
 	}
@@ -128,10 +128,10 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 		})
 
 
-.normalizeGatingSet<-function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,ncdfFile = NULL, ...){
+.normalizeGatingSet <- function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,ncdfFile = NULL, minCountThreshold = 500, ...){
 
 #	browser()
-	samples<-getSamples(x)
+	samples<-sampleNames(x)
 	valid<-target%in%samples
 	if(!is.null(target)){
 		if(!valid){
@@ -211,7 +211,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 					parentgates[[as.character(g)]]$unnormalized<-setdiff(parentgates[[as.character(g)]]$unnormalized,dims)
 					stains<-dims[wh.dim]
 #					browser()	
-					if(length(stains)!=0&gateHasSufficientData(x,g,...)){
+					if(length(stains)!=0&gateHasSufficientData(x,g, minCountThreshold = minCountThreshold, ...)){
 						#choose the np element by name
 						npks<-np[[as.character(i)]]
 
@@ -222,7 +222,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 							flowData(x)<-result
 						}else{
 							oldfs<-flowData(x)
-							for(j in getSamples(x)){
+							for(j in sampleNames(x)){
 								inds<-flowWorkspace::getIndices(x[[j]],g)
 								oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
 							}

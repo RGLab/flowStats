@@ -1,7 +1,7 @@
 Package: flowStats
 Type: Package
 Title: Statistical methods for the analysis of flow cytometry data
-Version: 3.20.2
+Version: 3.20.3
 Author: Florian Hahne, Nishant Gopalakrishnan, Alireza Hadj Khodabakhshi,
         Chao-Jen Wong, Kyongryun Lee
 Maintainer: Greg Finak <gfinak@fhcrc.org> and Mike Jiang <wjiang2@fhcrc.org>

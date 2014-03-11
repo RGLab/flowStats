@@ -33,8 +33,6 @@ importFrom(KernSmooth, bkde2D)
 
 importFrom(MASS, huber, hubers, rlm)
 
-importFrom(compositions, dist)
-
 importFrom(fda, Data2fd, create.bspline.basis, eval.fd, fdPar,
            landmarkreg)
 
@@ -59,7 +57,7 @@ importFrom(mvoutlier, pcout)
 
 importFrom(stats, anova, approxfun, as.formula, as.hclust, chisq.test,
            density, dnorm, fitted, formula, kmeans, mad, median,
-           na.omit, optimize, qnorm, quantile, resid, sd, var)
+           na.omit, optimize, qnorm, quantile, resid, sd, var, dist)
 
 importFrom(utils, capture.output)
 

@@ -188,8 +188,13 @@ idFeaturesByBackgating <- function(bg, nDim, thres.sigma=2.5, lambda=0.1,
             reg[reg$cluster==lab, dim] <- as.matrix(perClust[[j]][, dim])
        else {
            tmp <- rbind(refF[lab, dim], perClust[[j]][,dim])
+           
+           #we don't need to call compositions::dist here since tmp is data.frame
+           # and it always falls back to the stats::dist without any
+          # compositions::cdt transformation
            mindist <-
                    which.min(as.numeric(dist(tmp))[1:nrow(perClust[[j]])])
+              
            reg[reg$cluster==lab, dim] <- as.matrix(perClust[[j]][mindist, dim])
        }
        reg$bogus[reg$cluster==lab] <- FALSE

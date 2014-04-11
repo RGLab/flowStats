@@ -1,0 +1,348 @@
+% NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
+% likely to be overwritten.
+%
+%\VignetteIndexEntry{flowStats Overview}
+%\VignetteDepends{flowStats, flowViz}
+%\VignetteKeywords{}
+%\VignettePackage{flowStats}
+\documentclass[11pt]{article}
+
+\usepackage{times}
+\usepackage{hyperref}
+\usepackage[authoryear,round]{natbib}
+\usepackage{times}
+\usepackage{comment}
+\usepackage{graphicx}
+\usepackage{subfigure}
+
+\textwidth=6.2in
+\textheight=8.5in
+\oddsidemargin=.1in
+\evensidemargin=.1in
+\headheight=-.3in
+
+\newcommand{\scscst}{\scriptscriptstyle}
+\newcommand{\scst}{\scriptstyle}
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textsf{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+
+
+
+\title{Getting started with \Rpackage{flowStats}}
+\author{F. Hahne, N. Gopalakrishnan}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\Rpackage{flowStats} is a collection of algorithms for the statistical
+analysis of flow cytometry data. So far, the focus is on automated
+gating and normalization.
+\end{abstract}
+
+
+\section{Introduction}
+Since \Rpackage{flowStats} is more a collection of algorithms, writing
+a coherent Vignette is somewhat difficult. Instead, we will present a
+hypothetical data analysis process that also makes heavy use of the
+functionality provided by \Rpackage{flowCore}, mainly the work flow
+infrastructure.
+
+We start by loading the \Robject{GvHD} data set from the
+\Rpackage{flowCore} package.
+<<loadGvHD>>=
+library(flowStats)
+data(ITN)
+@ 
+%
+The data was acquired from blood samples by 3 groups of patients, each
+group containing 5 samples. Each \Rclass{flowFrame} includes, in
+addition to FSC and SSC, 5 fluoresence parameters: CD3, CD4, CD8, CD69
+and HLADR.
+
+First we need to tranform all the fluorescense channels. This is a
+good point to start using a \Rclass{workFlow} object to keep track of
+our progress.
+<<transform>>=
+wf <- workFlow(ITN)
+tl <- transformList(colnames(ITN)[3:7], asinh, transformationId="asinh")
+add(wf, tl)
+@ 
+%
+In a initial analysis step we first want to indentify and subset all
+T-cells. This can be archived by gating in the CD3 and SSC dimensions,
+however there are several other sub-populations, and we need to
+either specify our selection further, or segment the individual
+sub-populations. One solution for the latter aproach is to use the
+mixture modelling infrastructure provided by the \Rclass{flowClust}
+package. However, since we are only interested in one single
+sub-population, the T-cell, it is much faster and easier to use the
+\Rfunction{lymphGate} function in the \Rpackage{flowStats}
+package. The idea here is to first do a rough preselection in the
+two-dimensional projection of the data based on expert knowledge or
+prior experience and subsequently to fit a \Rclass{norm2Filter} to
+this subset. The function also allows to derive the pre-selection
+through back-gating: we know that CD4 positive cells are a subset of
+T-cells, so by estimating CD4 positive cells first we can get a rough
+idea on where to find the T-cells in the CD3 SSC projection.
+
+<<lymphGate, keep.source=TRUE>>=
+lg <- lymphGate(Data(wf[["asinh"]]), channels=c("SSC", "CD3"),
+                preselection="CD4", filterId="TCells", eval=FALSE,
+                scale=2.5)
+add(wf, lg$n2gate, parent="asinh")
+<<lymphGatePlot, keep.source=TRUE, fig=TRUE>>=
+library(flowViz)
+print(xyplot(SSC ~ CD3| PatientID, wf[["TCells+"]],
+      par.settings=list(gate=list(col="red", 
+         fill="red", alpha=0.3))))
+@ 
+
+In the next step we want to separate T-helper and NK cells using the
+CD4 and CD8 stains. A convenient way of doing this is to apply a
+\Rclass{quadGate}, assuming that both CD4 and CD8 are binary markers
+(cells are either positive or negative for CD4 and CD8). Often
+investigators use negative samples to derive a split point between the
+postive and negative populations, and apply this constant gate on all
+their samples. This will only work if there are no unforseen shifts in
+the fluorescence itensities between samples which are purely caused by
+technical variation rather than biological phenotype. Let's take a
+look at this variation for the T-cell subset and all 4 remaining
+fluorescense channels:
+
+<<variation, fig=TRUE>>=
+pars <- colnames(Data(wf[["base view"]]))[c(3,4,5,7)]
+print(densityplot(PatientID~., Data(wf[["TCells+"]]), channels=pars, groups=GroupID,
+                  scales=list(y=list(draw=F)), filter=lapply(pars, curv1Filter),
+                  layout=c(4,1)))
+@ 
+
+Indeed the data, especially for CD4 and CD8, don't align well. At
+this point we could decide to compute the \Rclass{quadGates} for each
+sample separately. Alternatively, we can try to normalize the data and
+then compute a common gate. The \Rfunction{warpSet} function can be
+used to normalize data according to a set of landmarks, which
+essentially are the peaks or high-density areas in the density
+estimates shown before. The ideas here are simple:
+
+\begin{itemize}
+\item High density areas represent particular sub-types of cells. 
+\item Markers are binary. Cells are either positive or negative for
+  a particular marker.
+\item Peaks should aline if the above statements are true.
+\end{itemize}
+
+The algorithm in \Rfunction{warpSet} performs the following steps:
+\begin{enumerate}
+\item Identify landmarks for each parameter using a \Rfunction{curv1Filter}
+\item Estimate the most likely total number (k) of landmarks
+\item Perform k-means clustering to classify landmarks
+\item Estimate warping functions for each sample and parameter that
+  best align the landmarks, given the underlying data. This step uses
+  functionality from the \Rpackage{fda} package.
+\item Transform the data using the warping functions.
+\end{enumerate}
+
+The algorithm should be robust to missing peaks in some of the
+samples, however the classification in step 3 becomes harder since it
+is not clear which cell population it represents.   
+
+<<norm>>=
+norm <- normalization(normFun=function(x, parameters, ...)
+                      warpSet(x, parameters, ...),
+                      parameters=pars,
+                      arguments=list(grouping="GroupID", monwrd=TRUE),
+                      normalizationId="Warping")
+add(wf, norm, parent="TCells+")
+<<normPlot, fig=TRUE>>=
+print(densityplot(PatientID~., Data(wf[["Warping"]]), channels=pars, groups=GroupID,
+                  scales=list(y=list(draw=F)), filter=lapply(pars, curv1Filter),
+                  layout=c(4,1)))
+@
+
+After normalization the data look much cleaner and we should be able
+to use a single static gate for all \Rclass{flowFrames} in order to
+separate CD4 and CD8 positive cells. Typically one would use a
+\Rclass{quadGate}, and the \Rfunction{quadrantGate} function in
+\Rpackage{flowStats} can be used to automatically estimate such a
+gate. 
+
+<<quadGate>>=
+qgate <- quadrantGate(Data(wf[["Warping"]]), stains=c("CD4", "CD8"),
+                      filterId="CD4CD8", sd=3)
+add(wf, qgate, parent="Warping")
+@ 
+<<quadGatePlot, fig=TRUE, keep.source=TRUE>>=
+print(xyplot(CD8 ~ CD4 | PatientID, wf[["CD4+CD8+"]],
+             par.settings=list(gate=list(fill="transparent", 
+                               col="red"))))
+@ 
+
+In a final step we might be interested in finding the proportion of
+activated T-helper cells by means of the CD69 stain. The
+\Rfunction{rangeGate} function is helpful in separating positive and
+negative peaks in 1D.
+
+<<rangeGate>>=
+CD69rg <- rangeGate(Data(wf[["Warping"]]), stain="CD69",
+                    alpha=0.75, filterId="CD4+CD8-CD69", sd=2.5)
+add(wf, CD69rg, parent="CD4+CD8-")
+@
+<<rangeGatePlot, keep.source=TRUE, fig=TRUE>>=
+print(densityplot(PatientID ~ CD69, Data(wf[["CD4+CD8-"]]), main = "CD4+",
+            groups=GroupID, refline=CD69rg@min))
+@ 
+
+\section{Probability Binning}
+A probability binning algorithm for quantitating multivariate distribution 
+differences was described by Roederer et al. The algorithm identifies the flow 
+parameter in a flowFrame with the largest variance and divides the events in the 
+flowFrame into two subgroups based on the median of the parameter. This process 
+continues until the number of events in each subgroup is less than a user 
+specified threshold.
+
+For comparison across multiple samples, probability binning algorithm can be applied
+to a control dataset to obtain the position of bins and the same bins can be 
+applied to the experimental dataset. The number of events in the control and sample
+bins can then be compared using the Pearsons chi-square test or the probability 
+binning metric defined by Roederer et al.
+
+Although probability binning can be applied simultaneously to all parameters in 
+a flowFrame with bins in n dimensional hyperspace, we proceed with a two dimenstional
+example from our previous discussion involving CD4 and CD8 populations. This helps
+to simplify the demonstration of the method and interpretation of results. 
+
+From the workflow object containing the warped data, we extract our data frame of 
+interest. We try to compare the panels using probability binning to identify patients 
+with CD4, CD8 populations different from a control flowFrame that we create using the
+data from all the patients.
+
+<<createData>>=
+dat <- Data(wf[["Warping"]])
+
+@
+
+The dat is visualized below
+<<rawData, fig=TRUE>>=
+print( xyplot(CD8 ~ CD4 , dat, main= "Experimental data set"))
+@
+
+The control dataset is created by combining all the flowFrames in the flowSet. 
+The flowFrame is then subsetted after applying a sampleFilter so that the control
+flowSet created has approximately the same number of events as the other flowSets
+in our example.
+
+<<createControlData>>=
+datComb <- as(dat,"flowFrame")
+subCount <- nrow(exprs(datComb))/length(dat)
+	sf <- sampleFilter(filterId="mySampleFilter", size=subCount)
+	fres <- filter(datComb, sf)
+	ctrlData <- Subset(datComb, fres)
+	ctrlData <- ctrlData[,-ncol(ctrlData)] ##remove the  column name "original"
+	
+@
+
+The probability binning algorithm can then applied to the control data. The 
+terminating condition for the algorithm is set so that the number of events 
+in each bin is approximately 5 percent of the total number of events in the 
+control data.
+<<BinControlData>>=
+minRow=subCount*0.05
+refBins<-proBin(ctrlData,minRow,channels=c("CD4","CD8"))
+	
+@
+
+The binned control Data can be visualized using the \Rfunction{plotBins} function.
+Areas in the scatter  plot with a large number of data points have a higher
+density of bins. Each bin also has approximately same number of events.
+
+
+<<controlBinsPlot, fig=TRUE>>=
+plotBins(refBins,ctrlData,channels=c("CD4","CD8"),title="Control Data")
+
+@
+
+The same bin positions from the control data set are then applied to each flowFrame
+in our sample Data set.
+
+<<binSampleData>>=
+sampBins <- fsApply(dat,function(x){
+		   binByRef(refBins,x)
+		   })
+@
+
+For each patient, the number events in the control and sample bins can be compared
+using the \Rfunction{calcPearsonChi} or using Roederers probability binning 
+metric.
+
+<<pearsonStat>>=
+pearsonStat <- lapply(sampBins,function(x){
+		      calcPearsonChi(refBins,x)
+                     })
+@
+
+<<Roderers PBin metric>>=
+sCount <- fsApply(dat,nrow)
+pBStat <-lapply(seq_along(sampBins),function(x){
+		calcPBChiSquare(refBins,sampBins[[x]],subCount,sCount[x])
+		})
+@
+
+
+For each sample, the results can be visualized using the \Rfunction{plotBins} function.
+The residuals from Roeders probability binning metric or the Pearsons chi square
+test can be used to shade bins to highlight bins in each sample that differ 
+the most from the control sample.
+
+<<plotBinsresiduals, fig=TRUE>>=
+par(mfrow=c(4,4),mar=c(1.5,1.5,1.5,1.5))
+
+plotBins(refBins,ctrlData,channels=c("CD4","CD8"),title="Control Data")
+patNames <-sampleNames(dat)
+tm<-lapply(seq_len(length(dat)),function(x){
+		plotBins(refBins,dat[[x]],channels=c("CD4","CD8"),
+			title=patNames[x],
+			residuals=pearsonStat[[x]]$residuals[2,],
+			shadeFactor=0.7)
+		
+		}
+      )
+@
+
+The patient with CD4/CD8 populations most different from that of the 
+control group can be identified from the magnitue of Pearson-chi square
+statistic(or Probability binning statistic). 
+
+
+<<chiSqstatisticvalues,echo=FALSE>>=
+library(xtable)
+chi_Square_Statistic <- unlist(lapply(pearsonStat,function(x){
+		x$statistic
+		}))
+
+pBin_Statistic <-unlist(lapply(pBStat,function(x){
+                x$pbStat
+						                        })) 
+	
+frame <- data.frame(chi_Square_Statistic, pBin_Statistic)
+rownames(frame) <- patNames
+ 	
+@
+
+<<echo=FALSE,results=tex>>=
+print(xtable(frame))
+@
+
+\clearpage
+
+
+<<echo=FALSE,results=tex>>=
+toLatex(sessionInfo())
+@
+ 
+
+\end{document}
+

@@ -2,12 +2,12 @@
 #return a normalized gatingset
 #target is the target sample to normalize against
 #skip is a list of gate indices for which you want to skip normalization (i.e. dump gates that may be difficult to normalize, or FSC/SSC)
-getNormGateList<-function(x){
-	flowCore:::checkClass(x,"GatingSet")
-	bfsgates<-lapply(x,function(y)which(sapply(RBGL::bfs(y@tree),function(x)!flowWorkspace:::.isBooleanGate.graphNEL(y,x))))
-	bfsgates<-unique(do.call(rbind,bfsgates))
-	return(data.frame(gate=flowWorkspace:::getNodes(x[[1]], showHidden = TRUE)[bfsgates],index=t(bfsgates)))
-}
+#getNormGateList<-function(x){
+#	flowCore:::checkClass(x,"GatingSet")
+#	bfsgates<-lapply(x,function(y)which(sapply(RBGL::bfs(y@tree),function(x)!flowWorkspace:::.isBooleanGate.graphNEL(y,x))))
+#	bfsgates<-unique(do.call(rbind,bfsgates))
+#	return(data.frame(gate=flowWorkspace::getNodes(x[[1]], showHidden = TRUE)[bfsgates],index=t(bfsgates)))
+#}
 plotAllGates<-function(gh,cex=2,gsubset=NULL){
   nodes<-RBGL::bfs(gh@tree)
   nodes<-nodes[!sapply(nodes,function(x)flowWorkspace:::.isBooleanGate.graphNEL(gh,x))][-1L]
@@ -27,9 +27,9 @@ plotAllGates<-function(gh,cex=2,gsubset=NULL){
   }
   grid<-expand.grid(1:rs,1:cs)
   sapply(1:(length(nodes)-1),function(g){
-    print(flowWorkspace:::plotGate(gh,nodes[g],lwd=2,pch='.',cex=cex,main=strsplit(nodes[g],"\\.")[[1]][2]),split=c(grid[g,1],grid[g,2],rs,cs),more=T)
+    print(flowWorkspace::plotGate(gh,nodes[g],lwd=2,pch='.',cex=cex,main=strsplit(nodes[g],"\\.")[[1]][2]),split=c(grid[g,1],grid[g,2],rs,cs),more=T)
   })
-  print(flowWorkspace:::plotGate(gh,nodes[length(nodes)],lwd=2,pch='.',cex=cex,main=strsplit(nodes[length(nodes)],"\\.")[[1]][2]),split=c(grid[length(nodes),1],grid[length(nodes),2],rs,cs),more=F)
+  print(flowWorkspace::plotGate(gh,nodes[length(nodes)],lwd=2,pch='.',cex=cex,main=strsplit(nodes[length(nodes)],"\\.")[[1]][2]),split=c(grid[length(nodes),1],grid[length(nodes),2],rs,cs),more=F)
 }
 plotSameGate<-function(gs,cex=2,gsubset=NULL,names=NULL){
 	if(is.null(gsubset))
@@ -49,21 +49,21 @@ plotSameGate<-function(gs,cex=2,gsubset=NULL,names=NULL){
 		g2<-gsubset[2]
 	g1<-gsubset[1]
 	if(is.null(names)){
-		names<-flowWorkspace:::sampleNames(gs)
+		names<-flowWorkspace::sampleNames(gs)
 	}else if(length(names)!=length(gs)){
 		stop("names must be same length as gating set")
 	}
 	for(i in 1:(length(gs)-1)){
-		nodes<-flowWorkspace:::getNodes(gs[[i]], showHidden = TRUE)
-		print(flowWorkspace:::plotGate(gs[[i]],nodes[g1],lwd=2,pch='.',cex=cex,main=names[i]),split=c(grid[i,1],grid[i,2],cs,rs),more=T)
+		nodes<-flowWorkspace::getNodes(gs[[i]], showHidden = TRUE)
+		print(flowWorkspace::plotGate(gs[[i]],nodes[g1],lwd=2,pch='.',cex=cex,main=names[i]),split=c(grid[i,1],grid[i,2],cs,rs),more=T)
 		if(!is.null(g2)){
-			flowWorkspace:::plotGate(gs[[i]],nodes[g2],lwd=2,add=T)
+			flowWorkspace::plotGate(gs[[i]],nodes[g2],lwd=2,add=T)
 		}
 	}
-	nodes<-flowWorkspace:::getNodes(gs[[length(gs)]], showHidden = TRUE)
-	print(flowWorkspace:::plotGate(gs[[length(gs)]],nodes[g1],lwd=2,pch='.',cex=cex,main=names[length(gs)]),split=c(grid[length(gs),1],grid[length(gs),2],cs,rs),more=F)
+	nodes<-flowWorkspace::getNodes(gs[[length(gs)]], showHidden = TRUE)
+	print(flowWorkspace::plotGate(gs[[length(gs)]],nodes[g1],lwd=2,pch='.',cex=cex,main=names[length(gs)]),split=c(grid[length(gs),1],grid[length(gs),2],cs,rs),more=F)
 	if(!is.null(g2)){
-		flowWorkspace:::plotGate(gs[[length(gs)]],nodes[g2],lwd=2,add=T)
+		flowWorkspace::plotGate(gs[[length(gs)]],nodes[g2],lwd=2,add=T)
 	}
 }
 #updateFlowFrameRange<-function(x){
@@ -217,8 +217,8 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 
 						result<-warpSetGS(x,stains=stains,gate=g,target=target,subsample=subsample,chunksize=chunksize,peakNr=npks,bwFac=bwFac,...)
 											
-						if(flowWorkspace:::isNcdf(x)){
-							sapply(sampleNames(result),function(s)ncdfFlow:::updateIndices(result,s,NA))
+						if(flowWorkspace::isNcdf(x)){
+							sapply(sampleNames(result),function(s)ncdfFlow::updateIndices(result,s,NA))
 							flowData(x)<-result
 						}else{
 							oldfs<-flowData(x)

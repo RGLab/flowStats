@@ -117,7 +117,7 @@ warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL,
 
 \seealso{
 
-  \code{\link[curv1Filter-class]{curv1Filter}},
+  \code{\link[flowStats:curv1Filter-class]{curv1Filter}},
   \code{\link{landmarkMatrix}}
   
 }

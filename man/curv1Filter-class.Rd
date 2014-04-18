@@ -3,6 +3,10 @@
 \alias{curv1Filter-class}
 \alias{curv1Filter} 
 \alias{show,curv1Filter-method}
+\alias{\%in\%,flowFrame,curv1Filter-method}
+\alias{summarizeFilter,multipleFilterResult,curv1Filter-method}
+
+
 
 
 \title{Class "curv1Filter"}
@@ -134,7 +138,7 @@ filterId="defaultCurv1Filter")
 
 \seealso{
 
-  \code{\link[curv2Filter-class]{curv2Filter}},
+  \code{\link[flowStats:curv2Filter-class]{curv2Filter}},
   \code{\link{flowFrame}}, \code{\link{flowSet}},
   \code{\link[flowCore:filter-methods]{filter}} for evaluation 
   of \code{curv1Filters} and \code{\link{split}} for splitting of flow
@@ -145,7 +149,7 @@ filterId="defaultCurv1Filter")
 
 \examples{
 
-
+library(flowStats)
 ## Loading example data
 dat <- read.FCS(system.file("extdata","0877408774.B08",
 package="flowCore"))

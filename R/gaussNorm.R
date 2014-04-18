@@ -20,7 +20,7 @@ gaussNormGS <- function(gatingset, channel.names, max.lms=2, base.lms=NULL,peak.
 	if(!gatingset[[1]]@isNcdf)
 		stop("gatingset not gated using netcdf. Just use the regular gaussNorm function, please");
 	if(is.null(gate)){
-		ncflowset<-graph:::nodeData(gatingset[[1]]@tree,gatingset[[1]]@nodes[1],"data")[[1]][["data"]]$ncfs
+		ncflowset<-graph::nodeData(gatingset[[1]]@tree,gatingset[[1]]@nodes[1],"data")[[1]][["data"]]$ncfs
 	}else{
 		ncflowset<-Subset(gatingset,gate)
 	}
@@ -33,7 +33,7 @@ gaussNormGS <- function(gatingset, channel.names, max.lms=2, base.lms=NULL,peak.
 gaussNormNC <- function(ncflowset, channel.names, max.lms=2, base.lms=NULL,  peak.density.thr=0.05, peak.distance.thr=0.05, debug=FALSE, fname=''){
   remb.flowset=remBoundaryNC(ncflowset, channel.names) #This method needs to be rewritten to deal with large data sets.
   expr.list=c(1:length(	ncflowset))  
-  normalized<-ncdfFlow:::clone.ncdfFlowSet(ncflowset)
+  normalized<-ncdfFlow::clone.ncdfFlowSet(ncflowset)
   if(length(max.lms)==1){
     max.lms=rep(max.lms, times=length(channel.names))
   }

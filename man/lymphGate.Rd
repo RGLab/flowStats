@@ -80,7 +80,7 @@ lymphFilter(channels, preselection=as.character(NULL),
   
   \item{preselection}{ Either \code{NULL}, in which case this boils down
     to fitting a regular
-    \code{\link[norm2Filter-class]{norm2Filter}}, a 
+    \code{\link[flowCore:norm2Filter-class]{norm2Filter}}, a 
     character scalar giving one of the flow parameters in \code{x}, or a
     named list of numerics specifying the initial rough
     preselection. The latter gets passed on to
@@ -175,7 +175,7 @@ lymphFilter(channels, preselection=as.character(NULL),
 
 \author{ Florian Hahne }
 
-\seealso{ \code{\link[norm2Filter-class]{norm2Filter}},
+\seealso{ \code{\link[flowCore:norm2Filter-class]{norm2Filter}},
   \code{\link[curv1Filter-class]{curv1Filter}} } 
 
 \examples{

@@ -3,8 +3,8 @@
 \alias{curv2Filter-class}
 \alias{curv2Filter} 
 \alias{show,curv2Filter-method}
-
-
+\alias{\%in\%,flowFrame,curv2Filter-method}
+\alias{summarizeFilter,multipleFilterResult,curv2Filter-method}
 \title{Class "curv2Filter"}
 
 
@@ -134,7 +134,7 @@ gridsize=rep(151, 2))
 
 \seealso{
 
-  \code{\link[curv1Filter-class]{curv1Filter}},
+  \code{\link[flowStats:curv1Filter-class]{curv1Filter}},
   \code{\link{flowFrame}}, 
   \code{\link{flowSet}}, \code{\link[flowCore:filter-methods]{filter}}
   for evaluation 

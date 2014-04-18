@@ -1,93 +1,3 @@
-#' norm2Filter, curv1Filter, curv2Filter are copied (eventually moved) from flowCore
-
-
-## ===========================================================================
-## norm2Filter
-## ---------------------------------------------------------------------------
-## A class to describe the fit of a bivariate normal distribution.
-## Slot method is a character describing the method used to compute the
-## covariance matrix, slot scale.factor holds a numeric representing the
-## Mahalanobis distance. Slot transformation holds a list of length
-## giving transformations, if applicable that are applied to the data
-## before gating. n is the number of points used in the subsampling step.
-## ---------------------------------------------------------------------------
-setClass("norm2Filter",
-    representation=representation(method="character",
-        scale.factor="numeric",
-        n="numeric"),
-    contains="parameterFilter",
-    prototype=list(filterId="defaultNorm2Filter",
-        scale.factor=1,
-        transformation=list(),
-        method="covMcd",
-        n=50000))
-
-## Constructor. We allow for the following inputs:
-##  method is always a character and scale.factor and n both are always
-##     numerics, all of length 1
-##  x and y are characters of length 1 or a mix of characters and
-##     transformations
-##  x is a character of length 2 and y is missing
-##  x is a list of characters and/or transformations, y is missing
-norm2Filter <- function(x, y, method="covMcd", scale.factor=1,
-    n=50000, filterId="defaultNorm2Filter")
-{
-  flowCore:::checkClass(method, "character", 1)
-  flowCore:::checkClass(scale.factor, "numeric", 1)
-  flowCore:::checkClass(n, "numeric", 1)
-  flowCore:::checkClass(filterId, "character", 1)
-  if(missing(y)) {
-    if(length(x)==1)
-      stop("You must specify two parameters for a norm2 gate.")
-    if(length(x)>2)
-      warning("Only the first two parameters will be used.")
-    y=x[[2]]
-    x=x[[1]]
-  }
-  new("norm2Filter", parameters=c(x, y), method=method,
-      scale.factor=scale.factor, filterId=filterId, n=n)
-}
-## ==========================================================================
-## norm2Filter
-## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-setMethod("show",
-    signature=signature(object="norm2Filter"),
-    definition=function(object)
-    {
-      parms <- as.character(parameters(object))
-      na  <-  is.na(parms)
-      if(any(na))
-        parms[na] <- "internal transformation"
-      cat(ifelse(length(object@transformation), "transformed", ""),
-          "norm2Filter '", identifier(object),
-          "' in dimensions ", sep="")
-      cat(paste(parms, sep="", collapse=" and "),
-          "with parameters:\n")
-      cat("  method:", object@method, "\n")
-      cat("  scale.factor:", object@scale.factor, "\n")
-      cat("  n:", object@n, "\n")
-      cat("\n")
-    })
-
-## ==========================================================================
-## For a norm2Filter we want to strip things from the attributes in the
-## subSet slot, i.e., the details about the fitted bivariate normal
-## distribution
-## ---------------------------------------------------------------------------
-setMethod("summarizeFilter",
-    signature=signature(result="logicalFilterResult",
-        filter="norm2Filter"),
-    definition=function(result, filter)
-    {
-      ret <- callNextMethod()
-      ret$cov <- attr(result@subSet,'cov')
-      ret$center <- attr(result@subSet,'center')
-      ret$radius <- attr(result@subSet,'radius')
-      ret$parameters <- parameters(filter)
-      return(ret)
-    })
-
-
 ## ===========================================================================
 ## curv1Filter
 ## ---------------------------------------------------------------------------
@@ -233,58 +143,6 @@ setMethod("summarizeFilter",
       ret$fsObj <- attr(result@subSet, "fSObj")
       return(ret)
     })
-## ==========================================================================
-## norm2Filter -- as a logical filter, this returns a logical vector.
-## Essentially, the algorithm to evaluate the filter is similar to that of
-## ellipsoidGates with the addition of the scalefac argument, that controls
-## the cutoff in the Mahalanobis distance.
-## ---------------------------------------------------------------------------
-setMethod("%in%",
-    signature=signature("flowFrame",
-        table="norm2Filter"),
-    definition=function(x, table)
-    {
-      if(nrow(x)==0)
-      {
-        result <- as.logical(NULL)
-        attr(result, 'center') <- NA
-        attr(result, 'cov') <- NA
-        attr(result, 'radius') <- NA
-        return(result)
-      }
-      if(length(parameters(table)) != 2)
-        stop("norm2 filters require exactly two parameters.")
-      y <- exprs(x)[,parameters(table)]
-      ## drop data that has piled up on the measurement ranges
-      r <- range(x, parameters(table))
-      sel <- (y[,1] > r[1,1] & y[,1] < r[2,1] &
-            y[,2] > r[1,2] & y[,2] < r[2,2])
-      values <- y[sel, ]
-      if(is.na(match(table@method,c("covMcd","cov.rob"))))
-        stop("Method must be either 'covMcd' or 'cov.rob'")
-      cov <- switch(table@method,
-          covMcd={
-            tmp <- if(nrow(values)>table@n)
-                  CovMcd(values[sample(nrow(values),
-                              table@n),])
-                else CovMcd(values)
-            list(center=tmp@center, cov=tmp@cov)
-          },
-          cov.rob={cov.rob(values)},
-          stop("How did you get here?")
-      )
-      W <- t(y)-cov$center
-      ## FIXME: a long term change might be to save chol(cov$cov)
-      ## rather than cov$cov in the result.  This helps in computing
-      ## the gate boundaries and qr.solve above could be replaced by
-      ## the equivalent of chol2inv(chol(cov$cov)).
-      covsol <- qr.solve(cov$cov) %*% W
-      result <- colSums(covsol * W) < table@scale.factor^2
-      attr(result, 'center') <- cov$center
-      attr(result, 'cov') <- cov$cov
-      attr(result, 'radius') <- table@scale.factor
-      result
-    })
 
 
 ## ==========================================================================
@@ -389,7 +247,7 @@ setMethod("%in%",
       for (i in seq(along=contourLinesObj)){
         vertices <- cbind(contourLinesObj[[i]]$x,
             contourLinesObj[[i]]$y)
-        sel <- as.logical(inpolygon(ovalues,vertices))
+        sel <- as.logical(flowCore:::inpolygon(ovalues,vertices))
         filterInds[sel] <- i
       }
       

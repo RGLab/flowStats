@@ -31,14 +31,16 @@ importFrom(Biobase, listLen)
 
 importFrom(KernSmooth, bkde2D)
 
-importFrom(MASS, huber, hubers, rlm)
+importFrom(MASS, huber, hubers, rlm, cov.rob)
+
+importFrom(ks, dfltCounts, drvkde)
 
 importFrom(fda, Data2fd, create.bspline.basis, eval.fd, fdPar,
            landmarkreg)
 
 importFrom(flowCore, boundaryFilter, char2ExpressionFilter,
-           curv1Filter, curv2Filter, filterList, flowFrame,
-           norm2Filter, quadGate, rectangleGate, sampleFilter)
+           filterList, flowFrame, norm2Filter,
+           quadGate, rectangleGate, sampleFilter)
 
 importFrom(grDevices, chull, col2rgb, contourLines, dev.cur, dev.off,
            png, rainbow, rgb, x11)
@@ -63,6 +65,8 @@ importFrom(utils, capture.output)
 
 export("lymphGate",
        "lymphFilter",
+       "curv1Filter",
+       "curv2Filter",
        "oneDGate",
        "quadrantGate",
        "rangeGate",
@@ -83,7 +87,8 @@ export("lymphGate",
        "singletGate"
        )
 
-exportClasses("lymphFilter","rangeFilter")
+exportClasses("lymphFilter","rangeFilter","curv1Filter", 
+              "curv2Filter")
 
 exportMethods("normalize")
 

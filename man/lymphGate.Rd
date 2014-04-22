@@ -91,7 +91,7 @@ lymphFilter(channels, preselection=as.character(NULL),
     \code{norm2Filter}. }
 
   \item{bwFac}{ The bandwidth factor that gets passed on to
-    \code{\link[flowCore:curv1Filter-class]{curv1Filter}}. }
+    \code{\link[flowStats:curv1Filter-class]{curv1Filter}}. }
 
   \item{filterId}{ A character used as filterId. }
 
@@ -176,7 +176,7 @@ lymphFilter(channels, preselection=as.character(NULL),
 \author{ Florian Hahne }
 
 \seealso{ \code{\link[flowCore:norm2Filter-class]{norm2Filter}},
-  \code{\link[flowCore:curv1Filter-class]{curv1Filter}} } 
+  \code{\link[flowStats:curv1Filter-class]{curv1Filter}} } 
 
 \examples{
 

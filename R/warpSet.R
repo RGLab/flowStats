@@ -10,13 +10,13 @@ warpSetGS <- function(x,stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 	#return the normalized data
 	if(!inherits(x,"GatingSet"))
 		stop("x must be of class GatingSet")
-	if(!flowWorkspace:::isNcdf(x)){
+	if(!flowWorkspace::isNcdf(x)){
 		#TODO code the regular flowSet (not ncdfFlowSet) normalization code.
 		message("Gating Set not gated using netcdf. We'll use the regular warpSet function");
 		if(is.null(gate)){
 			flowset<-getData(x);
 		}else{
-			if(gate<=length(flowWorkspace:::getNodes(x[[1]], showHidden = TRUE))){
+			if(gate<=length(flowWorkspace::getNodes(x[[1]], showHidden = TRUE))){
 				flowset<-getData(x,gate);
 			}else{
 				stop("gate ",gate," out of range");
@@ -27,14 +27,14 @@ warpSetGS <- function(x,stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 	}else{
 		if(is.null(gate)){
 			#ncflowset<-graph:::nodeData(x[[1]]@tree,x[[1]]@nodes[1],"data")[[1]][["data"]]$ncfs
-			ncflowset<-flowWorkspace:::flowData(x)
+			ncflowset<-flowWorkspace::flowData(x)
 			#subset for the correct samples
-			ncflowset<-ncflowset[flowWorkspace:::sampleNames(x)]
+			ncflowset<-ncflowset[flowWorkspace::sampleNames(x)]
 			#ncflowset<-ncflowset[setdiff(sampleNames(ncflowset),setdiff(sampleNames(ncflowset),sampleNames(x)))]
 			
 		}else{
 			#check if the gate is in range
-			if(gate<=length(flowWorkspace:::getNodes(x[[1]], showHidden = TRUE))){
+			if(gate<=length(flowWorkspace::getNodes(x[[1]], showHidden = TRUE))){
 #				browser()
               ncflowset <- getData(x,gate)
 				#subset for the correct samples
@@ -69,7 +69,7 @@ warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=N
 	#expData should now be x...
 #	browser()
 	if(isNew){
-		expData<-ncdfFlow:::clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,ncdfFile=newNcFile)
+		expData<-ncdfFlow::clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,ncdfFile=newNcFile)
 	}else{
 		expData<-x;
 	}
@@ -363,7 +363,7 @@ warpSetNCDF <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 
 	#expData should now be x...
 	if(isNew){
-		expData<-ncdfFlow:::clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,ncdfFile=newNcFile)
+		expData<-ncdfFlow::clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,ncdfFile=newNcFile)
 	}else{
 		expData<-x;
 	}

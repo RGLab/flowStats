@@ -8,7 +8,7 @@
 \description{
 
   Parse the output of
-  \code{\link[flowCore:curv1Filter-class]{curv1Filter}} and find modes
+  \code{\link[flowStats:curv1Filter-class]{curv1Filter}} and find modes
   and midpoints of the high-density regions. This function is considered
   to be internal.
   

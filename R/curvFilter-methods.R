@@ -126,7 +126,7 @@ setMethod("glpolygon",
     function(x, data, verbose=TRUE, gpar=flowViz.par.get(),
         names=FALSE, ...)
     {
-      checkFres(filter=x, fres=data, verbose=verbose)
+      flowViz:::checkFres(filter=x, fres=data, verbose=verbose)
       fd <- filterDetails(data, identifier(x))
       bounds <- fd$boundaries
       if(all(is.na(bounds[[1]])))
@@ -179,7 +179,7 @@ setMethod("glpolygon",
     function(x, data, verbose=TRUE, gpar=flowViz.par.get(),
         names=FALSE, ...)
     {
-      checkFres(filter=x, fres=data, verbose=verbose)
+      flowViz:::checkFres(filter=x, fres=data, verbose=verbose)
       fd <- filterDetails(data, identifier(x))
       polygons <- fd$polygons
       lf <- length(polygons)
@@ -225,7 +225,7 @@ setMethod("glines",
     signature(x="curv2Filter", data="multipleFilterResult"), 
     function(x, data, verbose=TRUE, col, ...)
     {
-      checkFres(filter=x, fres=data, verbose=verbose)
+      flowViz:::checkFres(filter=x, fres=data, verbose=verbose)
       fd <- filterDetails(data, identifier(x))
       parms <- parameters(x)
       polygons <- fd$polygons
@@ -270,7 +270,7 @@ setMethod("glines",
     signature(x="curv1Filter", data="multipleFilterResult"), 
     function(x, data, verbose=TRUE, col, ...)
     {
-      checkFres(filter=x, fres=data, verbose=verbose)
+      flowViz:::checkFres(filter=x, fres=data, verbose=verbose)
       fd <- filterDetails(data, identifier(x))
       parms <- parameters(x)
       bounds <- fd$boundaries
@@ -382,7 +382,7 @@ setMethod("gpolygon",
     signature(x="curv2Filter", data="multipleFilterResult"), 
     function(x, data, verbose=TRUE, col, ...)
     {
-      checkFres(filter=x, fres=data, verbose=verbose)
+      flowViz:::checkFres(filter=x, fres=data, verbose=verbose)
       fd <- filterDetails(data, identifier(x))
       parms <- parameters(x)
       polygons <- fd$polygons
@@ -431,7 +431,7 @@ setMethod("gpolygon",
     signature(x="curv1Filter", data="multipleFilterResult"), 
     function(x, data, verbose=TRUE, col, ...)
     {
-      checkFres(filter=x, fres=data, verbose=verbose)
+      flowViz:::checkFres(filter=x, fres=data, verbose=verbose)
       fd <- filterDetails(data, identifier(x))
       parms <- parameters(x)
       bounds <- fd$boundaries

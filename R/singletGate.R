@@ -30,11 +30,12 @@
 #' prediction uncertainty, especially for large FSC-A. This leads to wider gates,
 #' which are sometimes desired.
 #' @param filterId the name for the filter that is returned
+#' @param maxit the limit on the number of IWLS iterations passed to \code{\link[MASS]{rlm}}
 #' @param ... additional arguments passed to \code{\link[MASS]{rlm}}
 #' @return a \code{\link[flowCore]{polygonGate}} object with the singlet gate
 singletGate <- function(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
                         prediction_level = 0.99, subsample_pct = NULL,
-                        wider_gate = FALSE, filterId = "singlet", ...) {
+                        wider_gate = FALSE, filterId = "singlet", maxit = 5, ...) {
   flowCore:::checkClass(x, "flowFrame")
   flowCore:::checkClass(area, "character")
   flowCore:::checkClass(height, "character")
@@ -70,7 +71,7 @@ singletGate <- function(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
   }
   rlm_formula <- as.formula(rlm_formula)
 
-  rlm_fit <- rlm(rlm_formula, data = x, ...)
+  rlm_fit <- rlm(rlm_formula, data = x, maxit = maxit, ...)
 
   if (!rlm_fit$converged) {
     warning("The IRLS algorithm employed in 'rlm' did not converge.")

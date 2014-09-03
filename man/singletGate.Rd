@@ -35,7 +35,9 @@ singletGate(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
   \item{wider_gate}{logical value. If \code{TRUE}, the prediction bands used to construct the singlet gate use the robust fitted weights, which increase prediction uncertainty, especially for large FSC-A. This leads to wider gates, which are sometimes desired.}
 
   \item{filterId}{the name for the filter that is returned}
-
+	
+  \item{maxit}{the limit on the number of IWLS iterations passed to \code{\link[MASS]{rlm}}}
+  
   \item{...}{additional arguments passed to \code{\link[MASS]{rlm}}}
 }
 

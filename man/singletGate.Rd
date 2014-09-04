@@ -15,7 +15,7 @@
 \usage{
 singletGate(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
             prediction_level = 0.99, subsample_pct = NULL, wider_gate = FALSE,
-            filterId = "singlet", ...)
+            filterId = "singlet", maxit = 5, ...)
 }
 
 \arguments{

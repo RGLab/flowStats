@@ -1,0 +1,17 @@
+**************************************************
+*              1.7 SERIES PATCHED NEWS           *
+**************************************************
+
+NEW UTILITIES
+
+o Added an argument 'plot' to lymphGate() to produce plots of results.
+
+o Added an argument 'bwFac' to warpSet() to allow finer control to the
+  smoothing of the density kernal estimation (in curv1Filter). This bandwidth
+  factor would affect the number of landmarks. 
+
+o Added two arguments 'refLine1' and refLine2' to quandrantGate() allowing
+  algorithm to ignore minor, yet significant, sub-populations below 'refLine1'
+  and 'refLine' when calculating the separator between positive and negative.
+
+ 

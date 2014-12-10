@@ -24,7 +24,7 @@ normalize(data,x,...)
 		The target sample to normalize the other samples in the gating set to. A \code{character} vector. Must match a sample name in \code{x}, otherwise \code{NULL} will use the mean (average) of the peaks identified in all samples
 
  		skipgates:
-		A \code{numeric} vector of gate indices that are to be skipped (i.e. not normalized).  
+		A \code{character} vector of population names that are to be skipped (i.e. not normalized).  
 		
 
   		skipdims:

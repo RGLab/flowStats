@@ -128,8 +128,9 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 		})
 
 
-.normalizeGatingSet <- function(x,target=NULL,skipgates=NULL
-                                    ,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time")
+.normalizeGatingSet <- function(x,target=NULL
+                                    , populations = NULL
+                                    , dims
                                     ,nPeaks=list(),ncdfFile = NULL, minCountThreshold = 500, ...){
 
 #	browser()
@@ -143,8 +144,8 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	
 	#Get all the non-boolean gates, breadth first traversal
 	#Do a breadth-first traversal
-	nodes.full <- getNodes(x[[1]],order="bfs",showHidden = TRUE, path = "full")
-    nodes.auto <- getNodes(x[[1]],order="bfs",showHidden = TRUE, path = "auto")
+	
+    nodes <- getNodes(x[[1]],order="bfs",showHidden = TRUE, path = "auto")
 	
 	#gate-specific channel list to track normalization
 	parentgates<-list();	
@@ -160,17 +161,16 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	#for each gate, grab the dimensions and check if they are normalized.
 	#Normalize what hasn't been normalized yet, then do the gating.
 	#Set a target sample by name
-	for(i in seq_along(nodes.auto)){
+	for(node in populations){
 		
-        node <- nodes.auto[i]
+        
         if(node!="root")
           if(!flowWorkspace:::.isBoolGate(x[[1]],node))
         {
-            fullPath <- nodes.full[i]
-          
+            
     		gate <- getGate(x[[1]],node)
     		
-    		dims <- setdiff(parameters(gate), skipdims)
+    		dims <- intersect(parameters(gate), dims)
             
         
     		if(length(dims)>0)
@@ -179,54 +179,48 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
     			#Data will be subset at gate g (parent) and normalized on dims of i (child)
     			#keep a list of normalized and unnormalized channels for each parent gate..
     			#Check the gate being normalized.. make sure 74 is done correctly
-    			if(!(node%in%skipgates||fullPath%in%skipgates))#check both full path and short path
-                { 
-                  message("Normalize ", node)
-    					
-    				#Get the PARENT gate (since we'll be gating the data using gate i)
-    				parent <- getParent(x[[1]], node)
-    				#initialize gate-specific normalization list
-    				if(is.null(parentgates[[as.character(parent)]])){
-    					parentgates[[as.character(parent)]]<-list();
-    					parentgates[[as.character(parent)]]$unnormalized<-unnormalized
-    					parentgates[[as.character(parent)]]$normalized<-NULL
-    				}
-                    #check which dimensions are normalized already
-    				wh.dim<-dims%in%parentgates[[as.character(parent)]]$unnormalized
-    				parentgates[[as.character(parent)]]$normalized<-c(parentgates[[as.character(parent)]]$normalized,dims[wh.dim]);
-    				parentgates[[as.character(parent)]]$unnormalized<-setdiff(parentgates[[as.character(parent)]]$unnormalized,dims)
-    				stains<-dims[wh.dim]
-    #					browser()	
-    				if(length(stains)!=0&&gateHasSufficientData(x, parent, minCountThreshold = minCountThreshold, ...)){
-    					#choose the np element by name
-                        if(is.null(nPeaks[[node]]))
-                          npks <- nPeaks[[fullPath]]
-                        else
-    					  npks <- nPeaks[[node]]
-#                        browser()
-    					result <- warpSetGS(x,stains = stains
-                                                ,node = parent
-                                                ,target = target
-                                                ,peakNr = npks
-                                                ,...)
-    										
-    					if(flowWorkspace::isNcdf(x)){
-    						sapply(sampleNames(result),function(s)ncdfFlow::updateIndices(result,s,NA))
-    						flowData(x)<-result
-    					}else{
-    						oldfs<-flowData(x)
-    						for(j in sampleNames(x)){
-    							inds<-flowWorkspace::getIndices(x[[j]],parent)
-    							oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
-    						}
-    						flowData(x)<-oldfs
-    					}
-    					recompute(x,node);	
-    				}
+    			 
+                message("Normalize ", node)
+  					
+  				#Get the PARENT gate (since we'll be gating the data using gate i)
+  				parent <- getParent(x[[1]], node)
+  				#initialize gate-specific normalization list
+  				if(is.null(parentgates[[as.character(parent)]])){
+  					parentgates[[as.character(parent)]]<-list();
+  					parentgates[[as.character(parent)]]$unnormalized<-unnormalized
+  					parentgates[[as.character(parent)]]$normalized<-NULL
+  				}
+                  #check which dimensions are normalized already
+  				wh.dim<-dims%in%parentgates[[as.character(parent)]]$unnormalized
+  				parentgates[[as.character(parent)]]$normalized<-c(parentgates[[as.character(parent)]]$normalized,dims[wh.dim]);
+  				parentgates[[as.character(parent)]]$unnormalized<-setdiff(parentgates[[as.character(parent)]]$unnormalized,dims)
+  				stains<-dims[wh.dim]
+  #					browser()	
+  				if(length(stains)!=0&&gateHasSufficientData(x, parent, minCountThreshold = minCountThreshold, ...))
+                {
+  					#choose the np element by name
+				  npks <- nPeaks[[node]]
+
+  					result <- warpSetGS(x,stains = stains
+                                              ,node = parent
+                                              ,target = target
+                                              ,peakNr = npks
+                                              ,...)
+  										
+  					if(flowWorkspace::isNcdf(x)){
+  						sapply(sampleNames(result),function(s)ncdfFlow::updateIndices(result,s,NA))
+  						flowData(x)<-result
+  					}else{
+  						oldfs<-flowData(x)
+  						for(j in sampleNames(x)){
+  							inds<-flowWorkspace::getIndices(x[[j]],parent)
+  							oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
+  						}
+  						flowData(x)<-oldfs
+  					}
+  					recompute(x,node);	
+  				}
     							
-    	
-    			}
-    	
     			
     		}
           }

@@ -128,7 +128,10 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 		})
 
 
-.normalizeGatingSet <- function(x,target=NULL,skipgates=NULL,skipdims=c("FSC-A","SSC-A","FSC-H","SSC-H","Time"),subsample=NULL,chunksize=10,nPeaks=list(),bwFac=2,ncdfFile = NULL, minCountThreshold = 500, ...){
+.normalizeGatingSet <- function(x,target=NULL
+                                    , populations = NULL
+                                    , dims
+                                    ,nPeaks=list(),ncdfFile = NULL, minCountThreshold = 500, ...){
 
 #	browser()
 	samples<-sampleNames(x)
@@ -141,111 +144,97 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	
 	#Get all the non-boolean gates, breadth first traversal
 	#Do a breadth-first traversal
-	nodelist<-getNodes(x[[1]],order="bfs",prefix=TRUE, showHidden = TRUE)
 	
-	bfsgates<-unlist(lapply(nodelist,function(curNode){
-#							browser()
-				if(curNode=="root")
-					return(0)
-				else
-				{
-					curNodeInd<-as.integer(strsplit(curNode,split="\\.")[[1]][1])+1
-					if(!flowWorkspace:::.isBoolGate(x[[1]],curNodeInd))
-						return(curNodeInd)
-				}
-			}))
+    nodes <- getNodes(x[[1]],order="bfs",showHidden = TRUE, path = "auto")
 	
-
-	np<-vector("list",length(bfsgates))
-	
-	names(np)<-bfsgates
-	for(p in seq_along(nPeaks)){
-		np[[p]]<-nPeaks[[p]]
-	}
 	#gate-specific channel list to track normalization
 	parentgates<-list();	
 	
-	#Keep a vector of normalized dimensions
-	unnormalized<-NULL
-	
 	#Initialize master channel list
-	unnormalized<-colnames(getData(x[[1]]))
+	unnormalized <- colnames(getData(x[[1]]))
 	
+    
 	message("cloning the gatingSet...")
 		
-	x<-clone(x, ncdfFile = ncdfFile)	
-#	browser()
+	x <- clone(x, ncdfFile = ncdfFile)	
+	
 	#for each gate, grab the dimensions and check if they are normalized.
 	#Normalize what hasn't been normalized yet, then do the gating.
 	#Set a target sample by name
-	for(i in bfsgates){
+	for(node in populations){
 		
-		gate<-getGate(x[[1]],i)
-		
-		#Root node
-		if(class(gate)=="logical"){ #implies gate is NA, since NA is class logical, otherwise some flowCore gate class.
-			next;
-		}else{
-			#check which dimensions are normalized already
-			dims<-parameters(gate)
-			dims<-setdiff(dims,skipdims)
-			if(length(dims)>0)
-			{
-				
-				#Data will be subset at gate g (parent) and normalized on dims of i (child)
-				#keep a list of normalized and unnormalized channels for each parent gate..
-				#Check the gate being normalized.. make sure 74 is done correctly
-				if(!i%in%skipgates){
-#					browser()
-					#Get the PARENT gate (since we'll be gating the data using gate i)
-					g<-getParent(x[[1]],i)
-					#initialize gate-specific normalization list
-					if(is.null(parentgates[[as.character(g)]])){
-						parentgates[[as.character(g)]]<-list();
-						parentgates[[as.character(g)]]$unnormalized<-unnormalized
-						parentgates[[as.character(g)]]$normalized<-NULL
-					}
-					
-					wh.dim<-dims%in%parentgates[[as.character(g)]]$unnormalized
-					parentgates[[as.character(g)]]$normalized<-c(parentgates[[as.character(g)]]$normalized,dims[wh.dim]);
-					parentgates[[as.character(g)]]$unnormalized<-setdiff(parentgates[[as.character(g)]]$unnormalized,dims)
-					stains<-dims[wh.dim]
-#					browser()	
-					if(length(stains)!=0&gateHasSufficientData(x,g, minCountThreshold = minCountThreshold, ...)){
-						#choose the np element by name
-						npks<-np[[as.character(i)]]
+        
+        if(node!="root")
+          if(!flowWorkspace:::.isBoolGate(x[[1]],node))
+        {
+            
+    		gate <- getGate(x[[1]],node)
+    		
+    		dims <- intersect(parameters(gate), dims)
+            
+        
+    		if(length(dims)>0)
+    		{
+    			
+    			#Data will be subset at gate g (parent) and normalized on dims of i (child)
+    			#keep a list of normalized and unnormalized channels for each parent gate..
+    			#Check the gate being normalized.. make sure 74 is done correctly
+    			 
+                message("Normalize ", node)
+  					
+  				#Get the PARENT gate (since we'll be gating the data using gate i)
+  				parent <- getParent(x[[1]], node)
+  				#initialize gate-specific normalization list
+  				if(is.null(parentgates[[as.character(parent)]])){
+  					parentgates[[as.character(parent)]]<-list();
+  					parentgates[[as.character(parent)]]$unnormalized<-unnormalized
+  					parentgates[[as.character(parent)]]$normalized<-NULL
+  				}
+                  #check which dimensions are normalized already
+  				wh.dim<-dims%in%parentgates[[as.character(parent)]]$unnormalized
+  				parentgates[[as.character(parent)]]$normalized<-c(parentgates[[as.character(parent)]]$normalized,dims[wh.dim]);
+  				parentgates[[as.character(parent)]]$unnormalized<-setdiff(parentgates[[as.character(parent)]]$unnormalized,dims)
+  				stains<-dims[wh.dim]
+  #					browser()	
+  				if(length(stains)!=0&&gateHasSufficientData(x, parent, minCountThreshold = minCountThreshold, ...))
+                {
+  					#choose the np element by name
+				  npks <- nPeaks[[node]]
 
-						result<-warpSetGS(x,stains=stains,gate=g,target=target,subsample=subsample,chunksize=chunksize,peakNr=npks,bwFac=bwFac,...)
-											
-						if(flowWorkspace::isNcdf(x)){
-							sapply(sampleNames(result),function(s)ncdfFlow::updateIndices(result,s,NA))
-							flowData(x)<-result
-						}else{
-							oldfs<-flowData(x)
-							for(j in sampleNames(x)){
-								inds<-flowWorkspace::getIndices(x[[j]],g)
-								oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
-							}
-							flowData(x)<-oldfs
-						}
-						recompute(x,i);	
-					}
-								
-		
-				}
-			}
-			
-		}
-		
+  					result <- warpSetGS(x,stains = stains
+                                              ,node = parent
+                                              ,target = target
+                                              ,peakNr = npks
+                                              ,...)
+  										
+  					if(flowWorkspace::isNcdf(x)){
+  						sapply(sampleNames(result),function(s)ncdfFlow::updateIndices(result,s,NA))
+  						flowData(x)<-result
+  					}else{
+  						oldfs<-flowData(x)
+  						for(j in sampleNames(x)){
+  							inds<-flowWorkspace::getIndices(x[[j]],parent)
+  							oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
+  						}
+  						flowData(x)<-oldfs
+  					}
+  					recompute(x,node);	
+  				}
+    							
+    			
+    		}
+          }
 	}
 	x
 }
 
-#Function to check if each flowFrame at the given gate has enough data to normalize. 
+#Function to check if each sample at the given gate has enough data to normalize. 
 #Set the threshold at 500 events for each flowFrame.
 gateHasSufficientData<-function(x=NULL,g=NULL,minCountThreshold=500,...){
-	#x could be flowSet or ncdfFlowSet
-	res<-unlist(lapply(x,function(x)nrow(getData(x,g))>=minCountThreshold))
+  
+	res <- unlist(flowWorkspace::lapply(x,function(y){
+              nrow(getData(y,g))>=minCountThreshold
+                  }))
 	if(all(res))
 		return(TRUE)
 	else

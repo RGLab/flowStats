@@ -23,12 +23,12 @@ normalize(data,x,...)
 		target:
 		The target sample to normalize the other samples in the gating set to. A \code{character} vector. Must match a sample name in \code{x}, otherwise \code{NULL} will use the mean (average) of the peaks identified in all samples
 
- 		skipgates:
-		A \code{numeric} vector of gate indices that are to be skipped (i.e. not normalized).  
+ 		populations:
+		A \code{character} vector of population names that are to be normalized.  
 		
 
-  		skipdims:
-		A \code{character} vector of parameter names to be omitted during sequential normalization.  
+  		dims:
+		A \code{character} vector of parameter names to be normalized.  
 		
 		
 		chunksize:
@@ -59,27 +59,28 @@ See also \code{\link[flowWorkspace]{GatingSet-class}}, \code{\link[flowWorkspace
 }
 \examples{
 \dontrun{
-#open an xml flowJo workspace
-ws<-openWorkspace("test.xml"))
-#parse it into a GatingSet
-G<-parseWorkspace(ws)
+#gs is a GatingSet
+gs_norm <- normalize(gs
+                , target = "M+T panel_903997-25.fcs"
+                , populations = "cd27gate"
+                , dims = "<Violet A 610/20-A>"
+                , minCountThreshold = 100
+                , nPeaks = list('cd27gate' = 2)
+                , chunksize = 10
+                , bwFac = 2
+                )
 
-#exclude some populations(gates) from normalization
-skip.g<-(1:length(getNodes(G[[1]])))[-c(9,144)]
-#exclude some channels(parameters) from normalization
-skip.d<-colnames(getData(G[[1]]))[-c(9)]
-#run the normalization method
-G_norm<-normalize(data=G
-				,target="517614.fcs" #reference sample
-				,skipgates=skip.g
-				,skipdims=skip.d
+
+
 #show the population statistics for before and after normalization				
-getPopStats(G))
-getPopStats(G_norm)		
+getPopStats(gs)
+getPopStats(gs_norm)		
 
 #plot the gate to see the effects of normalization
-plotGate(G,9,xbin=64)
-plotGate(G_norm,9,xbin=64)
+grid.arrange(
+		plotGate(gs, "cd27gate", type = "densityplot", stack = T)
+		,plotGate(gs_norm, "cd27gate", type = "densityplot", stack = T)
+		)
 }
 }
 \keyword{methods}

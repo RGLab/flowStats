@@ -384,6 +384,7 @@ setClass("lymphFilter",
 lymphFilter <- function(channels, preselection=as.character(NULL),
                         scale=2.5, bwFac=1.3, filterId="defaultLymphFilter")
 {
+    .Defunct()
     flowCore:::checkClass(scale, "numeric", 1)
     flowCore:::checkClass(bwFac, "numeric", 1)
     flowCore:::checkClass(filterId, "character", 1)

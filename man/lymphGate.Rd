@@ -65,10 +65,6 @@
 \usage{
 lymphGate(x, channels, preselection=NULL, scale=2.5,  bwFac=1.3,
           filterId="defaultLymphGate", evaluate=TRUE, plot=FALSE, \dots)
-
-lymphFilter(channels, preselection=as.character(NULL),
-            scale=2.5, bwFac=1.3, filterId="defaultLymphFilter")
-
 }
 
 \arguments{
@@ -132,8 +128,6 @@ lymphFilter(channels, preselection=as.character(NULL),
       gate. The items of the list have to be numerics of length one
       giving the gate boundaries in the respective dimensions. }
 
-    The \code{lymphFilter} class and constructor provide the means to
-    treat \code{lymphGates} as regular \code{flowCore} filters.
 
   }
 
@@ -154,24 +148,10 @@ lymphFilter(channels, preselection=as.character(NULL),
   for the \code{lymphGate} function. Note that \code{x} and
   \code{n2gateResults} are \code{NULL} when \code{eval=FALSE}.
 
-  The \code{lymphFilter} constructor returns and object of class
-  \code{lymphFilter}, which can be used as a regular \code{flowCore}
-  fitler.
+  
   
 }
 
-\section{Methods}{
-  
-  \describe{
-
-    \item{\%in\%}{\code{signature(x =
-	"flowFrame", table = "lymphFilter")}: the work horse for doing the
-      actual filtering. Internally, this simply calls the \code{lympghGate}
-      function. }
-    
-  } 
-  
-}
 
 \author{ Florian Hahne }
 
@@ -188,9 +168,6 @@ lg <- lymphGate(dat, channels=c("FSC-H", "SSC-H"), preselection="FL4-H",scale=1.
 if(require(flowViz))
 xyplot(`SSC-H`~`FSC-H`, dat, filter=lg$n2gate)
 
-## This is using the abstract lymphFilter class instead
-lf <- lymphFilter(channels=c("FSC-H", "SSC-H"), preselection="FL4-H")
-filter(dat, lf)
 
 }
 

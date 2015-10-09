@@ -64,7 +64,6 @@ importFrom(stats, anova, approxfun, as.formula, as.hclust, chisq.test,
 importFrom(utils, capture.output)
 
 export("lymphGate",
-       "lymphFilter",
        "curv1Filter",
        "curv2Filter",
        "oneDGate",

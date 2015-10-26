@@ -33,7 +33,7 @@ importFrom(KernSmooth, bkde2D)
 
 importFrom(MASS, huber, hubers, rlm, cov.rob)
 
-importFrom(ks, dfltCounts, drvkde)
+importFrom(ks, binning)
 
 importFrom(fda, Data2fd, create.bspline.basis, eval.fd, fdPar,
            landmarkreg)

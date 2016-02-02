@@ -247,7 +247,7 @@ setMethod("%in%",
       for (i in seq(along=contourLinesObj)){
         vertices <- cbind(contourLinesObj[[i]]$x,
             contourLinesObj[[i]]$y)
-        sel <- as.logical(flowCore:::inpolygon(ovalues,vertices))
+        sel <- as.logical(flowCore:::inPolygon(ovalues,vertices))
         filterInds[sel] <- i
       }
       

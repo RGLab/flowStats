@@ -5,7 +5,10 @@
 #         flowCore, flowViz, flowWorkspace, grDevices, graphics,
 #         lattice, methods, mvoutlier, stats, utils
 
-importClassesFrom(flowCore, flowFrame, parameterFilter, parameters)
+import(flowCore)
+import(flowViz)
+import(flowWorkspace)
+
 
 importClassesFrom(methods, character, list, numeric)
 
@@ -15,17 +18,7 @@ importMethodsFrom(BiocGenerics, cbind, colnames, lapply, mapply, order,
                   paste, pmax, pmin, rbind, rownames, sapply, setdiff,
                   table, unique)
 
-importMethodsFrom(flowCore, "%in%", "%subset%", Subset, assign,
-                  "colnames<-", description, "description<-", exprs,
-                  "exprs<-", filter, filterDetails, fsApply, head,
-                  "identifier<-", keyword, ncol, nrow, pData,
-                  "pData<-", parameters, "parameters<-", phenoData,
-                  "phenoData<-", print, sampleNames, sort, split,
-                  summary, tail,colnames,normalize)
 
-importMethodsFrom(flowViz, densityplot, glpolygon, xyplot)
-
-importMethodsFrom(flowWorkspace, getData)
 
 importFrom(Biobase, listLen)
 
@@ -38,9 +31,6 @@ importFrom(ks, binning)
 importFrom(fda, Data2fd, create.bspline.basis, eval.fd, fdPar,
            landmarkreg)
 
-importFrom(flowCore, boundaryFilter, char2ExpressionFilter,
-           filterList, flowFrame, norm2Filter,
-           quadGate, rectangleGate, sampleFilter)
 
 importFrom(grDevices, chull, col2rgb, contourLines, dev.cur, dev.off,
            png, rainbow, rgb, x11)

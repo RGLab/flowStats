@@ -35,7 +35,7 @@ importFrom(fda, Data2fd, create.bspline.basis, eval.fd, fdPar,
 importFrom(grDevices, chull, col2rgb, contourLines, dev.cur, dev.off,
            png, rainbow, rgb, x11)
 
-importFrom(graphics, abline, legend, lines, par, plot, points, polygon,
+importFrom(graphics, abline, legend, lines, par, points, polygon,
            rect, text)
 
 importFrom(lattice, make.groups, panel.abline, panel.number,

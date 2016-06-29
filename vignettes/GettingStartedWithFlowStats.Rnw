@@ -35,6 +35,7 @@
 \author{F. Hahne, N. Gopalakrishnan}
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 \maketitle
 
 \begin{abstract}

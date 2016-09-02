@@ -23,7 +23,7 @@ warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=N
 		warpFuns=FALSE,target=NULL,chunksize=10,isNew=FALSE,newNcFile=NULL,
 		...)
 {
-    .Deprecated("warpSetNCDF")
+    .Defunct("warpSetNCDF")
 	## Some type-checking first
 	flowCore:::checkClass(x, "flowSet")
 	flowCore:::checkClass(stains, "character")
@@ -35,7 +35,7 @@ warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=N
 	#expData should now be x...
 #	browser()
 	if(isNew){
-		expData<-ncdfFlow::clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,ncdfFile=newNcFile)
+		expData<-clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,ncdfFile=newNcFile)
 	}else{
 		expData<-x;
 	}
@@ -329,7 +329,7 @@ warpSetNCDF <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 
 	#expData should now be x...
 	if(isNew){
-		expData <- clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,ncdfFile=newNcFile)
+           expData <- clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,ncdfFile=newNcFile)
 	}else{
 		expData <- x;
 	}

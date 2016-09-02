@@ -15,7 +15,8 @@
 
 ##Normalize a GatingSet, allowing for normalization on a subset of gates
 gaussNormGS <- function(gatingset, channel.names, max.lms=2, base.lms=NULL,peak.density.thr=0.05,peak.distance.thr=0.05,debug=FALSE,fname='',gate=NULL){
-	if(!inherits(gatingset,"GatingSet"))
+	.Defunct()
+  if(!inherits(gatingset,"GatingSet"))
 		stop("gatingset must be of class GatingSet")
 	if(!gatingset[[1]]@isNcdf)
 		stop("gatingset not gated using netcdf. Just use the regular gaussNorm function, please");
@@ -31,6 +32,7 @@ gaussNormGS <- function(gatingset, channel.names, max.lms=2, base.lms=NULL,peak.
 }
 ## Output: -returns the normalized flowset.
 gaussNormNC <- function(ncflowset, channel.names, max.lms=2, base.lms=NULL,  peak.density.thr=0.05, peak.distance.thr=0.05, debug=FALSE, fname=''){
+  .Defunct()
   remb.flowset=remBoundaryNC(ncflowset, channel.names) #This method needs to be rewritten to deal with large data sets.
   expr.list=c(1:length(	ncflowset))  
   normalized<-ncdfFlow::clone.ncdfFlowSet(ncflowset)

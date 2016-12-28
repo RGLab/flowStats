@@ -66,7 +66,8 @@ export("lymphGate",
        "gpaSet",
        "iProcrustes",
        "normQA",
-       "singletGate"
+       "singletGate",
+       "gate_singlet"
        )
 
 exportClasses("lymphFilter","rangeFilter","curv1Filter", 

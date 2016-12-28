@@ -1,6 +1,6 @@
-\name{singletGate}
+\name{gate_singlet}
+\alias{gate_singlet}
 \alias{singletGate}
-
 \title{Creates a singlet polygon gate using the prediction bands from a robust linear model}
 
 
@@ -13,7 +13,7 @@
 }
 
 \usage{
-singletGate(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
+gate_singlet(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
             prediction_level = 0.99, subsample_pct = NULL, wider_gate = FALSE,
             filterId = "singlet", maxit = 5, ...)
 }
@@ -78,7 +78,7 @@ singletGate(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
 \examples{
 \dontrun{
 # fr is a flowFrame
-sg <- singletGate(fr, area = "FSC-A", height = "FSC-H")
+sg <- gate_singlet(fr, area = "FSC-A", height = "FSC-H")
 sg
 # plot the gate 
 xyplot(`FSC-H` ~ `FSC-A`, fr, filter = sg)

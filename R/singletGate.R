@@ -33,7 +33,9 @@
 #' @param maxit the limit on the number of IWLS iterations passed to \code{\link[MASS]{rlm}}
 #' @param ... additional arguments passed to \code{\link[MASS]{rlm}}
 #' @return a \code{\link[flowCore]{polygonGate}} object with the singlet gate
-singletGate <- function(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
+#' @rdname gate_singlet
+#' @export 
+gate_singlet <- function(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
                         prediction_level = 0.99, subsample_pct = NULL,
                         wider_gate = FALSE, filterId = "singlet", maxit = 5, ...) {
   flowCore:::checkClass(x, "flowFrame")
@@ -106,3 +108,7 @@ singletGate <- function(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
 
   polygonGate(gate_vertices, filterId = filterId)
 }
+
+#' @rdname gate_singlet
+#' @export 
+singletGate <- gate_singlet

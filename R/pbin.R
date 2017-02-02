@@ -44,7 +44,7 @@ proBin<-function(m,minEvents=500,channels=NULL)
       
       if(nrow(data[[as.character(nodeIndx)]])>minEvents)
       {
-		y<-apply(data[[as.character(nodeIndx)]][,channels],2,var)
+		y<-apply(data[[as.character(nodeIndx)]][,channels,drop=FALSE],2,var)
 		tName <- which.max(y)
 		t <- which(colnames(data[[as.character(nodeIndx)]])== attr(tName,"names"))
         #t<-which.max(y)

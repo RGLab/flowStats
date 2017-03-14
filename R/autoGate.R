@@ -164,8 +164,9 @@ setMethod("%in%",
       ovalues <- exprs(x)[, param]
       bwFac <- table@bwFac
       gridsize <- table@gridsize
+      
       ## drop data that has piled up on the measurement ranges
-      r <- range(x, param)
+      r <- range(x)[, param, drop = FALSE]
       sel <- ovalues > r[1,] & ovalues < r[2,] & !is.na(ovalues)
       values <- ovalues[sel]
       ## Compute normal scale bandwidth (second derivative).
@@ -221,7 +222,7 @@ setMethod("%in%",
       bwFac <- table@bwFac
       gridsize <- table@gridsize
       ## drop data that has piled up on the measurement ranges
-      r <- range(x, param)
+      r <- range(x)[, param]
       sel <- (ovalues[,1] > r[1,1] & ovalues[,1] < r[2,1] &
             ovalues[,2] > r[1,2] & ovalues[,2] < r[2,2] &
             !is.na(ovalues[,1]) & !is.na(ovalues[,2]))

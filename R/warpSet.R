@@ -285,7 +285,7 @@ warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=N
 					
 					ip <- match(p, pData(parameters(expData[[chunksamples[[k]][i]]]))$name)
 					tmp <- parameters(expData[[chunksamples[[k]][i]]])
-					oldRanges <- unlist(range(expData[[chunksamples[[k]][i]]],p))
+					oldRanges <- unlist(range(expData[[chunksamples[[k]][i]]])[,p])
 					pData(tmp)[ip, c("minRange", "maxRange")] <- c(min(oldRanges[1], newRange[1]),
 							max(oldRanges[2], newRange[2]))
 					expData[[chunksamples[[k]][i]]]@parameters <- tmp
@@ -763,7 +763,7 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 						ncol=1)
 				ip <- match(p, pData(parameters(expData[[i]]))$name)
 				tmp <- parameters(expData[[i]])
-				oldRanges <- unlist(range(expData[[i]],p))
+				oldRanges <- unlist(range(expData[[i]])[,p])
 				pData(tmp)[ip, c("minRange", "maxRange")] <- c(min(oldRanges[1], newRange[1]),
 						max(oldRanges[2], newRange[2]))
 				expData[[i]]@parameters <- tmp
@@ -927,7 +927,7 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
 		for(p in wchans)
 		{
 			np <- 30
-			xvals <- seq(range(data[[1]], p)[1,], range(data[[1]], p)[2,], len=np)
+			xvals <- seq(range(data[[1]])[, p][1,], range(data[[1]])[, p][2,], len=np)
 			yvals <- sapply(ninfo[[p]]$warpFun, function(fun) fun(xvals))
 			wfRes <- rbind(wfRes,
 					data.frame(sample=rep(factor(sampleNames(data),
@@ -1078,8 +1078,8 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
 			if(length(wp)==2)
 				ct <- ct[wp[2]]
 			exp <- exprs(alldat)[,1:2]
-			xr <- range(exp[,1], na.rm=TRUE)
-			yr <- range(exp[,2], na.rm=TRUE)
+			xr <- range(exp, na.rm=TRUE)[,1]
+			yr <- range(exp, na.rm=TRUE)[,2]
 			bw <- diff(apply(exp, 2, quantile, probs=c(0.05, 0.95),
 							na.rm=TRUE)) / 25
 			range <- list(xr+c(-1,1)*bw[1]*2.5, yr+c(-1,1)*bw[2]*2.5)

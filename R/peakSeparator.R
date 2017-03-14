@@ -72,7 +72,7 @@ backGating <- function(data, xy, channels=setdiff(colnames(data), c(xy, "time", 
 ## the polygon vertices as well as theirt centroids.
 curvRegs <- function(dat, p)
 {
-    r <- range(dat, p)
+    r <- range(dat)[, p]
     c2 <- curv2Filter(p, bwFac=1.8)
     c2Res <- filter(dat, c2)
     pols <- attr(c2Res@subSet, "polygons")
@@ -179,7 +179,7 @@ plotting <- function(data, norm, parm, props, ol)
     for(i in sampleNames(data))
     {
         plot(density(exprs(data[[i]][,parm])), main=parm)
-        r <- range(exprs(data[[i]][,parm]))
+        r <- range(exprs(data[[i]]))[,parm]
         for(j in 1:nrow(norm[[i]]))
         {
             sq <- seq(r[1], r[2], len=500)

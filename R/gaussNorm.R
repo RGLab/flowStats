@@ -79,7 +79,7 @@ gaussNormNC <- function(ncflowset, channel.names, max.lms=2, base.lms=NULL,  pea
     for(p in channel.names){
       ip <- match(p, pData(parameters(normalized[[i]]))$name)
       tmp <- parameters(normalized[[i]])
-      oldRanges <- unlist(range(ncflowset[[i]],p))
+      oldRanges <- unlist(range(ncflowset[[i]])[,p])
       pData(tmp)[ip, c("minRange", "maxRange")] <- c(min(oldRanges[1], newRange[1,p]),
                                                      max(oldRanges[2], newRange[2,p]))
       normalized[[i]]@parameters <- tmp
@@ -132,7 +132,7 @@ gaussNorm <- function(flowset, channel.names, max.lms=2, base.lms=NULL,  peak.de
     for(p in channel.names){
       ip <- match(p, pData(parameters(remb.flowset$res[[i]]))$name)
       tmp <- parameters(remb.flowset$res[[i]])
-      oldRanges <- unlist(range(flowset[[i]],p))
+      oldRanges <- unlist(range(flowset[[i]])[,p])
       pData(tmp)[ip, c("minRange", "maxRange")] <- c(min(oldRanges[1], newRange[1,p]),
                                                      max(oldRanges[2], newRange[2,p]))
       remb.flowset$res[[i]]@parameters <- tmp

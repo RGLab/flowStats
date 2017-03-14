@@ -141,9 +141,9 @@ plotBins<-function(binRes,data,channels=c("FSC-H","SSC-H"),title="",residuals=NU
    res <- (((residuals - min(residuals)) / max(residuals-min(residuals)))*shadeFactor)
    shade  <- rgb(0,0,0, res)
    }
-
-   x.limits=range(data[,plotColX])
-   y.limits=range(data[,plotColY])
+  
+   x.limits=range(data,plotColX)
+   y.limits=range(data,plotColY)
    limits=binRes$limits[binRes$table$left==0]
    pars=binRes$splitPars[binRes$table$left==0]
         

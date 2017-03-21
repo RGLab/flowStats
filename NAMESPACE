@@ -21,7 +21,7 @@ importFrom(MASS, huber, hubers, rlm, cov.rob)
 
 importFrom(ks, binning)
 
-importFrom(fda, Data2fd, create.bspline.basis, eval.fd, fdPar,
+importFrom(fda, Data2fd, create.bspline.basis, eval.fd, fdPar,fd,int2Lfd,vec2Lfd,norder,
            landmarkreg)
 
 

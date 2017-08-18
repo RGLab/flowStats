@@ -590,6 +590,9 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 		## subsample data set before all density estimation steps
 		x <- Subset(x, sampleFilter(size=subsample))
 	}
+	if(!is.null(grouping)){
+			if(!grouping %in% names(pData(x)))
+				stop("'", grouping, "' is not a phenoData variable.")
 	flowCore:::checkClass(monwrd, "logical", 1)
 	flowCore:::checkClass(bwFac, "numeric", 1)
 	

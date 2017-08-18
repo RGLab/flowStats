@@ -230,7 +230,7 @@ warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=N
 			chunkindices<-split(1:length(funs),chunkgroups)
 			for(k in seq_along(chunkfuns)){
 				#read in the data first for the current chunk
-				if(exists("thiDat")){
+				if(exists("thisDat")){
 					rm(thisDat)
 					gc(chunksize)
 				}

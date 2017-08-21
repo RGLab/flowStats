@@ -229,7 +229,7 @@ density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
         vrange[1] <- min(vrange[1], min(exprs(x)[,stain], na.rm=TRUE))
     }
     else  
-        vrange <- range(exprs(x), na.rm=TRUE)[,stain]
+        vrange <- range(exprs(x)[,stain], na.rm=TRUE)
 
     vrange[1] <- ifelse(is.null(refLine), vrange[1], max(vrange[1], refLine))
     inc <- diff(vrange)/1e5

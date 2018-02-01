@@ -1,4 +1,15 @@
 **************************************************
+*              3.35 SERIES NEWS			 *
+**************************************************
+
+o An updated NEWS file!
+
+o Added  Overton-like subtraction using densities, in the
+  function overton_like(). 
+
+
+
+**************************************************
 *              1.7 SERIES PATCHED NEWS           *
 **************************************************
 

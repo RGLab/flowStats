@@ -1,4 +1,23 @@
 **************************************************
+*              3.39 SERIES NEWS			 *
+**************************************************
+o Fix a bug in warpSet when target= is specified, we don't
+  warp the target. Ensures intensities of target don't change. 
+  https://www.github.com/RGLab/flowStats/issues/22
+
+
+**************************************************
+*              3.35 SERIES NEWS			 *
+**************************************************
+
+o An updated NEWS file!
+
+o Added  Overton-like subtraction using densities, in the
+  function overton_like(). 
+
+
+
+**************************************************
 *              1.7 SERIES PATCHED NEWS           *
 **************************************************
 

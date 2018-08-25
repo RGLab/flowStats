@@ -784,7 +784,9 @@ warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 	regSet <- regSet[sampleNames(x)]
 	attr(regSet, "warping") <- lm
 	# if we have set a target, assign the original data back to the target, we don't really want to warp the target itself.
-	regSet[[target]] <- x[[target]]
+	if (!is.null(target)) {
+        regSet[[target]] <- x[[target]]
+        }
 	regSet
 }
 

@@ -98,7 +98,7 @@ comparativeNormalizationPlot<-function(x,y,g,s,g2=NULL){
 		G2<-NULL
 	}
 	par<-flowWorkspace::getParent(x[[1]],g)
-	dims<-flowWorkspace::getDimensions(x[[1]],flowWorkspace::getNodes(x[[1]], showHidden = TRUE)[g])
+	dims <- colnames(getGate(x[[1]],flowWorkspace::getNodes(x[[1]], showHidden = TRUE)[g])@boundaries)
 	form<-sapply(dims,function(f)as.formula(paste("~`",f,"`",sep="")))
 	print(densityplot(form[[1]],flowWorkspace::getData(x,par),main="Raw"),split=c(1,1,3,2),more=TRUE)
 	print(densityplot(form[[1]],flowWorkspace::getData(y,par),main="Normalized"),split=c(1,2,3,2),more=TRUE)

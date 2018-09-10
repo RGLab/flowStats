@@ -150,7 +150,7 @@ normalize.one.exprNC <- function(data,indices,i,base.lms,lms.list,lms.original,m
 	norm.data[indices,]<-NA;
 	if(debug==TRUE){
 		if(fname=='')
-		x11()
+		dev.new()
 		else
 		png(filename=fname, bg="white",width=1800,height=1000)      
 		par(mfrow=c(1, length(which(max.lms!=0))))
@@ -214,7 +214,7 @@ normalize.one.expr <- function(data, base.lms, lms.list, lms.original, matched.l
   norm.data=data
   if(debug==TRUE){
     if(fname=='')
-      x11()
+      dev.new()
     else
       png(filename=fname, bg="white",width=1800,height=1000)      
     par(mfrow=c(1, length(which(max.lms!=0))))

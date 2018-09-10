@@ -114,7 +114,7 @@ warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=N
 							}))
 			argvals <- seq(from, to, len=nb) 
 			##Can't call landmarkMatrix until we have ALL the filterResults.. Need to go into the landmarkMatrix function and factor our the code that deals with filterResults so that we pull out the relevant information chunk by chunk.
-			peaksandregions[[k]][[p]]<-flowStats:::getPeakRegions(x[chunksamples[[k]]],fres[[k]],p,border=clipRange,peakNr=peakNr,densities=densY[[k]][[p]],n=nb)
+			peaksandregions[[k]][[p]]<-getPeakRegions(x[chunksamples[[k]]],fres[[k]],p,border=clipRange,peakNr=peakNr,densities=densY[[k]][[p]],n=nb)
 			
 			## create matrix of landmarks from curv1Filter peaks.. append to the chunked landmarks.. and all stains.
 			#cat("Registering curves for parameter", p, "...\n")
@@ -129,7 +129,7 @@ warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=N
 	for(p in stains){
 		dns[[p]]<-do.call(cbind,lapply(densY,function(q)q[[p]]))
 		cat("Registering curves for parameter", p, "...\n")
-		landmarks[[p]] <- flowStats:::landmarkMatrixWithoutFilterResult(x, peaksandregions, p, border=clipRange, peakNr=peakNr)
+		landmarks[[p]] <- landmarkMatrixWithoutFilterResult(x, peaksandregions, p, border=clipRange, peakNr=peakNr)
 	}
 	#TODO check all landmark matrices to ensure they are valid.
 	densY<-dns;

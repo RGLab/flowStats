@@ -237,7 +237,7 @@ density1d <- function(x, stain, alpha="min", sd=2, plot=FALSE, borderQuant=0.1,
                                            vrange[1]+inc, stain, vrange[2]-inc))
 						   
     fres <- filter(tmp <- Subset(x, exprf), curv1Filter(stain,bwFac=bwFac))
-    bnds <- flowStats:::curvPeaks(fres, exprs(tmp)[, stain], borderQuant=borderQuant)
+    bnds <- flowStats::curvPeaks(fres, exprs(tmp)[, stain], borderQuant=borderQuant)
 	##when peakNr is present,drop the less significant peaks by their heights
 	
 	if(!is.null(peakNr))

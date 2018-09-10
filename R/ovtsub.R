@@ -8,6 +8,7 @@
 ##' @param twosided \code{boolean} flag testing whether the area of the density of the test curve above the reference curve will be calculated on both sides of the mode of the test curve (TRUE) or only on the positive side of the mode (FALSE, default). 
 ##' @return \code{numeric} value representing the proportion of the area of the test density above the reference density. 
 ##' @author Greg Finak
+##' @export
 ##' @examples
 ##' A = rnorm(10000,mean=1,sd=0.5)
 ##' B = rnorm(10000,mean=2,sd=0.5)

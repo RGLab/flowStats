@@ -46,9 +46,9 @@ gpaSet <- function(x, params, register="backgating", bgChannels=NULL,
     if (register=="backgating") {
         if (is.null(bg)) {
             message("Backgating ... \n")
-            bg <- flowStats:::backGating(x, xy=params, channels=bgChannels) 
+            bg <- backGating(x, xy=params, channels=bgChannels) 
         }
-        features <- flowStats:::idFeaturesByBackgating(bg, nDim=nDim,
+        features <- idFeaturesByBackgating(bg, nDim=nDim,
                        reference.method="median",
                        plot.workflow=show.workflow, ask=ask,
                        thres.sigma=thres.sigma, lambda=0.1)

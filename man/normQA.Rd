@@ -6,7 +6,9 @@
 \description{Create QA plots for a flow cytometry normalization process.}
 
 \usage{
-normQA(data, morph = c("^fsc", "^ssc"), channels, odat = NULL, ask = names(dev.cur()) != "pdf", grouping = NULL, tag.outliers = FALSE, peaksOnly = TRUE)
+normQA(data, morph = c("^fsc", "^ssc"), 
+  channels, odat = NULL, ask = names(dev.cur()) != "pdf",
+    grouping = NULL, tag.outliers = FALSE, peaksOnly = TRUE)
 }
 
 \arguments{

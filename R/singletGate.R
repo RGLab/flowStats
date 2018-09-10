@@ -111,4 +111,12 @@ gate_singlet <- function(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL
 
 #' @rdname gate_singlet
 #' @export 
+#' @examples 
+#' \dontrun{
+#'  # fr is a flowFrame
+#'  sg <- gate_singlet(fr, area = "FSC-A", height = "FSC-H")
+#'  sg
+#'  # plot the gate 
+#'  xyplot(`FSC-H` ~ `FSC-A`, fr, filter = sg)
+#' }
 singletGate <- gate_singlet

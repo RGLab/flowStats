@@ -1,5 +1,19 @@
-#' the old version copied from fda 2.4.0 because the new API changes the output 
-#' (specifically res$fd$coefs) and thus breaks the landmarkreg call
+#' The version of fdPar from fda 2.4.0 because the new API changes the output.
+#' (specifically res$fd$coefs) and thus breaks the landmarkreg call.
+#' @name fdPar
+#' @md
+#' @param fdobj functional data object, functional basis object, a functional parameter object or a matrix. If it a matrix, it is replaced by fd(fdobj). If class(fdobj) == 'basisfd', it is converted to an object of class fd with a coefficient matrix consisting of a single column of zeros.
+#' @param Lfdobj either a nonnegative integer or a linear differential operator object.
+#' If NULL, Lfdobj depends on `fdobj[['basis']][['type']]`
+#' - bspline `Lfdobj <- int2Lfd(max(0, norder-2))`, where `norder = norder(fdobj)`
+#' - fourier Lfdobj = a harmonic acceleration operator:
+#'  `Lfdobj <- vec2Lfd(c(0,(2*pi/diff(rng))^2,0), rng)`
+#'  where rng = `fdobj[['basis']][['rangeval']]`.
+#' - anything else `Lfdobj <- int2Lfd(0)`
+#' @param lambda a nonnegative real number specifying the amount of smoothing to be applied to the estimated functional parameter.
+#' @param estimate not currently used.
+#' @param penmat a roughness penalty matrix. Including this can eliminate the need to compute this matrix over and over again in some types of calculations.
+#' @export
 fdPar <- function (fdobj = NULL, Lfdobj = NULL, lambda = 0, estimate = TRUE, 
     penmat = NULL) 
 {

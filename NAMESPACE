@@ -12,9 +12,14 @@ importMethodsFrom(BiocGenerics, cbind, colnames, lapply, mapply, order,
                   table, unique)
 
 
-
+importFrom("grDevices", "colorRampPalette")
+importFrom("methods", "callNextMethod")
+importFrom("stats", "IQR", "fft", "pchisq", "pnorm", "predict",
+             "qchisq")
+importFrom("cluster", "diana")
 importFrom(Biobase, listLen)
-
+importFrom("ncdfFlow","updateIndices")
+importFrom("ncdfFlow","clone.ncdfFlowSet")
 importFrom(KernSmooth, bkde2D)
 
 importFrom(MASS, huber, hubers, rlm, cov.rob)
@@ -22,7 +27,7 @@ importFrom(MASS, huber, hubers, rlm, cov.rob)
 importFrom(ks, binning)
 
 importFrom(fda, Data2fd, create.bspline.basis, eval.fd, fdPar,fd,int2Lfd,vec2Lfd,norder,
-           landmarkreg)
+           landmarkreg,norder.bspline)
 
 
 importFrom(grDevices, chull, col2rgb, contourLines, dev.cur, dev.off,
@@ -30,15 +35,14 @@ importFrom(grDevices, chull, col2rgb, contourLines, dev.cur, dev.off,
 
 importFrom(graphics, abline, legend, lines, par, points, polygon,
            rect, text)
-
+importFrom(grDevices, dev.new)
 importFrom(lattice, make.groups, panel.abline, panel.number,
            panel.points, panel.polygon, panel.segments,
            panel.stripplot, panel.text, stripplot, trellis.focus,
            trellis.par.get, trellis.unfocus, which.packet)
-
 importFrom(methods,  as, is, new, selectMethod)
 
-
+importFrom(RColorBrewer, brewer.pal)
 
 importFrom(stats, anova, approxfun, as.formula, as.hclust, chisq.test,
            density, dnorm, fitted, formula, kmeans, mad, median,
@@ -49,6 +53,7 @@ importFrom(utils, capture.output)
 export("lymphGate",
        "curv1Filter",
        "curv2Filter",
+       "curvPeaks",
        "oneDGate",
        "quadrantGate",
        "rangeGate",

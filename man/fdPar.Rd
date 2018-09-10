@@ -2,13 +2,32 @@
 % Please edit documentation in R/fda_functions.R
 \name{fdPar}
 \alias{fdPar}
-\title{the old version copied from fda 2.4.0 because the new API changes the output 
-(specifically res$fd$coefs) and thus breaks the landmarkreg call}
+\title{The version of fdPar from fda 2.4.0 because the new API changes the output.
+(specifically res$fd$coefs) and thus breaks the landmarkreg call.}
 \usage{
 fdPar(fdobj = NULL, Lfdobj = NULL, lambda = 0, estimate = TRUE,
   penmat = NULL)
 }
+\arguments{
+\item{fdobj}{functional data object, functional basis object, a functional parameter object or a matrix. If it a matrix, it is replaced by fd(fdobj). If class(fdobj) == 'basisfd', it is converted to an object of class fd with a coefficient matrix consisting of a single column of zeros.}
+
+\item{Lfdobj}{either a nonnegative integer or a linear differential operator object.
+If NULL, Lfdobj depends on \code{fdobj[['basis']][['type']]}
+\itemize{
+\item bspline \code{Lfdobj <- int2Lfd(max(0, norder-2))}, where \code{norder = norder(fdobj)}
+\item fourier Lfdobj = a harmonic acceleration operator:
+\code{Lfdobj <- vec2Lfd(c(0,(2*pi/diff(rng))^2,0), rng)}
+where rng = \code{fdobj[['basis']][['rangeval']]}.
+\item anything else \code{Lfdobj <- int2Lfd(0)}
+}}
+
+\item{lambda}{a nonnegative real number specifying the amount of smoothing to be applied to the estimated functional parameter.}
+
+\item{estimate}{not currently used.}
+
+\item{penmat}{a roughness penalty matrix. Including this can eliminate the need to compute this matrix over and over again in some types of calculations.}
+}
 \description{
-the old version copied from fda 2.4.0 because the new API changes the output 
-(specifically res$fd$coefs) and thus breaks the landmarkreg call
+The version of fdPar from fda 2.4.0 because the new API changes the output.
+(specifically res$fd$coefs) and thus breaks the landmarkreg call.
 }

@@ -412,7 +412,7 @@ setMethod("%in%",
                            scale=table@scale,
                            bwFac=table@bwFac,
                            filterId=table@filterId,
-                           eval=TRUE,
+                           evaluate=TRUE,
                            plot=FALSE)
           tmp$n2gateResults@subSet
       })

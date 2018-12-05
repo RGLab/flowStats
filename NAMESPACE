@@ -13,6 +13,8 @@ importMethodsFrom(BiocGenerics, cbind, colnames, lapply, mapply, order,
 
 
 importFrom("grDevices", "colorRampPalette")
+importFrom("grDevices", "devAskNewPage")
+importFrom("utils", "read.csv")
 importFrom("methods", "callNextMethod")
 importFrom("stats", "IQR", "fft", "pchisq", "pnorm", "predict",
              "qchisq")
@@ -73,7 +75,8 @@ export("lymphGate",
        "normQA",
        "singletGate",
        "overton_like",
-       "gate_singlet"
+       "gate_singlet",
+       "spillover_ng"
        )
 
 exportClasses("lymphFilter","rangeFilter","curv1Filter", 

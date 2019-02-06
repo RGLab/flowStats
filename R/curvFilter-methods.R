@@ -147,7 +147,9 @@ setMethod("glpolygon",
       col <- rep(gpar$gate$col, lb)
       res <- vector(lb, mode="list")
       n <- if(is.logical(names) && names) names(data)[-1]
-          else if(is.character(names)) rep(names, lb) else rep(FALSE, lb)
+          else if(is.character(names)) rep(names, lb)
+          else if(is.list(names)) unlist(names)[-1]
+          else rep(FALSE, lb)
       for(i in 1:lb){
         tmp <- matrix(bounds[[i]], nrow=2)
         colnames(tmp) <- parameters(x)
@@ -198,7 +200,9 @@ setMethod("glpolygon",
       col <- rep(gpar$gate$col, lf)
       res <- vector(lf, mode="list")
       n <- if(is.logical(names) && names) names(data)[-1]
-          else if(is.character(names)) rep(names, lf) else rep(FALSE, lf)
+          else if(is.character(names)) rep(names, lf)
+          else if(is.list(names)) unlist(names)[-1]
+          else rep(FALSE, lf)
       for(i in 1:lf){
         tmp <- cbind(polygons[[i]]$x, polygons[[i]]$y)
         colnames(tmp) <- parameters(x)

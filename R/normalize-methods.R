@@ -131,7 +131,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 .normalizeGatingSet <- function(x,target=NULL
                                     , populations = NULL
                                     , dims
-                                    ,nPeaks=list(),ncdfFile = NULL, minCountThreshold = 500, ...){
+                                    ,nPeaks=list(),h5_dir = tempdir(), minCountThreshold = 500, ...){
 
 #	browser()
 	samples<-sampleNames(x)
@@ -156,7 +156,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
     
 	message("cloning the gatingSet...")
 		
-	x <- clone(x, ncdfFile = ncdfFile)	
+	x <- gs_clone(x, h5_dir = h5_dir)	
 	
 	#for each gate, grab the dimensions and check if they are normalized.
 	#Normalize what hasn't been normalized yet, then do the gating.
@@ -169,7 +169,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
         {
             
     		gate <- getGate(x[[1]],node)
-    		
+    		dims.old <- dims
     		dims <- intersect(parameters(gate), dims)
             
         
@@ -201,27 +201,32 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
   					#choose the np element by name
 				  npks <- nPeaks[[node]]
 
-  					result <- warpSetGS(x,stains = stains
+  					result <- warpSet(x,stains = stains
                                               ,node = parent
                                               ,target = target
                                               ,peakNr = npks
                                               ,...)
-  										
-  					if(flowWorkspace::isNcdf(x)){
+					data_type <- class(result)
+  					if(data_type == "ncdfFlowSet"){
   						sapply(sampleNames(result),function(s)ncdfFlow::updateIndices(result,s,NA))
   						flowData(x)<-result
-  					}else{
+  					}else if(data_type == "flowSet"){
   						oldfs<-flowData(x)
   						for(j in sampleNames(x)){
   							inds<-flowWorkspace::getIndices(x[[j]],parent)
   							oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
   						}
   						flowData(x)<-oldfs
-  					}
+  					}else if(data_type != "cytoset"){
+						stop("unsupported type: ", result)
+					}
   					recompute(x,node);	
   				}
     							
     			
+    		}else
+    		{
+    		  message("skip '", node, "' because '", dims.old, "' not used by this gate!")
     		}
           }
 	}

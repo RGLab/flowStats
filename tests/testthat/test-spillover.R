@@ -16,7 +16,8 @@ controls <- controls[,c(3,1,4,5,2,6,7)]
 test_that("spillover_ng: Using path to dir with files", {
   ref_file <- system.file("extdata", "compdata", "compref4", package="flowCore")
   comp_ref <- as.matrix(read.table(ref_file, check.names = FALSE))
-  comp <- spillover_ng(path=control_path, fsc="FSC-H", ssc="SSC-H", patt="-H", matchfile = matchfile_path)
+  comp <- spillover_ng(path=control_path, fsc="FSC-H", ssc="SSC-H", 
+                       patt="-H", matchfile = matchfile_path, pregate = FALSE)
   expect_equal(colnames(comp), colnames(comp_ref))
   expect_equal(rownames(comp), rownames(comp_ref))
   expect_equivalent(comp, comp_ref, tolerance=3e-08)
@@ -27,7 +28,8 @@ test_that("spillover_ng: Using preconstructed flowSet with filenames as sample n
   ref_file <- system.file("extdata", "compdata", "compref4", package="flowCore")
   comp_ref <- as.matrix(read.table(ref_file, check.names = FALSE))
   matched <- spillover_match(controls, fsc="FSC-H", ssc="SSC-H", matchfile = matchfile_path)
-  comp <- spillover_ng(controls, fsc="FSC-H", ssc="SSC-H", patt="-H", matchfile = matchfile_path)
+  comp <- spillover_ng(path=control_path, fsc="FSC-H", ssc="SSC-H", 
+                       patt="-H", matchfile = matchfile_path, pregate = FALSE)
   expect_equal(colnames(comp), colnames(comp_ref))
   expect_equal(rownames(comp), rownames(comp_ref))
   expect_equivalent(comp, comp_ref, tolerance=3e-08)

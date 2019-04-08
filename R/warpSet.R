@@ -6,9 +6,9 @@ warpSetGS <- function(x,node=NULL, ...){
 	if(!inherits(x,"GatingSet"))
 		stop("x must be of class GatingSet")
     if(is.null(node))
-      data <- getData(x)
+      data <- gs_get_data(x)
     else
-      data <- getData(x,node);
+      data <- gs_get_data(x,node);
 #    browser()
 	if(class(data) == "flowSet"){
 		message("Gating Set not gated using netcdf. We'll use the regular warpSet function");

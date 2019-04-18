@@ -93,18 +93,18 @@ comparativeNormalizationPlot<-function(x,y,g,s,g2=NULL){
 		stop("The two gating sets should be of the same size")
 	}
 	if(!is.null(g2)){
-		G2<-flowWorkspace::gh_get_gate(y[[s]],g2)@boundaries
+		G2<-flowWorkspace::gh_pop_get_gate(y[[s]],g2)@boundaries
 	}else{
 		G2<-NULL
 	}
-	par<-flowWorkspace::gs_get_parent(x[[1]],g)
-	dims <- colnames(gh_get_gate(x[[1]],flowWorkspace::gs_get_pop_paths(x[[1]], showHidden = TRUE)[g])@boundaries)
+	par<-flowWorkspace::gs_pop_get_parent(x[[1]],g)
+	dims <- colnames(gh_pop_get_gate(x[[1]],flowWorkspace::gs_get_pop_paths(x[[1]], showHidden = TRUE)[g])@boundaries)
 	form<-sapply(dims,function(f)as.formula(paste("~`",f,"`",sep="")))
-	print(densityplot(form[[1]],flowWorkspace::gs_get_data(x,par),main="Raw"),split=c(1,1,3,2),more=TRUE)
-	print(densityplot(form[[1]],flowWorkspace::gs_get_data(y,par),main="Normalized"),split=c(1,2,3,2),more=TRUE)
+	print(densityplot(form[[1]],flowWorkspace::gs_pop_get_data(x,par),main="Raw"),split=c(1,1,3,2),more=TRUE)
+	print(densityplot(form[[1]],flowWorkspace::gs_pop_get_data(y,par),main="Normalized"),split=c(1,2,3,2),more=TRUE)
 	
-	print(densityplot(form[[2]],flowWorkspace::gs_get_data(x,par),main="Raw"),split=c(2,1,3,2),more=TRUE)
-	print(densityplot(form[[2]],flowWorkspace::gs_get_data(y,par),main="Normalized"),split=c(2,2,3,2),more=TRUE)
+	print(densityplot(form[[2]],flowWorkspace::gs_pop_get_data(x,par),main="Raw"),split=c(2,1,3,2),more=TRUE)
+	print(densityplot(form[[2]],flowWorkspace::gs_pop_get_data(y,par),main="Normalized"),split=c(2,2,3,2),more=TRUE)
 	
 	print(flowWorkspace::plotGate(x[[s]],g,main="Raw"),split=c(3,1,3,2),more=TRUE)
 	if(!is.null(G2)){
@@ -151,7 +151,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	parentgates<-list();	
 	
 	#Initialize master channel list
-	unnormalized <- colnames(gh_get_data(x[[1]]))
+	unnormalized <- colnames(gh_pop_get_data(x[[1]]))
 	
     
 	message("cloning the gatingSet...")
@@ -168,7 +168,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
           if(!flowWorkspace:::.isBoolGate(x[[1]],node))
         {
             
-    		gate <- gh_get_gate(x[[1]],node)
+    		gate <- gh_pop_get_gate(x[[1]],node)
     		
     		dims <- intersect(parameters(gate), dims)
             
@@ -183,7 +183,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
                 message("Normalize ", node)
   					
   				#Get the PARENT gate (since we'll be gating the data using gate i)
-  				parent <- gs_get_parent(x[[1]], node)
+  				parent <- gs_pop_get_parent(x[[1]], node)
   				#initialize gate-specific normalization list
   				if(is.null(parentgates[[as.character(parent)]])){
   					parentgates[[as.character(parent)]]<-list();
@@ -213,7 +213,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
   					}else{
   						oldfs<-gs_cyto_data(x)
   						for(j in sampleNames(x)){
-  							inds<-flowWorkspace::gh_get_indices(x[[j]],parent)
+  							inds<-flowWorkspace::gh_pop_get_indices(x[[j]],parent)
   							oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
   						}
   						gs_cyto_data(x)<-oldfs
@@ -233,7 +233,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 gateHasSufficientData<-function(x=NULL,g=NULL,minCountThreshold=500,...){
   
 	res <- unlist(flowWorkspace::lapply(x,function(y){
-              nrow(gh_get_data(y,g))>=minCountThreshold
+              nrow(gh_pop_get_data(y,g))>=minCountThreshold
                   }))
 	if(all(res))
 		return(TRUE)

@@ -165,7 +165,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 		
         
         if(node!="root")
-          if(!flowWorkspace:::.isBoolGate(x[[1]],node))
+          if(!gh_pop_is_bool_gate(x[[1]],node))
         {
             
     		gate <- gh_pop_get_gate(x[[1]],node)
@@ -207,7 +207,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
                                               ,peakNr = npks
                                               ,...)
   										
-  					if(flowWorkspace::isNcdf(x)){
+  					if(flowWorkspace::gs_is_h5(x)){
   						sapply(sampleNames(result),function(s)ncdfFlow::updateIndices(result,s,NA))
   						gs_cyto_data(x)<-result
   					}else{

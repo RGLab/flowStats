@@ -298,7 +298,7 @@ autoGate <- function(x, ..., scale = 2.5)
 ##                       selection
 lymphGate <- function(x, channels, preselection=NULL, scale=2.5,
                       bwFac=1.3, filterId="defaultLymphGate",
-                      evaluate=TRUE, plot=FALSE, ...)
+                      plot=FALSE, ...)
 {
     ## some type-checking first
     flowCore:::checkClass(channels, "character", 2)
@@ -306,7 +306,6 @@ lymphGate <- function(x, channels, preselection=NULL, scale=2.5,
     flowCore:::checkClass(scale, "numeric", 1)
     flowCore:::checkClass(bwFac, "numeric", 1)
     flowCore:::checkClass(filterId, "character", 1)
-    flowCore:::checkClass(evaluate, "logical", 1)
     bcn2g <- do.call(norm2Filter, list(channels, scale=scale,
                                        filterId=filterId))
     if(!is.null(preselection)){
@@ -342,21 +341,30 @@ lymphGate <- function(x, channels, preselection=NULL, scale=2.5,
         bcn2g <- bcn2g %subset% bcrg
         identifier(bcn2g) <- filterId
     }
-    ## compute the filterResult and subset only if evaluate=TRUE
+    ## compute the filterResult and subset
     xr <- fr <- NULL
-    if(evaluate){
-        fr <- filter(x, bcn2g)
-        xr <- Subset(x, fr)
-    }
+    fr <- filter(x, bcn2g)
+    xr <- Subset(x, fr)
  
-    if (evaluate & plot) {
+    if (plot) {
         fm <- formula(paste(sapply(channels, function(ch) paste("`", ch, "`", sep="")),
                             collapse="~"))
         print(xyplot(fm, x, filter=bcn2g))
-
     }
     
-    return(list(x=xr, n2gate=bcn2g, n2gateResults=fr))
+    if(is.list(fr)){
+      lapply(fr, function(result){
+        details <- result@filterDetails[[2]]
+        mean <- details$center
+        cov <- details$cov*details$radius
+        ellipsoidGate(mean=mean, cov=cov, filterId=filterId)
+      })
+    }else{
+      details <- fr@filterDetails[[2]]
+      mean <- details$center
+      cov <- details$cov*details$radius
+      ellipsoidGate(mean=mean, cov=cov, filterId=filterId)
+    }
 }
 
 
@@ -412,7 +420,6 @@ setMethod("%in%",
                            scale=table@scale,
                            bwFac=table@bwFac,
                            filterId=table@filterId,
-                           evaluate=TRUE,
                            plot=FALSE)
           tmp$n2gateResults@subSet
       })

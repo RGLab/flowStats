@@ -37,7 +37,7 @@
 #' @export 
 gate_singlet <- function(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
                         prediction_level = 0.99, subsample_pct = NULL,
-                        wider_gate = FALSE, filterId = "singlet", maxit = 5, ...) {
+                        wider_gate = FALSE, filterId = "singlet", maxit = 20, ...) {
   flowCore:::checkClass(x, "flowFrame")
   flowCore:::checkClass(area, "character")
   flowCore:::checkClass(height, "character")

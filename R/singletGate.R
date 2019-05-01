@@ -37,7 +37,7 @@
 #' @export 
 gate_singlet <- function(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
                         prediction_level = 0.99, subsample_pct = NULL,
-                        wider_gate = FALSE, filterId = "singlet", maxit = 20, ...) {
+                        wider_gate = FALSE, filterId = "singlet", maxit = 5, ...) {
   flowCore:::checkClass(x, "flowFrame")
   flowCore:::checkClass(area, "character")
   flowCore:::checkClass(height, "character")
@@ -73,11 +73,16 @@ gate_singlet <- function(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL
   }
   rlm_formula <- as.formula(rlm_formula)
 
-  rlm_fit <- rlm(rlm_formula, data = x, maxit = maxit, ...)
+  rlm_fit <- withCallingHandlers(rlm(rlm_formula, data = x, maxit = maxit, ...),
+                                 warning = function(w){
+                                   if(grepl("failed to converge", conditionMessage(w))){
+                                     invokeRestart("muffleWarning")
+                                   }
+                                 })
 
-  if (!rlm_fit$converged) {
-    warning("The IRLS algorithm employed in 'rlm' did not converge.")
-  }
+  # if (!rlm_fit$converged) {
+  #   warning("The IRLS algorithm employed in 'rlm' did not converge.")
+  # }
 
   # Creates polygon gate based on the prediction bands at the minimum and maximum
   # 'area' observation using the trained robust linear model.

@@ -6,7 +6,7 @@
 #	flowCore:::checkClass(x,"GatingSet")
 #	bfsgates<-lapply(x,function(y)which(sapply(RBGL::bfs(y@tree),function(x)!flowWorkspace:::.isBooleanGate.graphNEL(y,x))))
 #	bfsgates<-unique(do.call(rbind,bfsgates))
-#	return(data.frame(gate=flowWorkspace::getNodes(x[[1]], showHidden = TRUE)[bfsgates],index=t(bfsgates)))
+#	return(data.frame(gate=flowWorkspace::gs_get_pop_paths(x[[1]], showHidden = TRUE)[bfsgates],index=t(bfsgates)))
 #}
 plotAllGates<-function(gh,cex=2,gsubset=NULL){
   nodes<-RBGL::bfs(gh@tree)
@@ -54,13 +54,13 @@ plotSameGate<-function(gs,cex=2,gsubset=NULL,names=NULL){
 		stop("names must be same length as gating set")
 	}
 	for(i in 1:(length(gs)-1)){
-		nodes<-flowWorkspace::getNodes(gs[[i]], showHidden = TRUE)
+		nodes<-flowWorkspace::gs_get_pop_paths(gs[[i]], showHidden = TRUE)
 		print(flowWorkspace::plotGate(gs[[i]],nodes[g1],lwd=2,pch='.',cex=cex,main=names[i]),split=c(grid[i,1],grid[i,2],cs,rs),more=T)
 		if(!is.null(g2)){
 			flowWorkspace::plotGate(gs[[i]],nodes[g2],lwd=2,add=T)
 		}
 	}
-	nodes<-flowWorkspace::getNodes(gs[[length(gs)]], showHidden = TRUE)
+	nodes<-flowWorkspace::gs_get_pop_paths(gs[[length(gs)]], showHidden = TRUE)
 	print(flowWorkspace::plotGate(gs[[length(gs)]],nodes[g1],lwd=2,pch='.',cex=cex,main=names[length(gs)]),split=c(grid[length(gs),1],grid[length(gs),2],cs,rs),more=F)
 	if(!is.null(g2)){
 		flowWorkspace::plotGate(gs[[length(gs)]],nodes[g2],lwd=2,add=T)
@@ -83,7 +83,7 @@ comparativeNormalizationPlot<-function(x,y,g,s,g2=NULL){
 	flowCore:::checkClass(y,"GatingSet")
 	flowCore:::checkClass(g,"numeric")
 	flowCore:::checkClass(s,"numeric")
-	if(g>length(flowWorkspace::getNodes(x[[1]], showHidden = TRUE))){
+	if(g>length(flowWorkspace::gs_get_pop_paths(x[[1]], showHidden = TRUE))){
 		stop("Gate index out of bounds")
 	}
 	if(s>length(x)){
@@ -93,18 +93,18 @@ comparativeNormalizationPlot<-function(x,y,g,s,g2=NULL){
 		stop("The two gating sets should be of the same size")
 	}
 	if(!is.null(g2)){
-		G2<-flowWorkspace::getGate(y[[s]],g2)@boundaries
+		G2<-flowWorkspace::gh_pop_get_gate(y[[s]],g2)@boundaries
 	}else{
 		G2<-NULL
 	}
-	par<-flowWorkspace::getParent(x[[1]],g)
-	dims <- colnames(getGate(x[[1]],flowWorkspace::getNodes(x[[1]], showHidden = TRUE)[g])@boundaries)
+	par<-flowWorkspace::gs_pop_get_parent(x[[1]],g)
+	dims <- colnames(gh_pop_get_gate(x[[1]],flowWorkspace::gs_get_pop_paths(x[[1]], showHidden = TRUE)[g])@boundaries)
 	form<-sapply(dims,function(f)as.formula(paste("~`",f,"`",sep="")))
-	print(densityplot(form[[1]],flowWorkspace::getData(x,par),main="Raw"),split=c(1,1,3,2),more=TRUE)
-	print(densityplot(form[[1]],flowWorkspace::getData(y,par),main="Normalized"),split=c(1,2,3,2),more=TRUE)
+	print(densityplot(form[[1]],flowWorkspace::gs_pop_get_data(x,par),main="Raw"),split=c(1,1,3,2),more=TRUE)
+	print(densityplot(form[[1]],flowWorkspace::gs_pop_get_data(y,par),main="Normalized"),split=c(1,2,3,2),more=TRUE)
 	
-	print(densityplot(form[[2]],flowWorkspace::getData(x,par),main="Raw"),split=c(2,1,3,2),more=TRUE)
-	print(densityplot(form[[2]],flowWorkspace::getData(y,par),main="Normalized"),split=c(2,2,3,2),more=TRUE)
+	print(densityplot(form[[2]],flowWorkspace::gs_pop_get_data(x,par),main="Raw"),split=c(2,1,3,2),more=TRUE)
+	print(densityplot(form[[2]],flowWorkspace::gs_pop_get_data(y,par),main="Normalized"),split=c(2,2,3,2),more=TRUE)
 	
 	print(flowWorkspace::plotGate(x[[s]],g,main="Raw"),split=c(3,1,3,2),more=TRUE)
 	if(!is.null(G2)){
@@ -145,18 +145,18 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 	#Get all the non-boolean gates, breadth first traversal
 	#Do a breadth-first traversal
 	
-    nodes <- getNodes(x[[1]],order="bfs",showHidden = TRUE, path = "auto")
+    nodes <- gs_get_pop_paths(x[[1]],order="bfs",showHidden = TRUE, path = "auto")
 	
 	#gate-specific channel list to track normalization
 	parentgates<-list();	
 	
 	#Initialize master channel list
-	unnormalized <- colnames(getData(x[[1]]))
+	unnormalized <- colnames(gh_pop_get_data(x[[1]]))
 	
     
 	message("cloning the gatingSet...")
 		
-	x <- clone(x, ncdfFile = ncdfFile)	
+	x <- gs_clone(x, ncdfFile = ncdfFile)	
 	
 	#for each gate, grab the dimensions and check if they are normalized.
 	#Normalize what hasn't been normalized yet, then do the gating.
@@ -165,10 +165,10 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 		
         
         if(node!="root")
-          if(!flowWorkspace:::.isBoolGate(x[[1]],node))
+          if(!gh_pop_is_bool_gate(x[[1]],node))
         {
             
-    		gate <- getGate(x[[1]],node)
+    		gate <- gh_pop_get_gate(x[[1]],node)
     		
     		dims <- intersect(parameters(gate), dims)
             
@@ -183,7 +183,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
                 message("Normalize ", node)
   					
   				#Get the PARENT gate (since we'll be gating the data using gate i)
-  				parent <- getParent(x[[1]], node)
+  				parent <- gs_pop_get_parent(x[[1]], node)
   				#initialize gate-specific normalization list
   				if(is.null(parentgates[[as.character(parent)]])){
   					parentgates[[as.character(parent)]]<-list();
@@ -207,16 +207,16 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
                                               ,peakNr = npks
                                               ,...)
   										
-  					if(flowWorkspace::isNcdf(x)){
+  					if(flowWorkspace::gs_is_h5(x)){
   						sapply(sampleNames(result),function(s)ncdfFlow::updateIndices(result,s,NA))
-  						flowData(x)<-result
+  						gs_cyto_data(x)<-result
   					}else{
-  						oldfs<-flowData(x)
+  						oldfs<-gs_cyto_data(x)
   						for(j in sampleNames(x)){
-  							inds<-flowWorkspace::getIndices(x[[j]],parent)
+  							inds<-flowWorkspace::gh_pop_get_indices(x[[j]],parent)
   							oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
   						}
-  						flowData(x)<-oldfs
+  						gs_cyto_data(x)<-oldfs
   					}
   					recompute(x,node);	
   				}
@@ -233,7 +233,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 gateHasSufficientData<-function(x=NULL,g=NULL,minCountThreshold=500,...){
   
 	res <- unlist(flowWorkspace::lapply(x,function(y){
-              nrow(getData(y,g))>=minCountThreshold
+              nrow(gh_pop_get_data(y,g))>=minCountThreshold
                   }))
 	if(all(res))
 		return(TRUE)

@@ -26,7 +26,7 @@ gaussNormGS <- function(gatingset, channel.names, max.lms=2, base.lms=NULL,peak.
 		ncflowset<-Subset(gatingset,gate)
 	}
 	#Update the column names on the ncflowset so that they are consistent with the column names on the GatingSet
-	colnames(ncflowset)<-colnames(getData(gatingset[[1]]))
+	colnames(ncflowset)<-colnames(gh_pop_get_data(gatingset[[1]]))
 	normed<-gaussNormNC(ncflowset=ncflowset,channel.names=channel.names,max.lms=max.lms,base.lms=base.lms,peak.density.thr=peak.density.thr,peak.distance.thr=peak.distance.thr,debug=debug,fname=fname);
 	return(normed);
 }

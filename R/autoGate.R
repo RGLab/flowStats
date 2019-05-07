@@ -354,13 +354,13 @@ lymphGate <- function(x, channels, preselection=NULL, scale=2.5,
     
     if(is.list(fr)){
       lapply(fr, function(result){
-        details <- result@filterDetails[[2]]
+        details <- result@filterDetails[[1]]
         mean <- details$center
         cov <- details$cov*details$radius
         ellipsoidGate(mean=mean, cov=cov, filterId=filterId)
       })
     }else{
-      details <- fr@filterDetails[[2]]
+      details <- fr@filterDetails[[1]]
       mean <- details$center
       cov <- details$cov*details$radius
       ellipsoidGate(mean=mean, cov=cov, filterId=filterId)

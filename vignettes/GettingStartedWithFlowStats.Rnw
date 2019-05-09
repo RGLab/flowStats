@@ -49,13 +49,14 @@ gating and normalization.
 Since \Rpackage{flowStats} is more a collection of algorithms, writing
 a coherent Vignette is somewhat difficult. Instead, we will present a
 hypothetical data analysis process that also makes heavy use of the
-functionality provided by \Rpackage{flowCore}, mainly the work flow
-infrastructure.
+functionality provided by \Rpackage{flowWorkspace}, primarily through
+\Robject{GatingSet}s.
 
-We start by loading the \Robject{GvHD} data set from the
-\Rpackage{flowCore} package.
+We start by loading the \Robject{ITN} data set
 <<loadGvHD>>=
 library(flowStats)
+library(flowWorkspace)
+library(ggcyto)
 data(ITN)
 @ 
 %
@@ -64,42 +65,45 @@ group containing 5 samples. Each \Rclass{flowFrame} includes, in
 addition to FSC and SSC, 5 fluoresence parameters: CD3, CD4, CD8, CD69
 and HLADR.
 
-First we need to tranform all the fluorescense channels. This is a
-good point to start using a \Rclass{workFlow} object to keep track of
+First we need to tranform all the fluorescence channels. This is a
+good point to start using a \Rclass{GatingSet} object to keep track of
 our progress.
 <<transform>>=
-wf <- workFlow(ITN)
-tl <- transformList(colnames(ITN)[3:7], asinh, transformationId="asinh")
-add(wf, tl)
+require(scales)
+gs <- GatingSet(ITN)
+trans.func <- asinh
+inv.func <- sinh
+trans.obj <- trans_new("myAsinh", trans.func, inv.func)
+transList <- transformerList(colnames(ITN)[3:7], trans.obj)
+gs <- transform(gs, transList)
 @ 
 %
-In a initial analysis step we first want to indentify and subset all
-T-cells. This can be archived by gating in the CD3 and SSC dimensions,
-however there are several other sub-populations, and we need to
-either specify our selection further, or segment the individual
+In an initial analysis step we first want to identify and subset all
+T-cells. This can be achieved by gating in the CD3 and SSC dimensions.
+However, there are several other sub-populations and we need to
+either specify our selection further or segment the individual
 sub-populations. One solution for the latter aproach is to use the
-mixture modelling infrastructure provided by the \Rclass{flowClust}
+mixture modelling infrastructure provided by the \Rpackage{flowClust}
 package. However, since we are only interested in one single
 sub-population, the T-cell, it is much faster and easier to use the
 \Rfunction{lymphGate} function in the \Rpackage{flowStats}
 package. The idea here is to first do a rough preselection in the
 two-dimensional projection of the data based on expert knowledge or
 prior experience and subsequently to fit a \Rclass{norm2Filter} to
-this subset. The function also allows to derive the pre-selection
+this subset. The function also allows us to derive the pre-selection
 through back-gating: we know that CD4 positive cells are a subset of
 T-cells, so by estimating CD4 positive cells first we can get a rough
 idea on where to find the T-cells in the CD3 SSC projection.
 
 <<lymphGate, keep.source=TRUE>>=
-lg <- lymphGate(Data(wf[["asinh"]]), channels=c("SSC", "CD3"),
-                preselection="CD4", filterId="TCells", eval=FALSE,
+lg <- lymphGate(gs_cyto_data(gs), channels=c("CD3", "SSC"),
+                preselection="CD4", filterId="TCells",
                 scale=2.5)
-add(wf, lg$n2gate, parent="asinh")
+gs_pop_add(gs, lg)
+recompute(gs)
+@
 <<lymphGatePlot, keep.source=TRUE, fig=TRUE>>=
-library(flowViz)
-print(xyplot(SSC ~ CD3| PatientID, wf[["TCells+"]],
-      par.settings=list(gate=list(col="red", 
-         fill="red", alpha=0.3))))
+ggcyto(gs, aes(x = CD3, y = SSC)) + geom_hex(bins = 32) + geom_gate("TCells")
 @ 
 
 In the next step we want to separate T-helper and NK cells using the
@@ -115,10 +119,13 @@ look at this variation for the T-cell subset and all 4 remaining
 fluorescense channels:
 
 <<variation, fig=TRUE>>=
-pars <- colnames(Data(wf[["base view"]]))[c(3,4,5,7)]
-print(densityplot(PatientID~., Data(wf[["TCells+"]]), channels=pars, groups=GroupID,
-                  scales=list(y=list(draw=F)), filter=lapply(pars, curv1Filter),
-                  layout=c(4,1)))
+require(ggridges)
+require(gridExtra)
+pars <- colnames(gs)[c(3,4,5,7)]
+
+print(densityplot(PatientID~., gs_pop_get_data(gs, "TCells"), channels=pars, 
+                  groups=GroupID, scales=list(y=list(draw=F)), 
+                  filter=lapply(pars, curv1Filter), layout=c(4,1)))
 @ 
 
 Indeed the data, especially for CD4 and CD8, don't align well. At
@@ -149,38 +156,48 @@ The algorithm in \Rfunction{warpSet} performs the following steps:
 
 The algorithm should be robust to missing peaks in some of the
 samples, however the classification in step 3 becomes harder since it
-is not clear which cell population it represents.   
+is not clear which cell population it represents.
 
-<<norm>>=
-norm <- normalization(normFun=function(x, parameters, ...)
-                      warpSet(x, parameters, ...),
-                      parameters=pars,
-                      arguments=list(grouping="GroupID", monwrd=TRUE),
-                      normalizationId="Warping")
-add(wf, norm, parent="TCells+")
-<<normPlot, fig=TRUE>>=
-print(densityplot(PatientID~., Data(wf[["Warping"]]), channels=pars, groups=GroupID,
-                  scales=list(y=list(draw=F)), filter=lapply(pars, curv1Filter),
-                  layout=c(4,1)))
+While \Rfunction{warpSet} can be used directly on a \Robject{flowSet},
+the \Rfunction{normalize} method was written to integrate with
+\Robject{GatingSet} objects. We must first create the gate whose channels
+we would like to normalize, which in this case will be done using
+the \Rfunction{quadrantGate} function to automatically estimate
+a \Robject{quadGate} in the CD4 and CD8 channels.
+
+<<quad_gate>>=
+qgate <- quadrantGate(gs_pop_get_data(gs, "TCells"), stains=c("CD4", "CD8"),
+                      filterId="CD4CD8", sd=3)
+gs_pop_add(gs, qgate, parent = "TCells")
+recompute(gs)
 @
 
-After normalization the data look much cleaner and we should be able
-to use a single static gate for all \Rclass{flowFrames} in order to
-separate CD4 and CD8 positive cells. Typically one would use a
-\Rclass{quadGate}, and the \Rfunction{quadrantGate} function in
-\Rpackage{flowStats} can be used to automatically estimate such a
-gate. 
+We can now normalize the channels relevant to this gate using \Rfunction{normalize},
+so that we can successfully apply a single \Robject{quadGate} to all of the samples.
 
-<<quadGate>>=
-qgate <- quadrantGate(Data(wf[["Warping"]]), stains=c("CD4", "CD8"),
-                      filterId="CD4CD8", sd=3)
-add(wf, qgate, parent="Warping")
-@ 
-<<quadGatePlot, fig=TRUE, keep.source=TRUE>>=
-print(xyplot(CD8 ~ CD4 | PatientID, wf[["CD4+CD8+"]],
-             par.settings=list(gate=list(fill="transparent", 
-                               col="red"))))
-@ 
+<<quad_gate_norm>>=
+gs <- normalize(gs, populations=c("CD4+CD8+", "CD4+CD8-", "CD4-CD8+", "CD4-CD8-"), 
+                     dims=c("CD4", "CD8"), minCountThreshold = 50)
+@
+
+The normalization aligns the peaks in the selected channels across all samples.
+
+<<variation_norm, fig=TRUE>>==
+print(densityplot(PatientID~., gs_pop_get_data(gs, "TCells"), channels=pars, 
+                  groups=GroupID, scales=list(y=list(draw=F)), 
+                  filter=lapply(pars, curv1Filter), layout=c(4,1)))
+@
+
+This ensures that the single \Robject{quadGate} is appropriately placed for each sample.
+
+<<quad_gate_norm_plot, fig=TRUE>>=
+ggcyto(gs_pop_get_data(gs, "TCells"), aes(x=CD4, y=CD8)) +
+  geom_hex(bins=32) +
+  geom_gate(gs_pop_get_gate(gs, "CD4-CD8-")) +
+  geom_gate(gs_pop_get_gate(gs, "CD4-CD8+")) +
+  geom_gate(gs_pop_get_gate(gs, "CD4+CD8-")) +
+  geom_gate(gs_pop_get_gate(gs, "CD4+CD8+"))
+@
 
 In a final step we might be interested in finding the proportion of
 activated T-helper cells by means of the CD69 stain. The
@@ -188,14 +205,28 @@ activated T-helper cells by means of the CD69 stain. The
 negative peaks in 1D.
 
 <<rangeGate>>=
-CD69rg <- rangeGate(Data(wf[["Warping"]]), stain="CD69",
+CD69rg <- rangeGate(gs_cyto_data(gs), stain="CD69",
                     alpha=0.75, filterId="CD4+CD8-CD69", sd=2.5)
-add(wf, CD69rg, parent="CD4+CD8-")
+gs_pop_add(gs, CD69rg, parent="CD4+CD8-")
+# gs_pop_add(gs, CD69rg, parent="CD4+CD8-", name = "CD4+CD8-CD69-", negated=TRUE)
+recompute(gs)
 @
 <<rangeGatePlot, keep.source=TRUE, fig=TRUE>>=
-print(densityplot(PatientID ~ CD69, Data(wf[["CD4+CD8-"]]), main = "CD4+",
+print(densityplot(PatientID ~ CD69, gs_pop_get_data(gs, "CD4+CD8-"), main = "CD4+",
             groups=GroupID, refline=CD69rg@min))
-@ 
+@
+
+This channel could also benefit from normalization before determining a single \Robject{rangeGate} to apply to all samples.
+
+<<rangeGate_norm>>=
+gs <- normalize(gs, populations=c("CD4+CD8-CD69"), 
+                     dims=c("CD69"), minCountThreshold = 50)
+@
+
+<<rangeGate_norm_plot, fig=TRUE>>=
+print(densityplot(PatientID ~ CD69, gs_pop_get_data(gs, "CD4+CD8-"), main = "CD4+",
+            groups=GroupID, refline=CD69rg@min))
+@
 
 \section{Probability Binning}
 A probability binning algorithm for quantitating multivariate distribution 
@@ -222,7 +253,7 @@ with CD4, CD8 populations different from a control flowFrame that we create usin
 data from all the patients.
 
 <<createData>>=
-dat <- Data(wf[["Warping"]])
+dat <- gs_cyto_data(gs)
 
 @
 

@@ -126,15 +126,14 @@ warpSet(x, stains, grouping = NULL, monwrd = TRUE, subsample=NULL,
 
 data(ITN)
 dat <- transform(ITN, "CD4"=asinh(CD4), "CD3"=asinh(CD3), "CD8"=asinh(CD8))
-lg <- lymphGate(dat, channels=c("CD3", "SSC"),
-preselection="CD4",scale=1.5)
-dat <- Subset(dat, lg$n2gate)
+lg <- lymphGate(dat, channels=c("CD3", "SSC"), preselection="CD4",scale=1.5)
+dat <- Subset(dat, lg)
 datr <- warpSet(dat, "CD8", grouping="GroupID", monwrd=TRUE)
 if(require(flowViz)){
-d1 <- densityplot(~CD8, dat, main="original", filter=curv1Filter("CD8"))
-d2 <- densityplot(~CD8, datr, main="normalized", filter=curv1Filter("CD8"))
-plot(d1, split=c(1,1,2,1))
-plot(d2, split=c(2,1,2,1), newpage=FALSE)
+  d1 <- densityplot(~CD8, dat, main="original", filter=curv1Filter("CD8"))
+  d2 <- densityplot(~CD8, datr, main="normalized", filter=curv1Filter("CD8"))
+  plot(d1, split=c(1,1,2,1))
+  plot(d2, split=c(2,1,2,1), newpage=FALSE)
 }
 
 }

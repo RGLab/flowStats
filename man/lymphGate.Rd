@@ -149,7 +149,7 @@ dat <- transform(dat, "FL4-H"=asinh(`FL4-H`))
 lg <- lymphGate(dat, channels=c("FSC-H", "SSC-H"), preselection="FL4-H",scale=1.5)
 
 if(require(flowViz))
-xyplot(`SSC-H`~`FSC-H`, dat, filter=lg$n2gate)
+xyplot(`SSC-H`~`FSC-H`, dat, filter=lg)
 
 
 }

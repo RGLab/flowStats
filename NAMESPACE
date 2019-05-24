@@ -53,6 +53,7 @@ importFrom(stats, anova, approxfun, as.formula, as.hclust, chisq.test,
 importFrom(utils, capture.output)
 
 export("lymphGate",
+       "norm2Filter",
        "curv1Filter",
        "curv2Filter",
        "curvPeaks",
@@ -80,9 +81,9 @@ export("lymphGate",
        )
 
 exportClasses("lymphFilter","rangeFilter","curv1Filter", 
-              "curv2Filter")
+              "curv2Filter", "norm2Filter")
 
-exportMethods("normalize")
+exportMethods("normalize", "spillover", "spillover_match", "spillover_ng")
 
 
 exportMethods("%in%")

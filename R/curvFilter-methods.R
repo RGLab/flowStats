@@ -474,25 +474,3 @@ setMethod("gpolygon",
       fres <- filter(data, x)
       gpolygon(x, fres, verbose=verbose, ...)
     })
-
-setMethod("densityplot",
-    signature(x="view", data="missing"),
-    function(x, data, channels, ...)
-    {
-      dat <- Data(x)
-      if(is.null(dat))
-        stop("Filter has not been applied to this view.\n",
-            "Run applyParentFilter(view, workflow).")
-      if(missing(channels))
-        channels <- if(is(x, "normalizeView"))
-              parameters(get(get(x@action)@normalization)) else
-              colnames(dat)
-      ## A curv1Filter overlay
-      filter <- if(is(x, "normalizeView")){
-            tmp <- lapply(channels, curv1Filter)
-            names(tmp) <- channels
-            tmp} else NULL
-      ## We construct our own formula
-      densityplot(~ ., data=dat, scales=list(y=list(draw=F)),
-          channels=channels, filter=filter)
-    })

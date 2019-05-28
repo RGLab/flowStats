@@ -1,3 +1,5 @@
+
+
 ## ===========================================================================
 ## curv1Filter
 ## ---------------------------------------------------------------------------
@@ -425,3 +427,259 @@ setMethod("%in%",
       })
 
           
+## ===========================================================================
+## norm2Filter
+## ---------------------------------------------------------------------------
+## A class to describe the fit of a bivariate normal distribution.
+## Slot method is a character describing the method used to compute the
+## covariance matrix, slot scale.factor holds a numeric representing the
+## Mahalanobis distance. Slot transformation holds a list of length
+## giving transformations, if applicable that are applied to the data
+## before gating. n is the number of points used in the subsampling step.
+## ---------------------------------------------------------------------------
+#' Class "norm2Filter"
+#' 
+#' 
+#' Class and constructors for a \code{\link{filter}} that fits a bivariate
+#' normal distribution to a data set of paired values and selects data points
+#' according to their standard deviation from the fitted distribution.
+#' 
+#' 
+#' The filter fits a bivariate normal distribution to the data and selects all
+#' events within the Mahalanobis distance multiplied by the \code{scale.factor}
+#' argument. The constructor \code{norm2Filter} is a convenience function for
+#' object instantiation. Evaluating a \code{curv2Filter} results in an object
+#' of class \code{\link{logicalFilterResult}}. Accordingly, \code{norm2Filters}
+#' can be used to subset and to split flow cytometry data sets.
+#' 
+#' @name norm2Filter-class
+#' @aliases norm2Filter-class norm2Filter show,norm2Filter-method
+#' @docType class
+#' @usage
+#' norm2Filter(x, y, method="covMcd", scale.factor=1, n=50000,
+#' filterId="defaultNorm2Filter")
+#' @param x,y Characters giving the names of the measurement parameter on which
+#' the filter is supposed to work on. \code{y} can be missing in which case
+#' \code{x} is expected to be a character vector of length 2 or a list of
+#' characters.
+#' @param filterId An optional parameter that sets the \code{filterId} slot of
+#' this filter. The object can later be identified by this name.
+#' @param scale.factor,n Numerics of length 1, used to set the
+#' \code{scale.factor} and n slots of the object.
+#' @param method Character in \code{covMcd} or \code{cov.rob}, used to set the
+#' \code{method} slot of the object.
+#' @return
+#' Returns a \code{\link{norm2Filter}} object for use in filtering
+#' \code{\link{flowFrame}}s or other flow cytometry objects.
+#' 
+#' @note
+#' See the documentation in the \code{\link[flowViz:flowViz-package]{flowViz}}
+#' package for plotting of \code{norm2Filters}.
+#' 
+#' @section Extends:
+#' 
+#' Class \code{"\linkS4class{parameterFilter}"}, directly.
+#' 
+#' Class \code{"\linkS4class{concreteFilter}"}, by class
+#' \code{parameterFilter}, distance 2.
+#' 
+#' Class \code{"\linkS4class{filter}"}, by class \code{parameterFilter},
+#' distance 3.
+#' 
+#' @slot method One of \code{covMcd} or \code{cov.rob}
+#' defining method used for computation of covariance matrix.
+#' @slot scale.factor Numeric vector giving factor of standard
+#' deviations used for data selection (all points within
+#' \code{scalefac} standard deviations are selected).
+#' @slot n Object of class \code{"numeric"}, the number of
+#' events used to compute the covariance matrix of the bivariate
+#' distribution.
+#' @slot filterId Object of class \code{"character"}
+#' referencing the filter.
+#' @slot parameters Object of class \code{"ANY"} describing
+#' the parameters used to filter the \code{\link{flowFrame}} or
+#' \code{\link{flowSet}}.
+#' 
+#' @section Objects from the Class:
+#'   Objects can be created by calls of the form \code{new("norm2Filter",
+#' ...)} or using the constructor \code{norm2Filter}. The constructor
+#' is the recommended way.
+#' 
+#' @section Methods:
+#' \describe{
+#'   
+#'   \item{\%in\%}{\code{signature(x = "flowFrame", table =
+#'                                   "norm2Filter")}: The workhorse used to evaluate the filter on
+#'     data. This is usually not called directly by the user, but
+#'     internally by calls to the \code{\link{filter}} methods. }
+#'   
+#'   \item{show}{\code{signature(object = "norm2Filter")}: Print
+#'     information about the filter. }
+#'   
+#' }
+#' 
+#' @author F. Hahne
+#' @seealso
+#' 
+#' \code{\link[MASS]{cov.rob}}, \code{\link[rrcov]{CovMcd}},
+#' \code{\link[flowCore:filter-methods]{filter}} for evaluation of
+#' \code{norm2Filters} and \code{\link{split}} and \code{\link{Subset}}for
+#' splitting and subsetting of flow cytometry data sets based on that.
+#' @keywords classes methods
+#' @examples
+#' 
+#' ## Loading example data
+#' dat <- read.FCS(system.file("extdata","0877408774.B08",
+#' package="flowCore"))
+#' 
+#' ## Create directly. Most likely from a command line
+#' norm2Filter("FSC-H", "SSC-H", filterId="myCurv2Filter")
+#' 
+#' ## To facilitate programmatic construction we also have the following
+#' n2f <- norm2Filter(filterId="myNorm2Filter", x=list("FSC-H", "SSC-H"),
+#' scale.factor=2)
+#' n2f <- norm2Filter(filterId="myNorm2Filter", x=c("FSC-H", "SSC-H"),
+#' scale.factor=2)
+#' 
+#' ## Filtering using norm2Filter
+#' fres <- filter(dat, n2f)
+#' fres
+#' summary(fres)
+#' 
+#' ## The result of norm2 filtering is a logical subset
+#' Subset(dat, fres)
+#' 
+#' ## We can also split, in which case we get those events in and those
+#' ## not in the gate as separate populations
+#' split(dat, fres)
+#' 
+#' 
+setClass("norm2Filter",
+         representation=representation(method="character",
+                                       scale.factor="numeric",
+                                       n="numeric"),
+         contains="parameterFilter",
+         prototype=list(filterId="defaultNorm2Filter",
+                        scale.factor=1,
+                        method="covMcd",
+                        n=50000))
+
+## Constructor. We allow for the following inputs:
+##  method is always a character and scale.factor and n both are always
+##     numerics, all of length 1
+##  x and y are characters of length 1 or a mix of characters and
+##     transformations
+##  x is a character of length 2 and y is missing
+##  x is a list of characters and/or transformations, y is missing
+norm2Filter <- function(x, y, method="covMcd", scale.factor=1,
+                        n=50000, filterId="defaultNorm2Filter")
+{
+  flowCore:::checkClass(method, "character", 1)
+  flowCore:::checkClass(scale.factor, "numeric", 1)
+  flowCore:::checkClass(n, "numeric", 1)
+  flowCore:::checkClass(filterId, "character", 1)
+  if(missing(y)) {
+    if(length(x)==1)
+      stop("You must specify two parameters for a norm2 gate.")
+    if(length(x)>2)
+      warning("Only the first two parameters will be used.")
+    y=x[[2]]
+    x=x[[1]]
+  }
+  new("norm2Filter", parameters=c(x, y), method=method,
+      scale.factor=scale.factor, filterId=filterId, n=n)
+}
+
+
+## ==========================================================================
+## norm2Filter -- as a logical filter, this returns a logical vector.
+## Essentially, the algorithm to evaluate the filter is similar to that of
+## ellipsoidGates with the addition of the scalefac argument, that controls
+## the cutoff in the Mahalanobis distance.
+## ---------------------------------------------------------------------------
+setMethod("%in%",
+          signature=signature("flowFrame",
+                              table="norm2Filter"),
+          definition=function(x, table)
+          {
+            if(nrow(x)==0)
+            {
+              result <- as.logical(NULL)
+              attr(result, 'center') <- NA
+              attr(result, 'cov') <- NA
+              attr(result, 'radius') <- NA
+              return(result)
+            }
+            if(length(parameters(table)) != 2)
+              stop("norm2 filters require exactly two parameters.")
+            y <- exprs(x)[,parameters(table)]
+            ## drop data that has piled up on the measurement ranges
+            r <- range(x)[, parameters(table)]
+            sel <- (y[,1] > r[1,1] & y[,1] < r[2,1] &
+                      y[,2] > r[1,2] & y[,2] < r[2,2])
+            values <- y[sel, ]
+            if(is.na(match(table@method,c("covMcd","cov.rob"))))
+              stop("Method must be either 'covMcd' or 'cov.rob'")
+            cov <- switch(table@method,
+                          covMcd={
+                            tmp <- if(nrow(values)>table@n)
+                              CovMcd(values[sample(nrow(values),
+                                                   table@n),])
+                            else rrcov::CovMcd(values)
+                            list(center=tmp@center, cov=tmp@cov)
+                          },
+                          cov.rob={MASS::cov.rob(values)},
+                          stop("How did you get here?")
+            )
+            W <- t(y)-cov$center
+            ## FIXME: a long term change might be to save chol(cov$cov)
+            ## rather than cov$cov in the result.  This helps in computing
+            ## the gate boundaries and qr.solve above could be replaced by
+            ## the equivalent of chol2inv(chol(cov$cov)).
+            covsol <- qr.solve(cov$cov) %*% W
+            result <- colSums(covsol * W) < table@scale.factor^2
+            attr(result, 'center') <- cov$center
+            attr(result, 'cov') <- cov$cov
+            attr(result, 'radius') <- table@scale.factor
+            result
+          })
+
+## ==========================================================================
+## norm2Filter
+## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+setMethod("show",
+          signature=signature(object="norm2Filter"),
+          definition=function(object)
+          {
+            parms <- as.character(parameters(object))
+            na  <-  is.na(parms)
+            if(any(na))
+              parms[na] <- "internal transformation"
+            cat("norm2Filter '", identifier(object),
+                "' in dimensions ", sep="")
+            cat(paste(parms, sep="", collapse=" and "),
+                "with parameters:\n")
+            cat("  method:", object@method, "\n")
+            cat("  scale.factor:", object@scale.factor, "\n")
+            cat("  n:", object@n, "\n")
+            cat("\n")
+          })
+
+## ==========================================================================
+## For a norm2Filter we want to strip things from the attributes in the
+## subSet slot, i.e., the details about the fitted bivariate normal
+## distribution
+## ---------------------------------------------------------------------------
+setMethod("summarizeFilter",
+          signature=signature(result="logicalFilterResult",
+                              filter="norm2Filter"),
+          definition=function(result, filter)
+          {
+            ret <- callNextMethod()
+            ret$cov <- attr(result@subSet,'cov')
+            ret$center <- attr(result@subSet,'center')
+            ret$radius <- attr(result@subSet,'radius')
+            ret$parameters <- parameters(filter)
+            return(ret)
+          })

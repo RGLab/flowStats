@@ -541,7 +541,7 @@ warpSetNCDF <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
                     exprs(curfr)[,p] <- newDat
                     #take advantage of channel-wise write to cdf (instead of entire frame)
                     destDat <- expData[,p]
-                    destDat[[curChunksample,only.exprs = TRUE]] <- curfr
+                    destDat[[curChunksample]] <- curfr
     				## make sure that edge envents are set to the extreme values
     				## of the warped data range and update the parameters slot
     				## accordingly

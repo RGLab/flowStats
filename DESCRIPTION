@@ -7,7 +7,7 @@ Author: Florian Hahne, Nishant Gopalakrishnan, Alireza Hadj Khodabakhshi,
 Maintainer: Greg Finak <gfinak@fhcrc.org> and Mike Jiang <wjiang2@fhcrc.org>
 Description: Methods and functionality to analyse flow data that is beyond the
              basic infrastructure provided by the flowCore package.
-Depends: R (>= 2.10), flowCore, cluster, flowWorkspace, ncdfFlow(>= 2.19.5)
+Depends: R (>= 2.10), flowCore (>= 1.51.6), cluster, flowWorkspace, ncdfFlow(>= 2.19.5)
 Suggests: 
     xtable,
     testthat
@@ -20,4 +20,4 @@ Lazyload: yes
 URL: http://www.github.com/RGLab/flowStats
 BugReports: http://www.github.com/RGLab/flowStats/issues
 biocViews: ImmunoOncology, FlowCytometry, CellBasedAssays
-
+RoxygenNote: 6.1.1

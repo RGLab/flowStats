@@ -10,10 +10,10 @@ warpSet.GatingSet <- function(x,node=NULL, ...){
 	if(!inherits(x,"GatingSet"))
 		stop("x must be of class GatingSet")
     if(is.null(node))
-      data <- getData(x)
+      data <- gs_pop_get_data(x)
     else
-      data <- getData(x,node);
-	warpSet(x = data,...)
+      data <- gs_pop_get_data(x,node);
+	  warpSet(x = data,...)
 }
 warpSet.cytoset <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
                                 peakNr=NULL, clipRange=0.01, nbreaks=11, fres, bwFac=2,
@@ -491,7 +491,7 @@ warpSet.ncdfFlowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample
                     exprs(curfr)[,p] <- newDat
                     #take advantage of channel-wise write to cdf (instead of entire frame)
                     destDat <- expData[,p]
-                    destDat[[curChunksample,only.exprs = TRUE]] <- curfr
+                    destDat[[curChunksample]] <- curfr
     				## make sure that edge envents are set to the extreme values
     				## of the warped data range and update the parameters slot
     				## accordingly

@@ -64,7 +64,7 @@
 
 \usage{
 lymphGate(x, channels, preselection=NULL, scale=2.5,  bwFac=1.3,
-          filterId="defaultLymphGate", evaluate=TRUE, plot=FALSE, \dots)
+          filterId="defaultLymphGate", plot=FALSE, \dots)
 }
 
 \arguments{
@@ -90,11 +90,6 @@ lymphGate(x, channels, preselection=NULL, scale=2.5,  bwFac=1.3,
     \code{\link[flowStats:curv1Filter-class]{curv1Filter}}. }
 
   \item{filterId}{ A character used as filterId. }
-
-  \item{evaluate}{ A logical indicating wether the filter should be
-    resolved (computation of the
-    \code{\link[flowCore:filterResult-class]{filterResult}} 
-    and the subset). }
 
   \item{plot}{Logical. Produce plots of filter results}
   
@@ -135,20 +130,8 @@ lymphGate(x, channels, preselection=NULL, scale=2.5,  bwFac=1.3,
 
 \value{
 
-  A list with items
-  
-  \item{x }{The filtered \code{flowSet}. }
-  
-  \item{n2gate }{The \code{norm2Filter} object. }
-
-  \item{n2gateResults }{The
-    \code{\link[flowCore:filterResult-class]{filterResult}} after 
-    applying the \code{norm2Filter} on the \code{flowSet}. }
-
-  for the \code{lymphGate} function. Note that \code{x} and
-  \code{n2gateResults} are \code{NULL} when \code{eval=FALSE}.
-
-  
+  An \code{\link[flowCore]{ellipsoidGate}} or list 
+  of \code{ellipsoidGate} objects
   
 }
 
@@ -166,7 +149,7 @@ dat <- transform(dat, "FL4-H"=asinh(`FL4-H`))
 lg <- lymphGate(dat, channels=c("FSC-H", "SSC-H"), preselection="FL4-H",scale=1.5)
 
 if(require(flowViz))
-xyplot(`SSC-H`~`FSC-H`, dat, filter=lg$n2gate)
+xyplot(`SSC-H`~`FSC-H`, dat, filter=lg)
 
 
 }

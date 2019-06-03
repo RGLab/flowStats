@@ -1,19 +1,19 @@
 Package: flowStats
 Type: Package
 Title: Statistical methods for the analysis of flow cytometry data
-Version: 3.43.4
+Version: 3.43.5
 Author: Florian Hahne, Nishant Gopalakrishnan, Alireza Hadj Khodabakhshi,
         Chao-Jen Wong, Kyongryun Lee
 Maintainer: Greg Finak <gfinak@fhcrc.org> and Mike Jiang <wjiang2@fhcrc.org>
 Description: Methods and functionality to analyse flow data that is beyond the
              basic infrastructure provided by the flowCore package.
-Depends: R (>= 2.10), flowCore (>= 1.51.6), cluster, flowWorkspace, ncdfFlow(>= 2.19.5)
 Suggests: 
     xtable,
-    testthat
+    testthat,
+    openCyto
 Encoding: UTF-8
-Imports: BiocGenerics, MASS, flowViz, fda (>= 2.2.6), Biobase, methods, grDevices,
-	 graphics, stats, utils, KernSmooth, lattice,ks, RColorBrewer
+Imports: BiocGenerics, MASS, flowCore (>= 1.51.6), flowWorkspace, ncdfFlow(>= 2.19.5), flowViz, fda (>= 2.2.6), 
+   Biobase, methods, grDevices, graphics, stats, cluster, utils, KernSmooth, lattice, ks, RColorBrewer
 Enhances: RBGL,graph
 License: Artistic-2.0
 Lazyload: yes

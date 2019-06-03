@@ -55,7 +55,7 @@ autoGate(x, \dots, scale = 2.5)
 } 
 
 \examples{
-
+library(flowCore)
 data(GvHD)
 flowStats:::autoGate(GvHD[10:15], "FSC-H"=c(100,500), "SSC-H"=c(0, 400))
 

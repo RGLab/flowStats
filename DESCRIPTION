@@ -9,7 +9,8 @@ Description: Methods and functionality to analyse flow data that is beyond the
              basic infrastructure provided by the flowCore package.
 Suggests: 
     xtable,
-    testthat
+    testthat,
+    openCyto
 Encoding: UTF-8
 Imports: BiocGenerics, MASS, flowCore (>= 1.51.6), flowWorkspace, ncdfFlow(>= 2.19.5), flowViz, fda (>= 2.2.6), 
    Biobase, methods, grDevices, graphics, stats, cluster, utils, KernSmooth, lattice, ks, RColorBrewer

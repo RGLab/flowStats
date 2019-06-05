@@ -124,7 +124,7 @@ require(ggridges)
 require(gridExtra)
 pars <- colnames(gs)[c(3,4,5,7)]
 
-print(densityplot(PatientID~., gs_pop_get_data(gs, "TCells"), channels=pars, 
+print(densityplot(PatientID~., cytoset_to_flowSet(gs_pop_get_data(gs, "TCells")), channels=pars, 
                   groups=GroupID, scales=list(y=list(draw=F)), 
                   filter=lapply(pars, curv1Filter), layout=c(4,1)))
 @ 
@@ -184,7 +184,7 @@ gs <- normalize(gs, populations=c("CD4+CD8+", "CD4+CD8-", "CD4-CD8+", "CD4-CD8-"
 The normalization aligns the peaks in the selected channels across all samples.
 
 <<variation_norm, fig=TRUE>>==
-print(densityplot(PatientID~., gs_pop_get_data(gs, "TCells"), channels=pars, 
+print(densityplot(PatientID~., cytoset_to_flowSet(gs_pop_get_data(gs, "TCells")), channels=pars, 
                   groups=GroupID, scales=list(y=list(draw=F)), 
                   filter=lapply(pars, curv1Filter), layout=c(4,1)))
 @
@@ -213,7 +213,7 @@ gs_pop_add(gs, CD69rg, parent="CD4+CD8-")
 recompute(gs)
 @
 <<rangeGatePlot, keep.source=TRUE, fig=TRUE>>=
-print(densityplot(PatientID ~ CD69, gs_pop_get_data(gs, "CD4+CD8-"), main = "CD4+",
+print(densityplot(PatientID ~ CD69, cytoset_to_flowSet(gs_pop_get_data(gs, "CD4+CD8-")), main = "CD4+",
             groups=GroupID, refline=CD69rg@min))
 @
 
@@ -225,7 +225,7 @@ gs <- normalize(gs, populations=c("CD4+CD8-CD69"),
 @
 
 <<rangeGate_norm_plot, fig=TRUE>>=
-print(densityplot(PatientID ~ CD69, gs_pop_get_data(gs, "CD4+CD8-"), main = "CD4+",
+print(densityplot(PatientID ~ CD69, cytoset_to_flowSet(gs_pop_get_data(gs, "CD4+CD8-")), main = "CD4+",
             groups=GroupID, refline=CD69rg@min))
 @
 

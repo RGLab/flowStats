@@ -80,7 +80,7 @@ NULL, n = 201, indices=FALSE)
 
 
 \examples{
-
+library(flowCore)
 data(GvHD)
 tmp <- list("FSC-H"=filter(GvHD[1:3], curv1Filter("FSC-H")))
 res <-  flowStats:::landmarkMatrix(GvHD[1:3], tmp, "FSC-H")

@@ -150,6 +150,7 @@ filterId="defaultCurv1Filter")
 \examples{
 
 library(flowStats)
+library(flowCore)
 ## Loading example data
 dat <- read.FCS(system.file("extdata","0877408774.B08",
 package="flowCore"))

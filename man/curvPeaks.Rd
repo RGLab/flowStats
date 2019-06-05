@@ -64,7 +64,7 @@ curvPeaks(x, dat, borderQuant = 0.01, n = 201, from, to, densities=NULL)
 \seealso{ \code{\link{landmarkMatrix}} }
 
 \examples{
-
+library(flowCore)
 data(GvHD)
 tmp <- filter(GvHD[[10]], curv1Filter("FSC-H"))
 res <-  flowStats:::curvPeaks(tmp, exprs(GvHD[[10]])[, "FSC-H"])

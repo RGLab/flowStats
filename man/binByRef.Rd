@@ -35,7 +35,7 @@ binByRef(binRes, data)
 \seealso{ \code{\link{plotBins}}, \code{\link{proBin}}}
 
 \examples{
-
+library(flowCore)
 data(GvHD)
 resCtrl<-proBin(GvHD[[1]],200)  
 resSample<-binByRef(resCtrl,GvHD[[2]])

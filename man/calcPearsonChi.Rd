@@ -36,7 +36,7 @@ calcPearsonChi(ctrlRes,sampRes)
 \seealso{ \code{\link{proBin}}, \code{\link{calcPBChiSquare}}}
 
 \examples{
-
+library(flowCore)
 data(GvHD)
 # flow frame 1 is treated as  control dataset and used to generate bins
 resCtrl<-proBin(GvHD[[1]][,c("FSC-H","SSC-H","Time")],200)  

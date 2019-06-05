@@ -87,6 +87,7 @@ gpaSet(x, params, register="backgating", bgChannels=NULL,
 \author{C. J. Wong \email{cwon2@fhcrc.org}}
 
 \examples{
+library(flowCore)
 ## Example 1: calling up gpaSet directly
 data(ITN)
 data(BackGating)
@@ -113,6 +114,7 @@ if(require(flowViz)) {
 attr(s, "GPA")
 
 \dontrun{
+library(flowCore)
 ## Example 2: using work flow and normalization objects
 data(ITN)
 ITN <- ITN[1:8, ]

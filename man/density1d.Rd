@@ -133,7 +133,7 @@ density1d(x, stain, alpha = "min", sd = 2, plot = FALSE, borderQuant =
 }
   
 \examples{
-
+library(flowCore)
 data(GvHD)
 dat <- GvHD[pData(GvHD)$Patient==10]
 dat <- transform(dat, "FL4-H"=asinh(`FL4-H`), "FL3-H"=asinh(`FL3-H`))

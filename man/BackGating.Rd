@@ -13,6 +13,7 @@
 
 \source{ Results from executing the following code:
   
+  library(flowCore)
   data(ITN)
   
   flowStats:::backGating(ITN, xy=c("FSC", "SSC"),

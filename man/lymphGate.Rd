@@ -143,6 +143,7 @@ lymphGate(x, channels, preselection=NULL, scale=2.5,  bwFac=1.3,
 
 \examples{
 
+library(flowCore)
 data(GvHD)
 dat <- GvHD[pData(GvHD)$Patient==10]
 dat <- transform(dat, "FL4-H"=asinh(`FL4-H`))

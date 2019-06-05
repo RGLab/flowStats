@@ -49,7 +49,7 @@ plotBins(binRes,data,channels,title,residuals,shadeFactor)
  \code{\link{calcPBChiSquare}}}
 
 \examples{
-
+library(flowCore)
 data(GvHD)
 # flow frame 1 is treated as  control dataset and used to generate bins
 resCtrl<-proBin(GvHD[[1]],200,channels=c("FSC-H","SSC-H"))

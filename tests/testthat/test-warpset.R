@@ -2,6 +2,7 @@ context("test warpset")
 
 test_that("normalize", {
   #prepare data
+  library(flowCore)
   data(ITN)
   library(ncdfFlow)
   library(openCyto)

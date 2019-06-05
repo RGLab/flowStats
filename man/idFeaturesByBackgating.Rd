@@ -63,6 +63,7 @@ idFeaturesByBackgating(bg, nDim, thres.sigma=2.5, lambda=0.1,
 
 \examples{
 \dontrun{
+library(flowCore)
 data(ITN)
 wf <- workFlow(ITN)
 tl <- transformList(colnames(ITN)[3:7], asinh, transformationId="asinh")

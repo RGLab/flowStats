@@ -54,6 +54,7 @@ functionality provided by \Rpackage{flowWorkspace}, primarily through
 
 We start by loading the \Robject{ITN} data set
 <<loadGvHD>>=
+library(flowCore)
 library(flowStats)
 library(flowWorkspace)
 library(ggcyto)

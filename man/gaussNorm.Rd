@@ -80,7 +80,7 @@
 \author{ Alireza Hadj Khodabakhshi }
 
 \examples{
-
+library(flowCore)
 data(ITN)
 dat <- transform(ITN, "CD4"=asinh(CD4), "CD3"=asinh(CD3), "CD8"=asinh(CD8))
 lg <- lymphGate(dat, channels=c("CD3", "SSC"), preselection="CD4",scale=1.5)

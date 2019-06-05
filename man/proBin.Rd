@@ -98,7 +98,7 @@ proBin(m, minEvents=500,channels=NULL)
 \seealso{ \code{\link{plotBins}}, \code{\link{binByRef}}}
 
 \examples{
-
+library(flowCore)
 data(GvHD)
 res<-proBin(GvHD[[1]],200,channels=c("FSC-H","SSC-H","FL1-H","FL4-H")) 
 }

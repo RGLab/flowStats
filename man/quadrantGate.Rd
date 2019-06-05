@@ -83,6 +83,7 @@ quadrantGate(x, stains, alpha=c("min", "min"), sd=c(2, 2), plot=FALSE,
 
 \examples{
 \dontrun{
+library(flowCore)
 data(GvHD)
 dat <- GvHD[pData(GvHD)$Patient==10]
 dat <- transform(dat, "FL4-H"=asinh(`FL4-H`), "FL2-H"=asinh(`FL2-H`))

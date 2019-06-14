@@ -35,7 +35,7 @@ test_that("spillover: Match columns using ordered", {
 })
 
 test_that("spillover: Match columns using intensity", {
-  ref_file <- system.file("extdata", "compdata", "compref2", package="flowCore")
+  ref_file <- system.file("extdata", "compdata", "compref1", package="flowCore")
   comp_ref <- as.matrix(read.table(ref_file, check.names = FALSE))
   comp <- spillover(controls, unstained = "UNSTAINED", fsc="FSC-H", ssc="SSC-H", patt = "-H", stain_match="intensity")
   expect_equal(colnames(comp), colnames(comp_ref))

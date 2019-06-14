@@ -103,6 +103,7 @@ is the recommended way.
 }
 
 \examples{
+
 library(flowCore)
 ## Loading example data
 dat <- read.FCS(system.file("extdata","0877408774.B08",

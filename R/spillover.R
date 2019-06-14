@@ -209,10 +209,12 @@ setMethod("spillover",
                 # Just bump-down the channel_order to account for
                 # the removal of the unstained row. 
                 channel_order <- channel_order - (channel_order > unstained)
-                # Then reverse any shuffling so the rows are in the same
-                # order as the channels for symmetry
-                inten <- inten[order(channel_order),]
               }
+              
+              # Then reverse any shuffling so the rows are in the same
+              # order as the channels for symmetry
+              inten <- inten[order(channel_order),]
+              
               rownames(inten) <- colnames(inten)
               inten
             }

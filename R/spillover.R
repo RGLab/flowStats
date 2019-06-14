@@ -107,14 +107,13 @@ setMethod("spillover",
               
               ## We often only want spillover for a subset of the columns
               allcols <- colnames(x)
+              cols <- allcols[-c(fsc,ssc)]
               cols <- if (is.null(patt)) {
-                allcols
+                cols
               } else {
-                grep(patt, allcols, value = TRUE)
+                grep(patt, cols, value = TRUE)
               }
               
-              ## Ignore these guys if they somehow got into cols.
-              cols <- cols[-c(fsc,ssc)]
               
               ## There has got to be a better way of doing this...
               if (!is.numeric(unstained)) {

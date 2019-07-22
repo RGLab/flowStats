@@ -59,6 +59,8 @@
 #' have already been matched by spillover_match. This will override the
 #' values of unstained and stain_match with unstained = "unstained" and
 #' stain_match = "regexpr".
+#' @param exact_match a \code{logical} specifying if we should use "regex" or "exact match" to match column names. 
+#' The spillover_ng will pass exact_match and "regexpr" method will be over-ridden.
 #' 
 #' @return A matrix for each of the parameters
 #' @author B. Ellis, J. Wagner
@@ -73,8 +75,8 @@ setMethod("spillover",
           definition = function(x, unstained = NULL, fsc = "FSC-A",
                                 ssc = "SSC-A", patt = NULL, method = "median",
                                 stain_match = c("intensity", "ordered", "regexpr"),
-                                useNormFilt = FALSE, prematched = FALSE) {
-            if(prematched){
+                                useNormFilt = FALSE, prematched = FALSE, exact_match = FALSE) {
+            if (prematched) {
               unstained = "unstained"
               stain_match <- "regexpr"
             }
@@ -165,10 +167,14 @@ setMethod("spillover",
               } else if (stain_match == "ordered") {
                 channel_order <- seq_along(sampleNames(x))[-unstained]
               } else if (stain_match == "regexpr") {
+                if (exact_match) {
+                  channel_order <- sapply(cols, function(y)which(y == sampleNames(x)))
+                } else {
                 channel_order <- sapply(cols, grep, x = sampleNames(x), fixed = TRUE)
+                }
                 # Clip out those channels that do not match to a name
                 matched <- channel_order[sapply(channel_order, length) != 0]
-                if(anyDuplicated(matched)) {
+                if (anyDuplicated(matched)) {
                   stop("Multiple stains match to a common compensation-control name",
                        call. = FALSE)
                 }
@@ -339,16 +345,16 @@ setMethod("spillover_match",
 setMethod("spillover_match",
           signature = signature(x = "missing"),
           definition = function(x, fsc = "FSC-A", ssc = "SSC-A", matchfile, path){
-            if(missing(path)){
+            if (missing(path)) {
               stop("If no flowSet is provided, a path must be provided to the control FCS files", call. = FALSE)
             }
             match <- read.csv(matchfile, colClasses = "character")  
             # By default, this will give the file names to the flowSet's sample names,
             # which is what we want
-            x <- read.flowSet(files=match$filename, path=path)
-            spillmat <- spillover_match(x, path=path, 
-                                        fsc=fsc, ssc=ssc, 
-                                        matchfile=matchfile)
+            x <- read.flowSet(files = match$filename, path = path)
+            spillmat <- spillover_match(x, path = path, 
+                                        fsc = fsc, ssc = ssc, 
+                                        matchfile = matchfile)
           })
 
 ## ================================
@@ -451,7 +457,7 @@ setMethod("spillover_ng",
             unstained <- match("unstained", sampleNames(matched))
             
             #channel_order <- sapply(cols, grep, x = sampleNames(matched), fixed = TRUE)
-            channel_order <- sapply(cols, function(x)which(x==sampleNames(matched)))
+            channel_order <- sapply(cols, function(x)which(x == sampleNames(matched)))
 
             if (pregate) {
               if (plot) {
@@ -492,7 +498,7 @@ setMethod("spillover_ng",
             }
             
             spillmat <- spillover(matched, fsc = fsc, ssc = ssc, method = method,
-                                  useNormFilt=useNormFilt, patt = patt, prematched = TRUE)
+                                  useNormFilt = useNormFilt, patt = patt, prematched = TRUE, exact_match = TRUE)
             spillmat
           })
 

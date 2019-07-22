@@ -170,7 +170,7 @@ setMethod("spillover",
                 if (exact_match) {
                   channel_order <- sapply(cols, function(y)which(y == sampleNames(x)))
                 } else {
-                channel_order <- sapply(cols, grep, x = sampleNames(x), fixed = TRUE)
+                  channel_order <- sapply(cols, grep, x = sampleNames(x), fixed = TRUE)
                 }
                 # Clip out those channels that do not match to a name
                 matched <- channel_order[sapply(channel_order, length) != 0]

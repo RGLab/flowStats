@@ -470,9 +470,14 @@ setMethod("spillover_ng",
                 channel_name <- cols[which(channel_order == channel_i)]
                 
                 # Applies rangeGate to select positive population
-                gate_filter <- rangeGate(flow_frame, stain = channel_name,
+                gate_filter <- try(rangeGate(flow_frame, stain = channel_name,
                                          inBetween = TRUE, borderQuant = 0,
-                                         absolute = FALSE, peakNr = 2)
+                                         absolute = FALSE, peakNr = 2), silent = TRUE)
+                if(inherits(gate_filter,"try-error")){
+                  gate_filter <- try(rangeGate(flow_frame, stain = channel_name,
+                                               inBetween = TRUE, borderQuant = 1,
+                                               absolute = FALSE, peakNr = 2), silent = TRUE)
+                }
                 if (plot) {
                   # Plots a kernel density for the current channel
                   plot(density(exprs(flow_frame)[, channel_name]),

@@ -450,8 +450,9 @@ setMethod("spillover_ng",
             cols <- cols[!(cols %in% c(fsc, ssc))]
             unstained <- match("unstained", sampleNames(matched))
             
-            channel_order <- sapply(cols, grep, x = sampleNames(matched), fixed = TRUE)
-            
+            #channel_order <- sapply(cols, grep, x = sampleNames(matched), fixed = TRUE)
+            sapply(cols, function(x)which(x==sampleNames(matched)))
+
             if (pregate) {
               if (plot) {
                 oask <- devAskNewPage(TRUE)

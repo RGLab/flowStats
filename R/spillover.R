@@ -451,7 +451,7 @@ setMethod("spillover_ng",
             unstained <- match("unstained", sampleNames(matched))
             
             #channel_order <- sapply(cols, grep, x = sampleNames(matched), fixed = TRUE)
-            sapply(cols, function(x)which(x==sampleNames(matched)))
+            channel_order <- sapply(cols, function(x)which(x==sampleNames(matched)))
 
             if (pregate) {
               if (plot) {

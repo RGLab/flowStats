@@ -13,7 +13,7 @@ Suggests:
     openCyto
 Encoding: UTF-8
 Imports: BiocGenerics, MASS, flowCore (>= 1.51.6), flowWorkspace, ncdfFlow(>= 2.19.5), flowViz, fda (>= 2.2.6), 
-   Biobase, methods, grDevices, graphics, stats, cluster, utils, KernSmooth, lattice, ks, RColorBrewer
+   Biobase, methods, grDevices, graphics, stats, cluster, utils, KernSmooth, lattice, ks, RColorBrewer, rrcov
 Enhances: RBGL,graph
 License: Artistic-2.0
 Lazyload: yes

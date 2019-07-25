@@ -598,6 +598,7 @@ norm2Filter <- function(x, y, method="covMcd", scale.factor=1,
 ## ellipsoidGates with the addition of the scalefac argument, that controls
 ## the cutoff in the Mahalanobis distance.
 ## ---------------------------------------------------------------------------
+#' @importFrom rrcov covMcd
 setMethod("%in%",
           signature=signature("flowFrame",
                               table="norm2Filter"),

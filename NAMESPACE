@@ -23,6 +23,7 @@ importFrom(Biobase, listLen)
 importFrom("ncdfFlow","updateIndices")
 importFrom("ncdfFlow","clone.ncdfFlowSet")
 importFrom(KernSmooth, bkde2D)
+importFrom("rrcov", "CovMcd")
 
 importFrom(MASS, huber, hubers, rlm, cov.rob)
 

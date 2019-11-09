@@ -1,6 +1,10 @@
+warpSet <- function(x, ...)UseMethod("warpSet")
+warpSet.default <- function(x, ...){
+  stop(class(x), " is not supported by warpSet!")
+  }
 ## Align data in a flowSet by estimating high density regions and using this
 ## information as landmarks. This works separately on each parameter.
-warpSetGS <- function(x,node=NULL, ...){
+warpSet.GatingSet <- function(x,node=NULL, ...){
 	#Perform normalization on the subset
 	#return the normalized data
 	if(!inherits(x,"GatingSet"))
@@ -9,310 +13,256 @@ warpSetGS <- function(x,node=NULL, ...){
       data <- gs_pop_get_data(x)
     else
       data <- gs_pop_get_data(x,node);
-#    browser()
-	if(class(data) == "flowSet"){
-		message("Gating Set not gated using netcdf. We'll use the regular warpSet function");
-		
-		warped <- warpSet(x = data,...)
-	}else
-		warped <- warpSetNCDF(x = data,...)
-      return(warped);
+	  warpSet(x = data,...)
 }
-warpSetNCDFLowMem <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
-		peakNr=NULL, clipRange=0.01, nbreaks=11, fres=NULL, bwFac=2,
-		warpFuns=FALSE,target=NULL,chunksize=10,isNew=FALSE,newNcFile=NULL,
-		...)
+warpSet.cytoset <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
+                                peakNr=NULL, clipRange=0.01, nbreaks=11, fres, bwFac=2,
+                                warpFuns=FALSE,target=NULL,chunksize=10,
+                                ...)
 {
-    .Defunct("warpSetNCDF")
-	## Some type-checking first
-	flowCore:::checkClass(x, "flowSet")
-	flowCore:::checkClass(stains, "character")
-	mt <- stains %in% colnames(x)
-	if(!all(mt))
-		stop("Invalid stain(s) not matching the flowSet:\n    ",
-				paste(stains[!mt], collapse=", "))
-	#expData <- as(x, "list")
-	#expData should now be x...
-#	browser()
-	if(isNew){
-		expData<-clone.ncdfFlowSet(x,isNew=TRUE,isEmpty=FALSE,ncdfFile=newNcFile)
-	}else{
-		expData<-x;
-	}
-	samples<-sampleNames(expData)
-	ranges<-vector("list",length(x));
-	names(ranges)<-sampleNames(x)
-	for(i in 1:length(x)){ranges[[i]]<-range(x[[i]])}
-	#ranges <- fsApply(x, range) 
-	if(!is.null(grouping))
-		flowCore:::checkClass(grouping, "character", 1)
-	if(!is.null(subsample))
-	{
-		flowCore:::checkClass(subsample, "numeric", 1)
-		## subsample data set before all density estimation steps
-		#Does Subset clobber anything in a permanent way for an ncdfFlowSet? Check this, otherwise use subsample.
-		x <- Subset(x, sampleFilter(size=subsample))
-	}
-	flowCore:::checkClass(monwrd, "logical", 1)
-	flowCore:::checkClass(bwFac, "numeric", 1)
-	
-	##Chunking for filterResult
-	chunkgroups<-(1:length(expData))%/%chunksize
-	chunksamples<-split(samples,chunkgroups)
-	chunks.size<-table(chunkgroups)
-	nchunks<-length(chunks.size)
-	densY<-vector("list",nchunks)
-	peaksandregions<-vector("list",nchunks)
-	#Goal here is to compute filterResults in chunks, then to compute and register landmarks, which take up MUCH less space.
-	#chunk the data and compute filterResults
-	## find landmarks
-	for(k in 1:nchunks){
-		if(is.null(formals()$fres))
-		{
-			fres<-vector("list",nchunks)
-			#fres <- list()
-			for(p in stains){
-				cat("\rEstimating landmarks for channel", p, " Sample chunk ",k,"...")
-				#fres[[p]] <- filter(x, curv1Filter(p, bwFac=bwFac))
-				fres[[k]][[p]]<-filter(x[chunksamples[[k]]],curv1Filter(p,bwFac))
-			}
-			cat("\n")    
-		}
-		else
-		{
-			if(!is.list(fres[[k]]) || !all(stains %in% names(fres[[k]])))
-				stop("The supplied list of filter results does not match ",
-						"the channels to warp.")
-			if(!all(sapply(fres, is, "filterResult")))
-				stop("The argument 'fres' has to be a list of filterResultLists.")
-			cat("Extracting landmarks from user supplied filterResults\n")
-		}
-		
-		## define some variables
-		nb <- 1001
-		lm <- list()
-		z <- NULL 
-		
-		## iterate over stains
-		eps <- .Machine$double.eps
-		for(p in stains)
-		{
-			## set up fda parameters
-			extend <- 0.15
-			from <- min(sapply(ranges, function(z) z[1,p]-diff(z[,p])*extend), na.rm=TRUE)
-			to <- max(sapply(ranges, function(z) z[2,p]+diff(z[,p])*extend), na.rm=TRUE)
-			wbasis <- create.bspline.basis(rangeval=c(from, to),
-					norder=4, breaks=seq(from, to, len=nbreaks))
-			
-			WfdPar <- fdPar(wbasis, 1, 1e-4)
-			##append to the previously computed density estimates of the last chunk and now all stains
-			densY[[k]][[p]] <- t(fsApply(x[chunksamples[[k]]], function(z){
-								r <- range(z)[,p]
-								z <- exprs(z)
-								z <- z[z[,p]>r[1]+eps & z[,p]<r[2]-eps, p]
-								density(z, from=from, to=to, n=nb, na.rm=TRUE)$y
-							}))
-			argvals <- seq(from, to, len=nb) 
-			##Can't call landmarkMatrix until we have ALL the filterResults.. Need to go into the landmarkMatrix function and factor our the code that deals with filterResults so that we pull out the relevant information chunk by chunk.
-			peaksandregions[[k]][[p]]<-getPeakRegions(x[chunksamples[[k]]],fres[[k]],p,border=clipRange,peakNr=peakNr,densities=densY[[k]][[p]],n=nb)
-			
-			## create matrix of landmarks from curv1Filter peaks.. append to the chunked landmarks.. and all stains.
-			#cat("Registering curves for parameter", p, "...\n")
-			#landmarks[[k]][[p]] <- flowStats:::landmarkMatrix(x[chunksamples[[k]]], fres[[k]], p, border=clipRange, peakNr=peakNr,densities=densY[[k]][[p]], n=nb)
-			fres[[k]][[p]]<-list();gc();
-		}
-	}
-	## create matrix of landmarks from peaks.. append to the chunked landmarks.. and all stains.
-	
-	dns<-list()
-	landmarks<-list()
-	for(p in stains){
-		dns[[p]]<-do.call(cbind,lapply(densY,function(q)q[[p]]))
-		cat("Registering curves for parameter", p, "...\n")
-		landmarks[[p]] <- landmarkMatrixWithoutFilterResult(x, peaksandregions, p, border=clipRange, peakNr=peakNr)
-	}
-	#TODO check all landmark matrices to ensure they are valid.
-	densY<-dns;
-	rm(dns);gc()
-	
-	for(p in stains){
-		#TODO this should be computed outside the loop once we have all the density estimates.
-		fdobj   <- Data2fd(argvals,densY[[p]], wbasis)
-#                           argnames = c("x", "samples", "density"))
-		densY[[p]]<-NULL;gc();
-		## check if we remove signal between groups
-		sig <- 0.05
-		if(!is.null(grouping)){
-			if(!grouping %in% names(pData(x)))
-				stop("'", grouping, "' is not a phenoData variable.")
-			grps <- as.factor(pData(x)[,grouping])
-			anv <- numeric(ncol(landmarks[[p]]))
-			for(i in seq_len(ncol(landmarks[[p]])))
-				anv[i] <- anova(lm(landmarks[[p]][,i] ~ grps))$Pr[1]
-			if(any(anv < sig))
-				message("Within-group variances are smaller than ",
-						"across-group variances for stain ", p,
-						".\nWarping might have removed signal!")
-		}
-		## fill NAs with column medians
-		regions <- attr(landmarks[[p]], "regions")
-		dists <- attr(landmarks[[p]], "cdists") 
-		attr(landmarks[[p]], "regions") <- NULL
-		attr(landmarks[[p]], "cdists") <- NULL
-		hasPeak <- !is.na(landmarks[[p]])
-		for(n in 1:ncol(landmarks[[p]]))
-		{
-			nar <- is.na(landmarks[[p]][,n])
-			landmarks[[p]][nar,n] <- mean(landmarks[[p]][,n], na.rm=TRUE)
-			reg<-sapply(regions[!nar],function(r) if(is.null(dim(r))) r else r[n,])
-			if(class(reg)=="list"){
-				reg<-do.call(cbind,reg)
-			}
-			m <- matrix(apply(reg,1, mean, na.rm=TRUE), ncol=2)
-			for(i in names(which(nar)))
-				regions[[i]][n,] <- m
-		}
-		
-		## register the densities
-		if(ncol(landmarks[[p]])==1){ ## only one peak: offset
-			if(is.null(target)){
-				offsets <- landmarks[[p]]-median(landmarks[[p]])
-				names(offsets)<-sampleNames(expData)
-			}else{				
-				offsets<-landmarks[[p]]-landmarks[[p]][sampleNames(expData)%in%target]
-				names(offsets)<-sampleNames(expData)
-			}
-			funs <- funsBack <- vector("list", length(samples))
-			names(funs)<-samples
-			names(funsBack)<-samples
-			for(j in seq_along(funs)){
-				funs[[samples[[j]]]] <- function(x) x - z
-				e1 <- new.env(hash=TRUE)
-				e1$z <- offsets[samples[[j]]]
-				environment(funs[[samples[[j]]]]) <- e1
-				funsBack[[samples[[j]]]] <- function(x) x + z
-				e2 <- new.env(hash=TRUE)
-				e2$z <- offsets[samples[[j]]]
-				environment(funsBack[[samples[[j]]]]) <- e2
-			}
-		}else{ ## multiple peaks: warping
-			if(is.null(target)){
-				cat("Estimating warping functions\n")
-				capture.output(regDens <- landmarkreg(fdobj, landmarks[[p]], WfdPar=WfdPar, monwrd=monwrd,...))  
-			}else{
-				cat("Estimating warping functions\n")
-				capture.output(regDens <- landmarkreg(fdobj, landmarks[[p]],x0marks= apply(landmarks[[p]],2,jitter)[rownames(landmarks)%in%target,], WfdPar=WfdPar, monwrd=monwrd,...)) 
-			}
-			warpfdobj <- regDens$warpfd
-			warpedX <- eval.fd(warpfdobj, argvals)
-			warpedX[1,] <- head(argvals,1)
-			warpedX[nrow(warpedX),] <- tail(argvals,1)
-			## compute warping functions
-			## funs <-  apply(warpedX, 2, function(y) approxfun(argvals, y))
-			funs <-  apply(warpedX, 2, approxfun, argvals)
-			funsBack <- apply(warpedX, 2, function(a, b) approxfun(b, a), argvals)
-		}
-		names(funs) <- names(funsBack) <- sampleNames(x)
-		if(!warpFuns)
-		{
-			warpedLandmarks <- landmarks[[p]]
-			leftBoard <- rightBoard <- vector("list",length(funs))
-			#chunkleftBoard<-chunkrightBoard<-rep(list(length(funs)),max(1:length(funs)%/%chunksize)+1)
-			newRange <- c(Inf, -Inf)
-			## transform the raw data using the warping functions
-			##TODO there may be some speed up to be gained here by using chunks.
-			chunkgroups<-(1:length(funs))%/%chunksize
-			chunkfuns<-split(funs,chunkgroups)
-			chunksamples<-split(samples,chunkgroups)
-			chunkranges<-split(ranges,chunkgroups)
-			chunkleftBoard<-split(leftBoard,chunkgroups)
-			chunkrightBoard<-split(rightBoard,chunkgroups)
-			chunkindices<-split(1:length(funs),chunkgroups)
-			for(k in seq_along(chunkfuns)){
-				#read in the data first for the current chunk
-				if(exists("thisDat")){
-					rm(thisDat)
-					gc(chunksize)
-				}
-				thisDat <- unlist(fsApply((expData[chunksamples[[k]]]),function(z)list(exprs(z)[,,drop=FALSE])),recursive=FALSE)
-				#thisDat is a list
-				newDat<-vector("list",chunksize)
-				message("normalizing chunk ",k," of ",length(chunkfuns));
-				for(i in seq_along(chunkfuns[[k]])){
-					#thisDat <- try(exprs(expData[[samples[i]]][,p]))
-					lb <- thisDat[[i]][,p] < chunkranges[[k]][[i]][1,p]+eps
-					lb[is.na(lb)] <- TRUE
-					chunkleftBoard[[k]][[i]] <- lb
-					rb <- thisDat[[i]][,p] > chunkranges[[k]][[i]][2,p]-eps
-					rb[is.na(rb)] <- TRUE   
-					chunkrightBoard[[k]][[i]] <- rb
-					#Don't exclude things beyond the range 
-					#sel <- leftBoard[[i]] | rightBoard[[i]]
-					sel<-rep(FALSE,length(thisDat[[i]][,p]))
-					newDat[[i]] <- as.matrix(chunkfuns[[k]][[chunksamples[[k]][[i]]]](thisDat[[i]][!sel,p]))
-					newDat[[i]][is.na(newDat[[i]])] <- thisDat[[i]][!sel,p][is.na(newDat[[i]])]
-					#exprs(expData[[i]])[!sel,p] <- newDat
-					#ind1<-ncdfFlow:::getIndices(expData,chunksamples[[k]][i])
-					#ncdfFlow::updateIndices(expData,chunksamples[[k]][i],z=NA)
-					#slice<-exprs(expData[[samples[i]]])
-					thisDat[[i]][,p]<-newDat[[i]]
-					#slice[ind1,][!sel,p]<-newDat
-					
-					warpedLandmarks[chunkindices[[k]][i], ] <- chunkfuns[[k]][[chunksamples[[k]][[i]]]](landmarks[[p]][chunkindices[[k]][i],])
-					newRange[1] <- chunkranges[[k]][[i]][,p][1]
-					newRange[2] <- chunkranges[[k]][[i]][,p][2]
-					#this doesn't work for ncdf flow sets in this scenario since it negatively impacts plotting
-					#newRange[1] <- min(newRange[1], min(exprs(expData[[samples[i]]])[,p], na.rm=TRUE))
-					#newRange[2] <- max(newRange[2], max(exprs(expData[[samples[i]]])[,p], na.rm=TRUE))
-				}
-				#Writing after normalization
-				cat("Writing to disk..\n");
-				for(i in seq_along(chunkfuns[[k]])){
-#					browser()
-					curSampleName<-chunksamples[[k]][i]
-					print(i)
-					print(curSampleName)
-					exprs(expData[[curSampleName]])<-thisDat[[i]]
-					gc()
-				}
-				## make sure that edge envents are set to the extreme values
-				## of the warped data range and update the parameters slot
-				## accordingly
-				for(i in seq_along(chunkfuns[[k]])){
-					#samples<-names(chunkfuns[[k]])
-					minSel <- chunkleftBoard[[k]][[i]]
-					maxSel <- chunkrightBoard[[k]][[i]]
-					
-					ip <- match(p, pData(parameters(expData[[chunksamples[[k]][i]]]))$name)
-					tmp <- parameters(expData[[chunksamples[[k]][i]]])
-					oldRanges <- unlist(range(expData[[chunksamples[[k]][i]]])[,p])
-					pData(tmp)[ip, c("minRange", "maxRange")] <- c(min(oldRanges[1], newRange[1]),
-							max(oldRanges[2], newRange[2]))
-					expData[[chunksamples[[k]][i]]]@parameters <- tmp
-					gc()
-				}
-				
-			}
-			lm[[p]] <- list(prior=landmarks[[p]], warped=warpedLandmarks,
-					warpFun=funs, regions=regions, dists=dists,
-					hasPeak=hasPeak, revWarpFuns=funsBack)
-		}
-	}
-	if(warpFuns)
-		return(funs)
-	#regSet <- as(expData, "flowSet")
-	#regSet<-expData
-	phenoData(expData) <- phenoData(x)
-	expDat <- expData[sampleNames(x)]
-	attr(expData, "warping") <- lm
-	rm(thisDat);rm(newDat);rm(x);
-	gc()
-	expData
+  
+  ## Some type-checking first
+  flowCore:::checkClass(stains, "character")
+  mt <- stains %in% colnames(x)
+  if(!all(mt))
+    stop("Invalid stain(s) not matching the flowSet:\n    ",
+         paste(stains[!mt], collapse=", "))
+  
+  
+  expData <- x;
+  samples <- sampleNames(expData)
+  ranges <- lapply(samples, function(sn)range(x[[sn, use.exprs = FALSE]]))
+  
+  if(!is.null(grouping))
+    flowCore:::checkClass(grouping, "character", 1)
+  if(!is.null(subsample))
+  {
+    flowCore:::checkClass(subsample, "numeric", 1)
+    ## subsample data set before all density estimation steps
+    #Does Subset clobber anything in a permanent way for an ncdfFlowSet? Check this, otherwise use subsample.
+    x <- Subset(x, sampleFilter(size=subsample))
+  }
+  flowCore:::checkClass(monwrd, "logical", 1)
+  flowCore:::checkClass(bwFac, "numeric", 1)
+  
+  ## find landmarks
+  if(missing(fres))
+  {
+    fres <- list()
+    for(p in stains)
+    {
+      cat("\rEstimating landmarks for channel", p, "...")
+      fres[[p]] <- filter(x[,p], curv1Filter(p, bwFac=bwFac))
+    }
+    cat("\n")    
+  }
+  else
+  {
+    if(!is.list(fres) || !all(stains %in% names(fres)))
+      stop("The supplied list of filter results does not match ",
+           "the channels to warp.")
+    if(!all(sapply(fres, is, "filterResult")))
+      stop("The argument 'fres' has to be a list of filterResultLists.")
+    cat("Extracting landmarks from user supplied filterResults\n")
+  }
+  
+  ## define some variables
+  nb <- 1001
+  lm <- list()
+  z <- NULL 
+  
+  ## iterate over stains
+  eps <- .Machine$double.eps
+  for(p in stains)
+  {
+    thisX <- x[,p]
+    ## set up fda parameters
+    extend <- 0.15
+    from <- min(sapply(ranges, function(z) z[1,p]-diff(z[,p])*extend), na.rm=TRUE)
+    to <- max(sapply(ranges, function(z) z[2,p]+diff(z[,p])*extend), na.rm=TRUE)
+    wbasis <- create.bspline.basis(rangeval=c(from, to),
+                                   norder=4, breaks=seq(from, to, len=nbreaks))
+    WfdPar <- fdPar(wbasis, 1, 1e-4)
+    densY <- t(fsApply(thisX, function(z){
+      r <- range(z)[,p]
+      z <- exprs(z)
+      z <- z[z[,p]>r[1]+eps & z[,p]<r[2]-eps, p]
+      density(z, from=from, to=to, n=nb, na.rm=TRUE)$y
+    }))
+    argvals <- seq(from, to, len=nb) 
+    fdobj   <- Data2fd(argvals,densY, wbasis )
+    
+    ## create matrix of landmarks from curv1Filter peaks
+    cat("Registering curves for parameter", p, "...\n")
+    landmarks <- landmarkMatrix(thisX, fres, p, border=clipRange, peakNr=peakNr
+                                , densities=densY, n=nb)
+    if(inherits(landmarks,"logical")){
+      if(landmarks==FALSE){
+        #TODO return the unnormalized data
+        message("Can't detect any significant landmarks. No normalization performed.")
+        return(x);
+      }
+    }
+    
+    ## check if we remove signal between groups
+    sig <- 0.05
+    if(!is.null(grouping)){
+      if(!grouping %in% names(pData(thisX)))
+        stop("'", grouping, "' is not a phenoData variable.")
+      grps <- as.factor(pData(thisX)[,grouping])
+      anv <- numeric(ncol(landmarks))
+      for(i in seq_len(ncol(landmarks)))
+        anv[i] <- anova(lm(landmarks[,i] ~ grps))$Pr[1]
+      if(any(anv < sig))
+        warning("Within-group variances are smaller than ",
+                "across-group variances for stain ", p,
+                ".\nWarping might have removed signal!")
+    }
+    ## fill NAs with column medians
+    regions <- attr(landmarks, "regions")
+    dists <- attr(landmarks, "cdists") 
+    attr(landmarks, "regions") <- NULL
+    attr(landmarks, "cdists") <- NULL
+    hasPeak <- !is.na(landmarks)
+    
+    for(n in 1:ncol(landmarks))
+    {
+      nar <- is.na(landmarks[,n])
+      landmarks[nar,n] <- mean(landmarks[,n], na.rm=TRUE)
+      reg<-sapply(regions[!nar],function(r) if(is.null(dim(r))) r else r[n,])
+      if(class(reg)=="list"){
+        reg<-do.call(cbind,reg)
+      }
+      m <- matrix(apply(reg,1, mean, na.rm=TRUE), ncol=2)
+      for(i in names(which(nar)))
+        regions[[i]][n,] <- m
+    }
+    
+    ## register the densities
+    if(ncol(landmarks)==1){ ## only one peak: offset
+      if(is.null(target)){
+        offsets <- landmarks-median(landmarks)
+        names(offsets)<-sampleNames(expData)
+      }else{				
+        offsets<-landmarks-landmarks[sampleNames(expData)%in%target]
+        names(offsets)<-sampleNames(expData)
+      }
+      funs <- funsBack <- vector("list", length(landmarks))
+      names(funs)<-samples
+      names(funsBack)<-samples
+      for(j in seq_along(funs)){
+        funs[[samples[[j]]]] <- function(x) x - z
+        e1 <- new.env(hash=TRUE)
+        e1$z <- offsets[samples[[j]]]
+        environment(funs[[samples[[j]]]]) <- e1
+        funsBack[[samples[[j]]]] <- function(x) x + z
+        e2 <- new.env(hash=TRUE)
+        e2$z <- offsets[samples[[j]]]
+        environment(funsBack[[samples[[j]]]]) <- e2
+      }
+    }else{ ## multiple peaks: warping
+      if(is.null(target)){
+        capture.output(regDens <- landmarkreg(fdobj, landmarks, WfdPar=WfdPar, monwrd=monwrd,...))  
+      }else{
+        capture.output(regDens <- landmarkreg(fdobj, landmarks,x0marks= apply(landmarks,2,jitter)[rownames(landmarks)%in%target,], WfdPar=WfdPar, monwrd=monwrd,...)) 
+      }
+      warpfdobj <- regDens$warpfd
+      warpedX <- eval.fd(warpfdobj, argvals)
+      warpedX[1,] <- head(argvals,1)
+      warpedX[nrow(warpedX),] <- tail(argvals,1)
+      ## compute warping functions
+      ## funs <-  apply(warpedX, 2, function(y) approxfun(argvals, y))
+      funs <-  apply(warpedX, 2, approxfun, argvals)
+      funsBack <- apply(warpedX, 2, function(a, b) approxfun(b, a), argvals)
+    }
+    names(funs) <- names(funsBack) <- sampleNames(thisX)
+    if(!warpFuns)
+    {
+      warpedLandmarks <- landmarks
+      leftBoard <- rightBoard <- vector("list",length(funs))
+      #chunkleftBoard<-chunkrightBoard<-rep(list(length(funs)),max(1:length(funs)%/%chunksize)+1)
+      newRange <- c(Inf, -Inf)
+      ## transform the raw data using the warping functions
+      ##TODO there may be some speed up to be gained here by using chunks.
+      chunkgroups<-(1:length(funs))%/%chunksize
+      chunkfuns<-split(funs,chunkgroups)
+      chunksamples<-split(samples,chunkgroups)
+      chunkranges<-split(ranges,chunkgroups)
+      chunkleftBoard<-split(leftBoard,chunkgroups)
+      chunkrightBoard<-split(rightBoard,chunkgroups)
+      chunkindices<-split(1:length(funs),chunkgroups)
+      for(k in seq_along(chunkfuns)){
+        
+        thisChunksample <- chunksamples[[k]]
+        thisChunkFuns <- chunkfuns[[k]]
+        thisChunkRanges <- chunkranges[[k]]
+        #                thisChunkleftBoard <- chunkleftBoard[[k]]
+        #                thisChunkrightBoard <- chunkrightBoard[[k]]
+        thischunkindices <- chunkindices[[k]]
+        
+        
+        for(i in seq_along(thisChunkFuns)){
+          message("normalizing sample ",(k-1)*chunksize+i);
+          
+          curChunkRange <- thisChunkRanges[[i]]
+          #                    curChunkleftBoard <- thisChunkleftBoard[[i]]
+          #                    curChunkrightBoard <- thisChunkrightBoard[[i]]
+          curChunksample <- thisChunksample[[i]]
+          curChunkFun <- thisChunkFuns[[curChunksample]]
+          curChunkindices <- thischunkindices[[i]]
+          
+          curfr <- get_cytoframe_from_cs(expData, curChunksample)[,p]
+          curData <- exprs(curfr)[,,drop = TRUE]
+          
+          lb <- curData < curChunkRange[1,p]+eps
+          lb[is.na(lb)] <- TRUE
+          #                    curChunkleftBoard <- lb
+          rb <- curData > curChunkRange[2,p]-eps
+          rb[is.na(rb)] <- TRUE   
+          #                    curChunkrightBoard <- rb
+          #we no longer exclude things beyond the range
+          #sel <- leftBoard[[i]] | rightBoard[[i]]
+          #					newDat <- curChunkFun(curData[!sel])
+          #					newDat[is.na(newDat)] <- curData[!sel][is.na(newDat)]
+          newDat <- curChunkFun(curData)
+          naDatInd <- is.na(newDat)
+          newDat[naDatInd] <- curData[naDatInd]	
+          
+          warpedLandmarks[curChunkindices, ] <- curChunkFun(landmarks[curChunkindices,])
+          newRange[1] <- curChunkRange[,p][1]
+          newRange[2] <- curChunkRange[,p][2]
+          
+          
+          
+          #Writing after normalization
+          exprs(curfr)[,p] <- newDat
+          #take advantage of channel-wise write to cdf (instead of entire frame)
+          ## make sure that edge envents are set to the extreme values
+          ## of the warped data range and update the parameters slot
+          ## accordingly
+          tmp <- parameters(curfr)
+          oldRanges <- unlist(range(curfr))
+          ip <- match(p, pData(tmp)[,"name"])
+          pData(parameters(curfr))[ip, c("minRange", "maxRange")] <- c(min(oldRanges[1], newRange[1])
+                                                                        ,max(oldRanges[2], newRange[2])
+                                                                      )
+          
+        }
+        
+      }
+      lm[[p]] <- list(prior=landmarks, warped=warpedLandmarks,
+                      warpFun=funs, regions=regions, dists=dists,
+                      hasPeak=hasPeak, revWarpFuns=funsBack)
+    }
+  }
+  if(warpFuns)
+    return(funs)
+  expData
 }
 
 # When isNew == FALSE, the original cdf is modified 
 # when isNew == TRUE, a new cdf is created
-warpSetNCDF <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
+warpSet.ncdfFlowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 		peakNr=NULL, clipRange=0.01, nbreaks=11, fres, bwFac=2,
 		warpFuns=FALSE,target=NULL,chunksize=10,isNew=FALSE,newNcFile=NULL,
 		...)
@@ -568,7 +518,7 @@ warpSetNCDF <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 	expData
 }
 #
-warpSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
+warpSet.flowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
 		peakNr=NULL, clipRange=0.01, nbreaks=11, fres, bwFac=2,
 		warpFuns=FALSE,target=NULL,
 		...)

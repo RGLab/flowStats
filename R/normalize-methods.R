@@ -131,7 +131,7 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
 .normalizeGatingSet <- function(x,target=NULL
                                     , populations = NULL
                                     , dims
-                                    ,nPeaks=list(),ncdfFile = NULL, minCountThreshold = 500, ...){
+                                    ,nPeaks=list(),h5_dir = tempdir(), minCountThreshold = 500, ...){
 
 #	browser()
 	samples<-sampleNames(x)
@@ -156,74 +156,79 @@ setMethod("normalize",c("GatingSet","missing"),function(data,x="missing",...){
     
 	message("cloning the gatingSet...")
 		
-	x <- gs_clone(x, ncdfFile = ncdfFile)	
+	x <- gs_clone(x, h5_dir = h5_dir)	
 	
 	#for each gate, grab the dimensions and check if they are normalized.
 	#Normalize what hasn't been normalized yet, then do the gating.
 	#Set a target sample by name
 	for(node in populations){
-		
-        
-        if(node!="root")
-          if(!gh_pop_is_bool_gate(x[[1]],node))
-        {
-            
-    		gate <- gh_pop_get_gate(x[[1]],node)
-    		
-    		dims <- intersect(parameters(gate), dims)
-            
-        
-    		if(length(dims)>0)
-    		{
-    			
-    			#Data will be subset at gate g (parent) and normalized on dims of i (child)
-    			#keep a list of normalized and unnormalized channels for each parent gate..
-    			#Check the gate being normalized.. make sure 74 is done correctly
-    			 
-                message("Normalize ", node)
-  					
-  				#Get the PARENT gate (since we'll be gating the data using gate i)
-  				parent <- gs_pop_get_parent(x[[1]], node)
-  				#initialize gate-specific normalization list
-  				if(is.null(parentgates[[as.character(parent)]])){
-  					parentgates[[as.character(parent)]]<-list();
-  					parentgates[[as.character(parent)]]$unnormalized<-unnormalized
-  					parentgates[[as.character(parent)]]$normalized<-NULL
-  				}
-                  #check which dimensions are normalized already
-  				wh.dim<-dims%in%parentgates[[as.character(parent)]]$unnormalized
-  				parentgates[[as.character(parent)]]$normalized<-c(parentgates[[as.character(parent)]]$normalized,dims[wh.dim]);
-  				parentgates[[as.character(parent)]]$unnormalized<-setdiff(parentgates[[as.character(parent)]]$unnormalized,dims)
-  				stains<-dims[wh.dim]
-  #					browser()	
-  				if(length(stains)!=0&&gateHasSufficientData(x, parent, minCountThreshold = minCountThreshold, ...))
-                {
-  					#choose the np element by name
-				  npks <- nPeaks[[node]]
-
-  					result <- warpSetGS(x,stains = stains
-                                              ,node = parent
-                                              ,target = target
-                                              ,peakNr = npks
-                                              ,...)
-  										
-  					if(flowWorkspace::gs_is_h5(x)){
-  						sapply(sampleNames(result),function(s)ncdfFlow::updateIndices(result,s,NA))
-  						gs_cyto_data(x)<-result
-  					}else{
-  						oldfs<-gs_cyto_data(x)
-  						for(j in sampleNames(x)){
-  							inds<-flowWorkspace::gh_pop_get_indices(x[[j]],parent)
-  							oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
-  						}
-  						gs_cyto_data(x)<-oldfs
-  					}
-  					recompute(x,node);	
-  				}
-    							
-    			
-    		}
-          }
+	  
+	  
+	  if(node!="root")
+	    if(!gh_pop_is_bool_gate(x[[1]],node))
+	    {
+	      
+	      gate <- gh_pop_get_gate(x[[1]],node)
+	      dims.old <- dims
+	      dims <- intersect(parameters(gate), dims)
+	      
+	      
+	      if(length(dims)>0)
+	      {
+	        
+	        #Data will be subset at gate g (parent) and normalized on dims of i (child)
+	        #keep a list of normalized and unnormalized channels for each parent gate..
+	        #Check the gate being normalized.. make sure 74 is done correctly
+	        
+	        message("Normalize ", node)
+	        
+	        #Get the PARENT gate (since we'll be gating the data using gate i)
+	        parent <- gs_pop_get_parent(x[[1]], node)
+	        #initialize gate-specific normalization list
+	        if(is.null(parentgates[[as.character(parent)]])){
+	          parentgates[[as.character(parent)]]<-list();
+	          parentgates[[as.character(parent)]]$unnormalized<-unnormalized
+	          parentgates[[as.character(parent)]]$normalized<-NULL
+	        }
+	        #check which dimensions are normalized already
+	        wh.dim<-dims%in%parentgates[[as.character(parent)]]$unnormalized
+	        parentgates[[as.character(parent)]]$normalized<-c(parentgates[[as.character(parent)]]$normalized,dims[wh.dim]);
+	        parentgates[[as.character(parent)]]$unnormalized<-setdiff(parentgates[[as.character(parent)]]$unnormalized,dims)
+	        stains<-dims[wh.dim]
+	        #					browser()	
+	        if(length(stains)!=0&&gateHasSufficientData(x, parent, minCountThreshold = minCountThreshold, ...))
+	        {
+	          #choose the np element by name
+	          npks <- nPeaks[[node]]
+	          
+	          result <- warpSet(x,stains = stains
+	                            ,node = parent
+	                            ,target = target
+	                            ,peakNr = npks
+	                            ,...)
+	          data_type <- class(result)
+	          if(data_type == "ncdfFlowSet"){
+	            sapply(sampleNames(result),function(s)ncdfFlow::updateIndices(result,s,NA))
+	            gs_cyto_data(x)<-result
+	          }else if(data_type == "flowSet"){
+	            oldfs<-gs_cyto_data(x)
+	            for(j in sampleNames(x)){
+	              inds<-flowWorkspace::gh_pop_get_indices(x[[j]],parent)
+	              oldfs[[j]]@exprs[inds,]<-result[[j]]@exprs
+	            }
+	            gs_cyto_data(x)<-oldfs
+	          }else if(data_type != "cytoset"){
+	            stop("unsupported type: ", result)
+	          }
+	          recompute(x,node);	
+	        }
+	        
+	        
+	      }else
+	      {
+	        message("skip '", node, "' because '", dims.old, "' not used by this gate!")
+	      }
+	    }
 	}
 	x
 }

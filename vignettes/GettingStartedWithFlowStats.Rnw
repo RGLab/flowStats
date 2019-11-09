@@ -124,16 +124,9 @@ require(ggridges)
 require(gridExtra)
 pars <- colnames(gs)[c(3,4,5,7)]
 
-data <- gs_pop_get_data(gs, "TCells")
-plots <- lapply(pars, function(par)
-  as.ggplot(ggcyto(data, aes(x = !!par, fill = GroupID)) +
-    geom_density_ridges(mapping = aes(y = PatientID), alpha = 0.4) +
-    theme(axis.title.y = element_blank(),
-          axis.text.y = element_blank(),
-          axis.ticks.y = element_blank()) +
-    facet_null()
-  ))
-do.call("grid.arrange", c(plots, nrow=1))
+print(densityplot(PatientID~., cytoset_to_flowSet(gs_pop_get_data(gs, "TCells")), channels=pars, 
+                  groups=GroupID, scales=list(y=list(draw=F)), 
+                  filter=lapply(pars, curv1Filter), layout=c(4,1)))
 @ 
 
 Indeed the data, especially for CD4 and CD8, don't align well. At
@@ -191,16 +184,9 @@ gs <- normalize(gs, populations=c("CD4+CD8+", "CD4+CD8-", "CD4-CD8+", "CD4-CD8-"
 The normalization aligns the peaks in the selected channels across all samples.
 
 <<variation_norm, fig=TRUE>>==
-data <- gs_pop_get_data(gs, "TCells")
-plots <- lapply(pars, function(par)
-  as.ggplot(ggcyto(data, aes(x = !!par, fill = GroupID)) +
-    geom_density_ridges(mapping = aes(y = PatientID), alpha = 0.4) +
-    theme(axis.title.y = element_blank(),
-          axis.text.y = element_blank(),
-          axis.ticks.y = element_blank()) +
-    facet_null()
-  ))
-do.call("grid.arrange", c(plots, nrow=1))
+print(densityplot(PatientID~., cytoset_to_flowSet(gs_pop_get_data(gs, "TCells")), channels=pars, 
+                  groups=GroupID, scales=list(y=list(draw=F)), 
+                  filter=lapply(pars, curv1Filter), layout=c(4,1)))
 @
 
 This ensures that the single \Robject{quadGate} is appropriately placed for each sample.
@@ -227,14 +213,8 @@ gs_pop_add(gs, CD69rg, parent="CD4+CD8-")
 recompute(gs)
 @
 <<rangeGatePlot, keep.source=TRUE, fig=TRUE>>=
-ggcyto(gs_pop_get_data(gs, "CD4+CD8-"), aes(x=CD69, fill = GroupID)) +
-    geom_density_ridges(mapping = aes(y = PatientID), alpha = 0.4) +
-    theme(axis.title.y = element_blank(),
-          axis.text.y = element_blank(),
-          axis.ticks.y = element_blank()) +
-    geom_vline(xintercept = CD69rg@min) +
-    facet_null() +
-    ggtitle("CD4+")
+print(densityplot(PatientID ~ CD69, cytoset_to_flowSet(gs_pop_get_data(gs, "CD4+CD8-")), main = "CD4+",
+            groups=GroupID, refline=CD69rg@min))
 @
 
 This channel could also benefit from normalization before determining a single \Robject{rangeGate} to apply to all samples.
@@ -245,14 +225,8 @@ gs <- normalize(gs, populations=c("CD4+CD8-CD69"),
 @
 
 <<rangeGate_norm_plot, fig=TRUE>>=
-ggcyto(gs_pop_get_data(gs, "CD4+CD8-"), aes(x=CD69, fill = GroupID)) +
-    geom_density_ridges(mapping = aes(y = PatientID), alpha = 0.4) +
-    theme(axis.title.y = element_blank(),
-          axis.text.y = element_blank(),
-          axis.ticks.y = element_blank()) +
-    geom_vline(xintercept = CD69rg@min) +
-    facet_null() +
-    ggtitle("CD4+")
+print(densityplot(PatientID ~ CD69, cytoset_to_flowSet(gs_pop_get_data(gs, "CD4+CD8-")), main = "CD4+",
+            groups=GroupID, refline=CD69rg@min))
 @
 
 \section{Probability Binning}

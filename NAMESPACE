@@ -52,7 +52,10 @@ importFrom(stats, anova, approxfun, as.formula, as.hclust, chisq.test,
            na.omit, optimize, qnorm, quantile, resid, sd, var, dist)
 
 importFrom(utils, capture.output)
-
+S3method(warpSet,GatingSet)
+S3method(warpSet,flowSet)
+S3method(warpSet,ncdfFlowSet)
+S3method(warpSet,cytoset)
 export("lymphGate",
        "norm2Filter",
        "curv1Filter",
@@ -63,9 +66,6 @@ export("lymphGate",
        "rangeGate",
        "rangeFilter",
        "warpSet",
-#       "warpSetGS",
-#	"warpSetNCDF",
-#	"warpSetNCDFLowMem",
 	"proBin",
        "binByRef",
        "gaussNorm",

@@ -885,7 +885,7 @@ normQA <- function(data, morph=c("^fsc", "^ssc"), channels,
 		for(p in wchans)
 		{
 			np <- 30
-			xvals <- seq(range(data[[1]])[, p][1,], range(data[[1]])[, p][2,], len=np)
+			xvals <- seq(range(data[[1]])[, p][1], range(data[[1]])[, p][2], len=np)
 			yvals <- sapply(ninfo[[p]]$warpFun, function(fun) fun(xvals))
 			wfRes <- rbind(wfRes,
 					data.frame(sample=rep(factor(sampleNames(data),

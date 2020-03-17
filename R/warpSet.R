@@ -631,7 +631,7 @@ warpSet.flowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NUL
 			nar <- is.na(landmarks[,n])
 			landmarks[nar,n] <- mean(landmarks[,n], na.rm=TRUE)
 			reg<-sapply(regions[!nar],function(r) if(is.null(dim(r))) r else r[n,])
-			if(class(reg)=="list"){
+			if(is(reg, "list")){
 				reg<-do.call(cbind,reg)
 			}
 			m <- matrix(apply(reg,1, mean, na.rm=TRUE), ncol=2)

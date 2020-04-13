@@ -226,6 +226,13 @@ setMethod("spillover",
             }
           })
 
+## ================================
+## Generic for spillover_match
+## --------------------------------
+#' @export
+setGeneric("spillover_match", 
+           function(x,...) standardGeneric("spillover_match"))
+
 ## =========================================================================
 ## spillover_match method: Match channel names to compensation control filenames
 ## -------------------------------------------------------------------------

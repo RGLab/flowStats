@@ -20,4 +20,4 @@ Lazyload: yes
 URL: http://www.github.com/RGLab/flowStats
 BugReports: http://www.github.com/RGLab/flowStats/issues
 biocViews: ImmunoOncology, FlowCytometry, CellBasedAssays
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0

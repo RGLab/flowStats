@@ -5,8 +5,7 @@
 \title{The version of fdPar from fda 2.4.0 because the new API changes the output.
 (specifically res$fd$coefs) and thus breaks the landmarkreg call.}
 \usage{
-fdPar(fdobj = NULL, Lfdobj = NULL, lambda = 0, estimate = TRUE,
-  penmat = NULL)
+fdPar(fdobj = NULL, Lfdobj = NULL, lambda = 0, estimate = TRUE, penmat = NULL)
 }
 \arguments{
 \item{fdobj}{functional data object, functional basis object, a functional parameter object or a matrix. If it a matrix, it is replaced by fd(fdobj). If class(fdobj) == 'basisfd', it is converted to an object of class fd with a coefficient matrix consisting of a single column of zeros.}

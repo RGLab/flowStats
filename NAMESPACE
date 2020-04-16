@@ -78,7 +78,8 @@ export("lymphGate",
        "singletGate",
        "overton_like",
        "gate_singlet",
-       "spillover_ng"
+       "spillover_ng",
+       "spillover_match"
        )
 
 exportClasses("lymphFilter","rangeFilter","curv1Filter", 

@@ -5,13 +5,31 @@
 \alias{singletGate}
 \title{Creates a singlet polygon gate using the prediction bands from a robust linear model}
 \usage{
-gate_singlet(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
-  prediction_level = 0.99, subsample_pct = NULL, wider_gate = FALSE,
-  filterId = "singlet", maxit = 5, ...)
+gate_singlet(
+  x,
+  area = "FSC-A",
+  height = "FSC-H",
+  sidescatter = NULL,
+  prediction_level = 0.99,
+  subsample_pct = NULL,
+  wider_gate = FALSE,
+  filterId = "singlet",
+  maxit = 5,
+  ...
+)
 
-singletGate(x, area = "FSC-A", height = "FSC-H", sidescatter = NULL,
-  prediction_level = 0.99, subsample_pct = NULL, wider_gate = FALSE,
-  filterId = "singlet", maxit = 5, ...)
+singletGate(
+  x,
+  area = "FSC-A",
+  height = "FSC-H",
+  sidescatter = NULL,
+  prediction_level = 0.99,
+  subsample_pct = NULL,
+  wider_gate = FALSE,
+  filterId = "singlet",
+  maxit = 5,
+  ...
+)
 }
 \arguments{
 \item{x}{a \code{\link[flowCore:flowFrame-class]{flowFrame}} object}

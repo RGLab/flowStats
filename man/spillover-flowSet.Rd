@@ -6,10 +6,18 @@
 \alias{spillover,flowSet-method}
 \title{Compute a spillover matrix from a flowSet}
 \usage{
-\S4method{spillover}{flowSet}(x, unstained = NULL, fsc = "FSC-A", 
-                              ssc = "SSC-A", patt = NULL, method = "median", 
-                              stain_match = c("intensity", "ordered", "regexpr"),
-                              useNormFilt=FALSE, prematched = FALSE)
+\S4method{spillover}{flowSet}(
+  x,
+  unstained = NULL,
+  fsc = "FSC-A",
+  ssc = "SSC-A",
+  patt = NULL,
+  method = "median",
+  stain_match = c("intensity", "ordered", "regexpr"),
+  useNormFilt = FALSE,
+  prematched = FALSE,
+  exact_match = FALSE
+)
 }
 \arguments{
 \item{x}{A flowSet of compensation beads or cells}

@@ -5,6 +5,7 @@
 \alias{norm2Filter-class}
 \alias{norm2Filter}
 \alias{show,norm2Filter-method}
+\alias{\%in\%,flowFrame,norm2Filter-method}
 \title{Class "norm2Filter"}
 \usage{
 norm2Filter(x, y, method="covMcd", scale.factor=1, n=50000,

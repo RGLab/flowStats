@@ -22,7 +22,7 @@ autoGate(x, \dots, scale = 2.5)
     details. }
 
   \item{scale}{ The \code{scale} parameter that gets passed on to
-    \code{\link[flowCore:norm2Filter-class]{norm2Filter}}. }
+    \code{\link[flowStats]{norm2Filter}}. }
 }
 
 \details{
@@ -51,7 +51,7 @@ autoGate(x, \dots, scale = 2.5)
 
 \seealso{
   \code{\link{lymphGate}},
-  \code{\link[flowCore:norm2Filter-class]{norm2Filter}}
+  \code{\link[flowStats]{norm2Filter}}
 } 
 
 \examples{

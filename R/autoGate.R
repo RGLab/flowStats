@@ -453,7 +453,7 @@ setMethod("%in%",
 #' can be used to subset and to split flow cytometry data sets.
 #' 
 #' @name norm2Filter-class
-#' @aliases norm2Filter-class norm2Filter show,norm2Filter-method
+#' @aliases norm2Filter-class norm2Filter show,norm2Filter-method %in%,flowFrame,norm2Filter-method
 #' @docType class
 #' @usage
 #' norm2Filter(x, y, method="covMcd", scale.factor=1, n=50000,

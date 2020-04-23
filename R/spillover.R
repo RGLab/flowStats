@@ -37,12 +37,6 @@
 #' @name spillover-flowSet
 #' @aliases spillover spillover,flowSet-method
 #' 
-#' @usage 
-#' \S4method{spillover}{flowSet}(x, unstained = NULL, fsc = "FSC-A", 
-#'                               ssc = "SSC-A", patt = NULL, method = "median", 
-#'                               stain_match = c("intensity", "ordered", "regexpr"),
-#'                               useNormFilt=FALSE, prematched = FALSE)
-#' 
 #' @param x A flowSet of compensation beads or cells
 #' @param unstained The name or index of the unstained negative control
 #' @param patt An optional regular expression defining which parameters should

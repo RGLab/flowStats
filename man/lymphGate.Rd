@@ -76,7 +76,7 @@ lymphGate(x, channels, preselection=NULL, scale=2.5,  bwFac=1.3,
   
   \item{preselection}{ Either \code{NULL}, in which case this boils down
     to fitting a regular
-    \code{\link[flowCore:norm2Filter-class]{norm2Filter}}, a 
+    \code{\link[flowStats]{norm2Filter}}, a 
     character scalar giving one of the flow parameters in \code{x}, or a
     named list of numerics specifying the initial rough
     preselection. The latter gets passed on to
@@ -138,7 +138,7 @@ lymphGate(x, channels, preselection=NULL, scale=2.5,  bwFac=1.3,
 
 \author{ Florian Hahne }
 
-\seealso{ \code{\link[flowCore:norm2Filter-class]{norm2Filter}},
+\seealso{ \code{\link[flowStats]{norm2Filter}},
   \code{\link[flowStats:curv1Filter-class]{curv1Filter}} } 
 
 \examples{

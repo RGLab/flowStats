@@ -36,7 +36,7 @@ and automated gating.
   
 Florian Hahne
 
-Maintainer: Florian Hahne <fhahne@fhcrc.org>
+Maintainers: Mike Jiang <wjiang2@fhcrc.org>, Jake Wagner <jpwagner@fhcrc.org>
 
 }
 

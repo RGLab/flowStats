@@ -4,16 +4,17 @@ test_that("normalize", {
   #prepare data
   library(flowCore)
   data(ITN)
-  library(ncdfFlow)
   library(openCyto)
-  fs <- ncdfFlowSet(ITN[c(1,5,8)])
+  fs <- flowSet_to_cytoset(ITN[c(1,5,8)])
   gs <- GatingSet(fs)
   transList <- transformerList(colnames(fs)[3:7], logicle_trans())
   gs <- transform(gs, transList)  
+  cs_lock(fs)
+  
   gs_add_gating_method(gs, "L", "-", "root", "SSC", "mindensity")
   gs_add_gating_method(gs, "cd3", "+", "L", "cd3", "mindensity")
   gs_add_gating_method(gs, "cd4", "+", "cd3", "cd4", "mindensity")
-  
+
   #' ## normalize cd4
   # library(ggridges)  
   # ggcyto(gs_pop_get_data(gs, "cd4"), aes(x = cd4)) + geom_density_ridges(aes(y = name)) + facet_null()

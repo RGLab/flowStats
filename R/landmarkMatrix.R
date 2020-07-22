@@ -104,6 +104,17 @@ landmarkMatrix <- function(data, fres, parm, border=0.05, peakNr=NULL, densities
         matD[i,cl$cluster] <- cl$dist/diff(ranges[[1]][,parm])
     }
     resRegions <- resRegions[rownames(mat)]
+    
+    # TODO: Somehow it is possible for a landmark column to be NA for all samples
+    # and this is seed-dependent. This is a deeper bug, but for now remove these
+    # problematic landmarks so they don't cause obscure errors later
+    valid_landmarks <- apply(mat, 2, function(col) !all(is.na(col)))
+    mat <- mat[,valid_landmarks]
+    regRegions <- lapply(resRegions, function(sample_regions){
+      sample_regions[valid_landmarks,]
+    })
+    
+    matD <- matD[,valid_landmarks]
     attr(mat, "regions") <- resRegions
     attr(mat, "cdists") <- matD
     return(mat)

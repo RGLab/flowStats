@@ -704,8 +704,18 @@ warpSet.flowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NUL
 				stop("'", grouping, "' is not a phenoData variable.")
 			grps <- as.factor(pData(x)[,grouping])
 			anv <- numeric(ncol(landmarks))
-			for(i in seq_len(ncol(landmarks)))
-				anv[i] <- anova(lm(landmarks[,i] ~ grps))$Pr[1]
+			
+			for(i in seq_len(ncol(landmarks))){
+			  grps_present <- unique(grps[!is.na(landmarks[,i])])
+			  if(length(grps_present == 1)){
+			    warning(paste0("The following landmark is only present in a single group --",
+			                   "\nstain: ", p, 
+			                   "\nmean value: ", mean(landmarks[!is.na(landmarks[,i]),i])))
+			    anv[i] = 1.0 # pass the variance check below to avoid double warning
+			  }else{
+			    anv[i] <- anova(lm(landmarks[,i] ~ grps))$Pr[1] 
+			  }
+			}
 			if(any(anv < sig))
 				warning("Within-group variances are smaller than ",
 						"across-group variances for stain ", p,

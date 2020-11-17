@@ -11,7 +11,8 @@ Suggests:
     xtable,
     testthat,
     openCyto,
-    ggcyto
+    ggcyto,
+    ggridges
 Encoding: UTF-8
 Depends: R (>= 3.0.2)
 Imports: BiocGenerics, MASS, flowCore (>= 1.99.6), flowWorkspace, ncdfFlow(>= 2.19.5), flowViz, fda (>= 2.2.6), 

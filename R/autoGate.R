@@ -304,7 +304,7 @@ lymphGate <- function(x, channels, preselection=NULL, scale=2.5,
 {
     ## some type-checking first
     flowCore:::checkClass(channels, "character", 2)
-    flowCore:::checkClass(x, c("flowSet", "flowFrame"))
+    flowCore:::checkClass(x, c("flowSet", "flowFrame", "cytoset", "cytoframe"))
     flowCore:::checkClass(scale, "numeric", 1)
     flowCore:::checkClass(bwFac, "numeric", 1)
     flowCore:::checkClass(filterId, "character", 1)

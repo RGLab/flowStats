@@ -51,7 +51,7 @@ This function implements sequential normalization using a GatingSet and a set of
 Returns a \code{GatingSet} of normalized data.
 }
 \author{
-Greg Finak <gfinak@fhcrc.org>
+Greg Finak <greg@ozette.ai>
 }
 
 \seealso{

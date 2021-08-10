@@ -1,7 +1,7 @@
 Package: flowStats
 Type: Package
 Title: Statistical methods for the analysis of flow cytometry data
-Version: 4.5.1
+Version: 4.5.2
 Author: Florian Hahne, Nishant Gopalakrishnan, Alireza Hadj Khodabakhshi,
         Chao-Jen Wong, Kyongryun Lee
 Maintainer: Greg Finak <greg@ozette.ai>, Mike Jiang <mike@ozette.ai>, Jake Wagner <jpwagner@fhcrc.org>
@@ -12,7 +12,8 @@ Suggests:
     testthat,
     openCyto,
     ggcyto,
-    ggridges
+    ggridges,
+    flowWorkspaceData
 Encoding: UTF-8
 Depends: R (>= 3.0.2)
 Imports: BiocGenerics, MASS, flowCore (>= 1.99.6), flowWorkspace, ncdfFlow(>= 2.19.5), flowViz, fda (>= 2.2.6), 
@@ -23,4 +24,4 @@ Lazyload: yes
 URL: http://www.github.com/RGLab/flowStats
 BugReports: http://www.github.com/RGLab/flowStats/issues
 biocViews: ImmunoOncology, FlowCytometry, CellBasedAssays
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1

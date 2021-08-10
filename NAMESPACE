@@ -27,7 +27,7 @@ importFrom("rrcov", "CovMcd")
 
 importFrom(MASS, huber, hubers, rlm, cov.rob)
 
-importFrom(ks, binning)
+importFrom(ks, binning, hpi)
 
 importFrom(fda, Data2fd, create.bspline.basis, eval.fd, fdPar,fd,int2Lfd,vec2Lfd,norder,
            landmarkreg,norder.bspline)
@@ -79,7 +79,9 @@ export("lymphGate",
        "overton_like",
        "gate_singlet",
        "spillover_ng",
-       "spillover_match"
+       "spillover_match",
+       "gate_tail",
+       "tailgate"
        )
 
 exportClasses("lymphFilter","rangeFilter","curv1Filter", 

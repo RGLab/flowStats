@@ -89,5 +89,31 @@ test_that("spillover_ng: Using preconstructed flowSet with filenames as sample n
   expect_equivalent(comp, comp_ref, tolerance=3e-08)
 })
 
+test_that("spillover_ng: Using preconstructed flowSet with channels in new order", {
+  match <- read.csv(matchfile_path, colClasses = "character")
+  fs <- read.flowSet(files=match$filename, path=control_path)
 
+  # Scramble the channel order
+  fs <- fs[,c("FSC-H", "FL4-H", "FL3-H", "FL1-A", "FL1-H", "FL2-H", "SSC-H")]
+  # Note that the order of the channels used for compensation (FL4-H, FL3-H, FL1-H, FL2-H)
+  # is c(3, 4, 2, 1), which has the property that
+  # order(c(3, 4, 2, 1)) != c(3, 4, 2, 1).
+  # This is in contrast to the channel order at the top of the file,
+  # where order(c(2, 1, 3, 4)) == c(2, 1, 3, 4).
+  # The channel order used here is important for testing the correctness of the
+  # approach used to re-order rows of the matrix in the spillover function.
+  
+  comp <- spillover_ng(x=fs, fsc="FSC-H", ssc="SSC-H", 
+                       patt="-H", matchfile = matchfile_path, pregate = FALSE)
+  # The diagonals should be equal to 1
+  for (i in 1:4) {
+    expect_equal(comp[i,i], 1)
+  }
+  comp_order <- c(3, 4, 2, 1)
+  # If you unscramble the rows and columns, you should get the original comp_ref
+  comp_ordered <- comp[comp_order, comp_order]
+  expect_equal(colnames(comp_ordered), colnames(comp_ref))
+  expect_equal(rownames(comp_ordered), rownames(comp_ref))
+  expect_equivalent(comp_ordered, comp_ref, tolerance=3e-08)
+})
 

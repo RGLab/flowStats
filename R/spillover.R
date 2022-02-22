@@ -166,6 +166,10 @@ setMethod("spillover",
                 } else {
                   channel_order <- sapply(cols, grep, x = sampleNames(x), fixed = TRUE)
                 }
+                if (any(sapply(channel_order, length) > 1)){
+                  stop("Multiple compensation-control names match to a common stain",
+                       call. = FALSE)
+                }
                 # Clip out those channels that do not match to a name
                 matched <- channel_order[sapply(channel_order, length) != 0]
                 if (anyDuplicated(matched)) {

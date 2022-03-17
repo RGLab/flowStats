@@ -142,9 +142,9 @@ setMethod("spillover",
                 if (is.na(match(ssc, allcols))) {
                   stop("Could not find side scatter parameter. ",
                        "Please set the ssc parameter", call. = FALSE)
-                  n2f <- norm2Filter(fsc, ssc, scale.factor = 1.5)
-                  x <- Subset(x, n2f)
                 }
+                n2f <- norm2Filter(fsc, ssc, scale.factor = 1.5)
+                x <- Subset(x, n2f)
               }
               
               # Here, we match the stain channels with the compensation controls
@@ -211,9 +211,10 @@ setMethod("spillover",
                 channel_order <- channel_order - (channel_order > unstained)
               }
               
-              # Then reverse any shuffling so the rows are in the same
-              # order as the channels for symmetry
-              inten <- inten[order(channel_order),]
+              # Place the rows (which originally corresponded to samples) in
+              # channel_order, which is the order that rows should be placed
+              # in in order to have the same order as the channels
+              inten <- inten[channel_order,]
               
               rownames(inten) <- colnames(inten)
               inten

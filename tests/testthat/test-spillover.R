@@ -120,6 +120,8 @@ test_that("spillover_ng: Using preconstructed flowSet with channels in new order
   comp_order <- c(3, 4, 2, 1)
   # If you unscramble the rows and columns, you should get the original comp_ref
   comp_ordered <- comp[comp_order, comp_order]
+  ref_file <- system.file("extdata", "compdata", "compref4", package="flowCore")
+  comp_ref <- as.matrix(read.table(ref_file, check.names = FALSE))
   expect_equal(colnames(comp_ordered), colnames(comp_ref))
   expect_equal(rownames(comp_ordered), rownames(comp_ref))
   expect_equivalent(comp_ordered, comp_ref, tolerance=3e-08)

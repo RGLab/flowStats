@@ -110,9 +110,7 @@ export("lymphGate",
        "overton_like",
        "gate_singlet",
        "spillover_ng",
-       "spillover_match",
-       "gate_tail",
-       "tailgate"
+       "spillover_match"
        )
 export(SimulateMixture)
 export(flowClust2Prior)

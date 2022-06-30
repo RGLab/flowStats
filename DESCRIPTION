@@ -1,10 +1,10 @@
 Package: flowStats
 Type: Package
 Title: Statistical methods for the analysis of flow cytometry data
-Version: 4.9.0
+Version: 4.9.1
 Author: Florian Hahne, Nishant Gopalakrishnan, Alireza Hadj Khodabakhshi,
         Chao-Jen Wong, Kyongryun Lee
-Maintainer: Greg Finak <greg@ozette.ai>, Mike Jiang <mike@ozette.ai>, Jake Wagner <jpwagner@fhcrc.org>
+Maintainer: Greg Finak <greg@ozette.com>, Mike Jiang <mike@ozette.com>
 Description: Methods and functionality to analyse flow data that is beyond the
              basic infrastructure provided by the flowCore package.
 Suggests: 

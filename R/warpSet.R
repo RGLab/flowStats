@@ -16,8 +16,6 @@
 #' a warning is issued in case the latter is bigger than the former,
 #' indicating the likely removal of signal by the normalization
 #' procedure.
-#' @param monwrd Logical. Compute strictly monotone warping
-#' functions. This gets directly passed on to
 #' \code{\link[fda]{landmarkreg}}.
 #' @param subsample Numeric. Reduce the number of events in each \code{flowSet}
 #' by sub sampling for all density estimation steps and the calculation
@@ -80,7 +78,7 @@
 #' dat <- transform(ITN, "CD4"=asinh(CD4), "CD3"=asinh(CD3), "CD8"=asinh(CD8))
 #' lg <- lymphGate(dat, channels=c("CD3", "SSC"), preselection="CD4",scale=1.5)
 #' dat <- Subset(dat, lg)
-#' datr <- warpSet(dat, "CD8", grouping="GroupID", monwrd=TRUE)
+#' datr <- warpSet(dat, "CD8", grouping="GroupID")
 #' if(require(flowViz)){
 #'   d1 <- densityplot(~CD8, dat, main="original", filter=curv1Filter("CD8"))
 #'   d2 <- densityplot(~CD8, datr, main="normalized", filter=curv1Filter("CD8"))
@@ -106,7 +104,7 @@ warpSet.GatingSet <- function(x,node=NULL, ...){
 	  warpSet(x = data,...)
 }
 #' @rdname warpSet
-warpSet.cytoset <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
+warpSet.cytoset <- function(x, stains, grouping=NULL,  subsample=NULL,
                                 peakNr=NULL, clipRange=0.01, nbreaks=11, fres, bwFac=2,
                                 warpFuns=FALSE,target=NULL,chunksize=10,
                                 ...)
@@ -133,7 +131,7 @@ warpSet.cytoset <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NUL
     #Does Subset clobber anything in a permanent way for an ncdfFlowSet? Check this, otherwise use subsample.
     x <- Subset(x, sampleFilter(size=subsample))
   }
-  flowCore:::checkClass(monwrd, "logical", 1)
+  
   flowCore:::checkClass(bwFac, "numeric", 1)
   
   ## find landmarks
@@ -253,9 +251,9 @@ warpSet.cytoset <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NUL
       }
     }else{ ## multiple peaks: warping
       if(is.null(target)){
-        capture.output(regDens <- landmarkreg(fdobj, landmarks, WfdPar=WfdPar, monwrd=monwrd,...))  
+        capture.output(regDens <- landmarkreg(fdobj, landmarks, WfdPar=WfdPar,...))  
       }else{
-        capture.output(regDens <- landmarkreg(fdobj, landmarks,x0marks= apply(landmarks,2,jitter)[rownames(landmarks)%in%target,], WfdPar=WfdPar, monwrd=monwrd,...)) 
+        capture.output(regDens <- landmarkreg(fdobj, landmarks,x0marks= apply(landmarks,2,jitter)[rownames(landmarks)%in%target,], WfdPar=WfdPar, ...)) 
       }
       warpfdobj <- regDens$warpfd
       warpedX <- eval.fd(warpfdobj, argvals)
@@ -353,7 +351,7 @@ warpSet.cytoset <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NUL
 
 # When isNew == FALSE, the original cdf is modified 
 # when isNew == TRUE, a new cdf is created
-warpSet.ncdfFlowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
+warpSet.ncdfFlowSet <- function(x, stains, grouping=NULL, subsample=NULL,
 		peakNr=NULL, clipRange=0.01, nbreaks=11, fres, bwFac=2,
 		warpFuns=FALSE,target=NULL,chunksize=10,isNew=FALSE,newNcFile=NULL,
 		...)
@@ -386,7 +384,7 @@ warpSet.ncdfFlowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample
 		#Does Subset clobber anything in a permanent way for an ncdfFlowSet? Check this, otherwise use subsample.
 		x <- Subset(x, sampleFilter(size=subsample))
 	}
-	flowCore:::checkClass(monwrd, "logical", 1)
+	
 	flowCore:::checkClass(bwFac, "numeric", 1)
 	
 	## find landmarks
@@ -506,9 +504,9 @@ warpSet.ncdfFlowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample
 			}
 		}else{ ## multiple peaks: warping
 			if(is.null(target)){
-				capture.output(regDens <- landmarkreg(fdobj, landmarks, WfdPar=WfdPar, monwrd=monwrd,...))  
+				capture.output(regDens <- landmarkreg(fdobj, landmarks, WfdPar=WfdPar, ...))  
 			}else{
-				capture.output(regDens <- landmarkreg(fdobj, landmarks,x0marks= apply(landmarks,2,jitter)[rownames(landmarks)%in%target,], WfdPar=WfdPar, monwrd=monwrd,...)) 
+				capture.output(regDens <- landmarkreg(fdobj, landmarks,x0marks= apply(landmarks,2,jitter)[rownames(landmarks)%in%target,], WfdPar=WfdPar, ...)) 
 			}
 			warpfdobj <- regDens$warpfd
 			warpedX <- eval.fd(warpfdobj, argvals)
@@ -609,7 +607,7 @@ warpSet.ncdfFlowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample
 	expData
 }
 #
-warpSet.flowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NULL,
+warpSet.flowSet <- function(x, stains, grouping=NULL,  subsample=NULL,
 		peakNr=NULL, clipRange=0.01, nbreaks=11, fres, bwFac=2,
 		warpFuns=FALSE,target=NULL,
 		...)
@@ -635,7 +633,7 @@ warpSet.flowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NUL
 			if(!grouping %in% names(pData(x)))
 				stop("'", grouping, "' is not a phenoData variable.")
 	}
-	flowCore:::checkClass(monwrd, "logical", 1)
+	
 	flowCore:::checkClass(bwFac, "numeric", 1)
 	
 	## find landmarks
@@ -762,12 +760,12 @@ warpSet.flowSet <- function(x, stains, grouping=NULL, monwrd=TRUE, subsample=NUL
 		}else{ ## multiple peaks: warping
 			if(is.null(target)){
 				capture.output(regDens <- landmarkreg(fdobj, landmarks, WfdPar=WfdPar, 
-								monwrd=monwrd, ...))  
+								 ...))  
 			}else{
 				
 				#add a small amount of noise 1% of sd (robust) to the target landmarks
 				capture.output(regDens <- landmarkreg(fdobj, landmarks, x0marks=apply(landmarks,2,jitter)[rownames(landmarks)%in%target,],WfdPar=WfdPar, 
-								monwrd=monwrd, ...))
+								 ...))
 			}
 			warpfdobj <- regDens$warpfd
 			warpedX <- eval.fd(warpfdobj, argvals)

@@ -14,7 +14,6 @@ warpSet(x, ...)
   x,
   stains,
   grouping = NULL,
-  monwrd = TRUE,
   subsample = NULL,
   peakNr = NULL,
   clipRange = 0.01,
@@ -41,10 +40,7 @@ variables in the \code{phenoData} slot of \code{x} used as a grouping
 factor. The within-group and between-group variance is computed and
 a warning is issued in case the latter is bigger than the former,
 indicating the likely removal of signal by the normalization
-procedure.}
-
-\item{monwrd}{Logical. Compute strictly monotone warping
-functions. This gets directly passed on to
+procedure.
 \code{\link[fda]{landmarkreg}}.}
 
 \item{subsample}{Numeric. Reduce the number of events in each \code{flowSet}
@@ -113,7 +109,7 @@ data(ITN)
 dat <- transform(ITN, "CD4"=asinh(CD4), "CD3"=asinh(CD3), "CD8"=asinh(CD8))
 lg <- lymphGate(dat, channels=c("CD3", "SSC"), preselection="CD4",scale=1.5)
 dat <- Subset(dat, lg)
-datr <- warpSet(dat, "CD8", grouping="GroupID", monwrd=TRUE)
+datr <- warpSet(dat, "CD8", grouping="GroupID")
 if(require(flowViz)){
   d1 <- densityplot(~CD8, dat, main="original", filter=curv1Filter("CD8"))
   d2 <- densityplot(~CD8, datr, main="normalized", filter=curv1Filter("CD8"))

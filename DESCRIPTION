@@ -1,7 +1,7 @@
 Package: flowStats
 Type: Package
 Title: Statistical methods for the analysis of flow cytometry data
-Version: 4.9.1
+Version: 4.9.2
 Author: Florian Hahne, Nishant Gopalakrishnan, Alireza Hadj Khodabakhshi,
         Chao-Jen Wong, Kyongryun Lee
 Maintainer: Greg Finak <greg@ozette.com>, Mike Jiang <mike@ozette.com>
@@ -24,4 +24,4 @@ Lazyload: yes
 URL: http://www.github.com/RGLab/flowStats
 BugReports: http://www.github.com/RGLab/flowStats/issues
 biocViews: ImmunoOncology, FlowCytometry, CellBasedAssays
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.2

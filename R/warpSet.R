@@ -251,7 +251,7 @@ warpSet.cytoset <- function(x, stains, grouping=NULL,  subsample=NULL,
       }
     }else{ ## multiple peaks: warping
       if(is.null(target)){
-        capture.output(regDens <- landmarkreg(fdobj, landmarks, WfdPar=WfdPar,...))  
+        capture.output(regDens <- landmarkreg(fdobj, landmarks,x0marks= apply(landmarks,2,mean), WfdPar=WfdPar,...))  
       }else{
         capture.output(regDens <- landmarkreg(fdobj, landmarks,x0marks= apply(landmarks,2,jitter)[rownames(landmarks)%in%target,], WfdPar=WfdPar, ...)) 
       }
@@ -504,7 +504,7 @@ warpSet.ncdfFlowSet <- function(x, stains, grouping=NULL, subsample=NULL,
 			}
 		}else{ ## multiple peaks: warping
 			if(is.null(target)){
-				capture.output(regDens <- landmarkreg(fdobj, landmarks, WfdPar=WfdPar, ...))  
+				capture.output(regDens <- landmarkreg(fdobj, landmarks,x0marks= apply(landmarks,2,mean), WfdPar=WfdPar, ...))  
 			}else{
 				capture.output(regDens <- landmarkreg(fdobj, landmarks,x0marks= apply(landmarks,2,jitter)[rownames(landmarks)%in%target,], WfdPar=WfdPar, ...)) 
 			}
@@ -759,7 +759,7 @@ warpSet.flowSet <- function(x, stains, grouping=NULL,  subsample=NULL,
 			}
 		}else{ ## multiple peaks: warping
 			if(is.null(target)){
-				capture.output(regDens <- landmarkreg(fdobj, landmarks, WfdPar=WfdPar, 
+				capture.output(regDens <- landmarkreg(fdobj, landmarks,x0marks= apply(landmarks,2,mean), WfdPar=WfdPar, 
 								 ...))  
 			}else{
 				

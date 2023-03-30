@@ -59,7 +59,7 @@ diff(range(x))}.}
 
 \item{nbreaks}{The number of spline sections used to approximate the
 data. Higher values produce more accurate results, however this
-comes with the cost of increaseqd computing times. For most data,
+comes with the cost of increased computing times. For most data,
 the default setting is good enough.}
 
 \item{fres}{A named list of \code{filterResultList} objects. This can

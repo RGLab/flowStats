@@ -64,6 +64,7 @@
 #' of the New York Academy of Sciences, 677:167-184.
 #' @keywords methods
 #' @export
+#' @importFrom clue solve_LSAP
 setMethod("spillover",
           signature = signature(x = "flowSet"),
           definition = function(x, unstained = NULL, fsc = "FSC-A",
@@ -203,7 +204,7 @@ setMethod("spillover",
                 dists = sapply(colnames(inten),function(x)adist(x,rownames(inten)))
                 colnames(dists)=colnames(inten)
                 rownames(dists)=rownames(inten)                
-                solution=clue::solve_LSAP(t(dists))
+                solution=solve_LSAP(t(dists))
                 channel_order <- as.vector(solution)
                 for(i in 1:ncol(dists)){
                     cat("matching ",colnames(dists)[i]," to ", rownames(dists)[channel_order[i]],"\n")

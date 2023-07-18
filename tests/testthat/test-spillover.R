@@ -27,8 +27,6 @@ test_that("spillover: Match columns using regexpr", {
 })
 
 test_that("spillover: Match columns using ordered", {
-  ref_file <- system.file("extdata", "compdata", "compref2", package="flowCore")
-  comp_ref <- as.matrix(read.table(ref_file, check.names = FALSE))
   # The spillover matrix here should (appropriately) be incorrect bc the rows are
   # not in the order of the columns. In fact we expect a warning as we'll check now for
   # multiple off diagonal entries greater than 1.

@@ -103,7 +103,6 @@ test_that("spillover_ng: Using preconstructed flowSet with filenames as sample n
 
 test_that("spillover_ng: Using preconstructed flowSet with channels in new order", {
   match <- read.csv(matchfile_path, colClasses = "character")
-  ref_file <- system.file("extdata", "compdata", "compref4", package="flowCore")
   fs <- read.flowSet(files=match$filename, path=control_path)
   comp_ref <- as.matrix(read.table(ref_file, check.names = FALSE))
 

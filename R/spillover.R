@@ -213,7 +213,7 @@ setMethod("spillover",
                 # the removal of the unstained row. 
                 channel_order <- channel_order - (channel_order > unstained)
                 for(i in seq_len(ncol(inten))){
-                    cat("matching ",colnames(inten)[i]," to ", rownames(inten)[channel_order[i]],"\n")
+                    message("matching ",colnames(inten)[i]," to ", rownames(inten)[channel_order[i]])
                 }
               }
               

@@ -104,7 +104,6 @@ test_that("spillover_ng: Using preconstructed flowSet with filenames as sample n
 test_that("spillover_ng: Using preconstructed flowSet with channels in new order", {
   match <- read.csv(matchfile_path, colClasses = "character")
   fs <- read.flowSet(files=match$filename, path=control_path)
-  comp_ref <- as.matrix(read.table(ref_file, check.names = FALSE))
 
   # Scramble the channel order
   fs <- fs[,c("FSC-H", "FL4-H", "FL3-H", "FL1-A", "FL1-H", "FL2-H", "SSC-H")]

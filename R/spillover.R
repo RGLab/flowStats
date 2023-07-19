@@ -299,11 +299,10 @@ setGeneric("spillover_match",
 #' @author B. Ellis, J. Wagner
 #' @seealso \code{\link{compensate}}, \code{\link{spillover}}
 #' @examples
-#' require(assertthat)
-#' data(comp_data_set)
-#' data(comp_from_fj)
+#' data(comp_data_set, package = "flowCore")
+#' data(comp_from_fj, package = "flowCore")
 #' comp_from_flowcore=spillover(fs,unstained=15,useNormFilt=TRUE)
-#' assert_that(norm(as.matrix(from_fj-from_flowcore))<0.05)
+#' stopifnot(norm(as.matrix(from_fj-from_flowcore)) < 0.05)
 #' @keywords methods
 
 #' @export

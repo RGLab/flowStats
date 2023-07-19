@@ -64,6 +64,7 @@
 #' of the New York Academy of Sciences, 677:167-184.
 #' @keywords methods
 #' @export
+#' @importFrom clue solve_LSAP
 setMethod("spillover",
           signature = signature(x = "flowSet"),
           definition = function(x, unstained = NULL, fsc = "FSC-A",
@@ -75,7 +76,6 @@ setMethod("spillover",
               stain_match <- "regexpr"
             }
             stain_match <- match.arg(stain_match)
-            
             if (is.null(unstained)) {
               stop("Sorry, we don't yet support unstained cells blended ",
                    "with stained cells", " please specify the name or index of unstained sample", call. = FALSE)
@@ -100,17 +100,22 @@ setMethod("spillover",
               }else if(ssc > length(colnames(x)) || ssc < 1){
                 stop(paste0("Side scatter parameter index", ssc, "' is out of bounds."), call. = FALSE)
               }
-              
+              time<-match("Time",colnames(x))              
               ## We often only want spillover for a subset of the columns
               allcols <- colnames(x)
-              cols <- allcols[-c(fsc,ssc)]
+              if(!is.na(time)){
+                cols <- allcols[-c(fsc,ssc,time)]
+              }else{
+                cols <- allcols[-c(fsc,ssc)]
+              }
               cols <- if (is.null(patt)) {
                 cols
               } else {
                 grep(patt, cols, value = TRUE)
+              }              
+              if(length(x)<(length(cols))){
+                stop("The number of samples is less than the number of channels. Empty channels must be removed prior to calling spillover.")
               }
-              
-              
               ## There has got to be a better way of doing this...
               if (!is.numeric(unstained)) {
                 unstained <- match(unstained, sampleNames(x))
@@ -191,32 +196,43 @@ setMethod("spillover",
               
               # background correction
               inten <- pmax(sweep(inten[-unstained, ], 2, inten[unstained, ]), 0)
-              
-              # normalize by max of each row
-              inten <- sweep(inten, 1, apply(inten, 1, max), "/")
-              
+
               # Updates the "rownames" of the intensity matrix. If the channel
               # order was not set above, then a guess is made based on the
               # largest statistic for the compensation control (i.e., the row).
               if (any(is.na(channel_order))) {
-                channel_order <- apply(inten, 1, which.max)
-                if (anyDuplicated(channel_order) > 0) {
-                  stop("Unable to match stains with controls based on intensity: ",
-                       "a single stain matches to several multiple controls. ",
-                       call. = FALSE)
+                dists = sapply(colnames(inten),function(x)adist(x,rownames(inten)))
+                colnames(dists)=colnames(inten)
+                rownames(dists)=rownames(inten)                
+                solution=solve_LSAP(t(dists))
+                channel_order <- as.vector(solution)
+                for(i in 1:ncol(dists)){
+                    cat("matching ",colnames(dists)[i]," to ", rownames(dists)[channel_order[i]],"\n")
                 }
               }else{
                 # Just bump-down the channel_order to account for
                 # the removal of the unstained row. 
                 channel_order <- channel_order - (channel_order > unstained)
+                for(i in seq_len(ncol(inten))){
+                    message("matching ",colnames(inten)[i]," to ", rownames(inten)[channel_order[i]])
+                }
               }
               
               # Place the rows (which originally corresponded to samples) in
               # channel_order, which is the order that rows should be placed
               # in in order to have the same order as the channels
-              inten <- inten[channel_order,]
               
+              inten<-inten[channel_order,]
               rownames(inten) <- colnames(inten)
+
+              # normalize each row by its diagonal
+              for(i in 1:nrow(inten)){
+                inten[i,]=inten[i,]/inten[i,i]
+              }
+              nchannels_gt_1=sum(apply(inten,1,function(x)x>1))
+              if(nchannels_gt_1>0 && stain_match=="ordered"){                
+                    warning("One or more channel has max signal in a different detector. Your channels may not actually be 'ordered'. Manually verify your spillover matrix.")
+              }
               inten
             }
           })
@@ -269,6 +285,12 @@ setGeneric("spillover_match",
 #' corresponding to the channels specified by the matchfile.
 #' @author B. Ellis, J. Wagner
 #' @seealso \code{\link{compensate}}, \code{\link{spillover}}
+#' @example
+#' require(assertthat)
+#' data(comp_data_set)
+#' data(comp_from_fj)
+#' comp_from_flowcore=spillover(fs,unstained=15,useNormFilt=TRUE)
+#' assert_that(norm(as.matrix(from_fj-from_flowcore))<0.05)
 #' @keywords methods
 
 #' @export

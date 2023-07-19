@@ -12,6 +12,7 @@ importMethodsFrom(BiocGenerics, cbind, colnames, lapply, mapply, order,
                   table, unique)
 importFrom(corpcor,cov.shrink)
 
+importFrom(clue,solve_LSAP)
 importFrom(grDevices,cm.colors)
 importFrom(grDevices,gray)
 importFrom(grDevices,heat.colors)

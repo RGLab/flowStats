@@ -48,6 +48,13 @@ control with the 'channel' entry of 'unstained'.\cr\cr
 The method also allows for \code{x} to be missing if \code{path} is provided,
 pointing to a directory containing the control FCS files.\cr\cr
 }
+\examples{
+require(assertthat)
+data(comp_data_set)
+data(comp_from_fj)
+comp_from_flowcore=spillover(fs,unstained=15,useNormFilt=TRUE)
+assert_that(norm(as.matrix(from_fj-from_flowcore))<0.05)
+}
 \seealso{
 \code{\link{compensate}}, \code{\link{spillover}}
 }

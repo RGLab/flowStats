@@ -43,15 +43,17 @@ structure(c(1, 0.0077220477483574751, 0.23582570418697035, 0.065683952675143667,
 expect_equivalent(comp,comp_ref)
 })
 
-test_that("spillover: Match columns using intensity", {
+test_that("spillover: Match columns using intensity and name_edit_distance", {
   ref_file <- system.file("extdata", "compdata", "compref1", package="flowCore")
   comp_ref <- as.matrix(read.table(ref_file, check.names = FALSE))
-  comp <- spillover(controls, unstained = "UNSTAINED", fsc="FSC-H",
-                    ssc="SSC-H", patt = "-H", stain_match="intensity",
-                    useNormFilt = FALSE)
+  for(stain_match in c("intensity", "name_edit_distance")) { 
+  comp <- suppressWarnings(spillover(controls, unstained = "UNSTAINED", fsc="FSC-H",
+                    ssc="SSC-H", patt = "-H", stain_match = stain_match,
+                    useNormFilt = FALSE))
   expect_equal(colnames(comp), colnames(comp_ref))
   expect_equal(rownames(comp), rownames(comp_ref))
   expect_equivalent(comp, comp_ref, tolerance=3e-08)
+  }
 })
 
 test_that("spillover_match: Using path to dir with files", {

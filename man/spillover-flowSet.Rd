@@ -13,7 +13,7 @@
   ssc = "SSC-A",
   patt = NULL,
   method = "median",
-  stain_match = c("intensity", "ordered", "regexpr"),
+  stain_match = c("name_edit_distance", "ordered", "regexpr", "intensity"),
   useNormFilt = FALSE,
   prematched = FALSE,
   exact_match = FALSE
@@ -63,8 +63,9 @@ compensation-control samples. If \code{regexpr}, we use a regular expression
 to match the channel names with the names of each of the compensation control
 \code{flowFrame}s (that is, \code{sampleNames(x)}, which will typically be the 
 filenames passed to \code{\link{read.FCS}}).
-By default, we must "guess" based on the largest statistic for the
-compensation control (i.e., the row).\cr\cr
+By default (\code{name_edit_distance}), we must "guess" based on resemblance
+ of the names of the compensation 
+control (i.e., the rows) to the markers.\cr\cr
 Additionally, matching of channels to compensation control files can
 be accomplished using the \code{\link{spillover_match}} method, which allows
 the matches to be specified using a csv file. The \link{flowSet} returned

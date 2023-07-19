@@ -18,8 +18,9 @@
 #' to match the channel names with the names of each of the compensation control
 #' \code{flowFrame}s (that is, \code{sampleNames(x)}, which will typically be the 
 #' filenames passed to \code{\link{read.FCS}}).
-#' By default, we must "guess" based on the largest statistic for the
-#' compensation control (i.e., the row).\cr\cr
+#' By default (\code{name_edit_distance}), we must "guess" based on resemblance
+#'  of the names of the compensation 
+#' control (i.e., the rows) to the markers.\cr\cr
 #' Additionally, matching of channels to compensation control files can
 #' be accomplished using the \code{\link{spillover_match}} method, which allows
 #' the matches to be specified using a csv file. The \link{flowSet} returned
@@ -69,7 +70,7 @@ setMethod("spillover",
           signature = signature(x = "flowSet"),
           definition = function(x, unstained = NULL, fsc = "FSC-A",
                                 ssc = "SSC-A", patt = NULL, method = "median",
-                                stain_match = c("intensity", "ordered", "regexpr"),
+                                stain_match = c("name_edit_distance", "ordered", "regexpr", "intensity"),
                                 useNormFilt = FALSE, prematched = FALSE, exact_match = FALSE) {
             if (prematched) {
               unstained = "unstained"
@@ -154,14 +155,14 @@ setMethod("spillover",
               
               # Here, we match the stain channels with the compensation controls
               # if the user has specified it. Otherwise, we must "guess" below
-              # based on the largest statistic for the compensation control
-              # (i.e., the row).
+              # based matching sampleNames to markernames through their edit distance
+              # "intensity"-based matching had a fatal bug in it, and is now deprecated.
               # If "ordered," we assume the ordering of the channels in the
               # flowSet object is the same as the ordering of the
               # compensation-control samples.
               # Another option is to use a regular expression to match the
               # channel names with the sampleNames of the flowSet.
-              if (stain_match == "intensity") {
+              if (stain_match %in% c("intensity", "name_edit_distance")) {
                 channel_order <- NA
               } else if (stain_match == "ordered") {
                 channel_order <- seq_along(sampleNames(x))[-unstained]
@@ -197,25 +198,37 @@ setMethod("spillover",
               # background correction
               inten <- pmax(sweep(inten[-unstained, ], 2, inten[unstained, ]), 0)
 
-              # Updates the "rownames" of the intensity matrix. If the channel
-              # order was not set above, then a guess is made based on the
-              # largest statistic for the compensation control (i.e., the row).
-              if (any(is.na(channel_order))) {
-                dists = sapply(colnames(inten),function(x)adist(x,rownames(inten)))
-                colnames(dists)=colnames(inten)
-                rownames(dists)=rownames(inten)                
-                solution=solve_LSAP(t(dists))
+              # Solve a linear assignment problem between the edit distance of the rownames (samples)
+              # and the colnames (markers) to try to guess the relationship
+              if (any(is.na(channel_order)) &&
+                  stain_match == "name_edit_distance") {
+                dists = sapply(colnames(inten), function(x)
+                  adist(x, rownames(inten)))
+                colnames(dists) = colnames(inten)
+                rownames(dists) = rownames(inten)
+                solution = solve_LSAP(t(dists))
                 channel_order <- as.vector(solution)
-                for(i in 1:ncol(dists)){
-                    cat("matching ",colnames(dists)[i]," to ", rownames(dists)[channel_order[i]],"\n")
+              } else if (stain_match == "intensity") {
+                # historically this was the default
+                warning(
+                  "`stain_name == 'intensity'` is deprecated, may be buggy, and subject to removal in future releases."
+                )
+                channel_order <- apply(inten, 1, which.max)
+                if (anyDuplicated(channel_order) > 0) {
+                  stop(
+                    "Unable to match stains with controls based on intensity: ",
+                    "a single stain matches to several multiple controls. ",
+                    call. = FALSE
+                  )
                 }
-              }else{
+              } else{
                 # Just bump-down the channel_order to account for
-                # the removal of the unstained row. 
-                channel_order <- channel_order - (channel_order > unstained)
-                for(i in seq_len(ncol(inten))){
-                    message("matching ",colnames(inten)[i]," to ", rownames(inten)[channel_order[i]])
-                }
+                # the removal of the unstained row.
+                channel_order <-
+                  channel_order - (channel_order > unstained)
+              }
+              for (i in seq_len(ncol(inten))) {
+                message("matching ", colnames(inten)[i], " to ", rownames(inten)[channel_order[i]])
               }
               
               # Place the rows (which originally corresponded to samples) in
@@ -285,12 +298,7 @@ setGeneric("spillover_match",
 #' corresponding to the channels specified by the matchfile.
 #' @author B. Ellis, J. Wagner
 #' @seealso \code{\link{compensate}}, \code{\link{spillover}}
-#' @example
-#' require(assertthat)
-#' data(comp_data_set)
-#' data(comp_from_fj)
-#' comp_from_flowcore=spillover(fs,unstained=15,useNormFilt=TRUE)
-#' assert_that(norm(as.matrix(from_fj-from_flowcore))<0.05)
+
 #' @keywords methods
 
 #' @export

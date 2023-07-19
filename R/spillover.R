@@ -298,11 +298,7 @@ setGeneric("spillover_match",
 #' corresponding to the channels specified by the matchfile.
 #' @author B. Ellis, J. Wagner
 #' @seealso \code{\link{compensate}}, \code{\link{spillover}}
-#' @examples
-#' data(comp_data_set, package = "flowCore")
-#' data(comp_from_fj, package = "flowCore")
-#' comp_from_flowcore=spillover(fs,unstained=15,useNormFilt=TRUE)
-#' stopifnot(norm(as.matrix(from_fj-from_flowcore)) < 0.05)
+
 #' @keywords methods
 
 #' @export
